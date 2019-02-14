@@ -10,7 +10,7 @@
   function doit() {
      log('Requesting Bluetooth Device...');
      navigator.bluetooth.requestDevice(
-    {filters: [{name: 'CodeLess'},{services: '866D3B04-E674-40DC-9C05-B7F91BEC6E83']})
+    {filters: [{services: '866D3B04-E674-40DC-9C05-B7F91BEC6E83']})
   .then(device => {
     log('Connecting to GATT Server...');
     return device.gatt.connect();
