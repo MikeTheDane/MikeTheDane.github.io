@@ -4,6 +4,7 @@
 <script>
   function log(text)
   {
+    document.getElementById("log").value += "\n" + text;
   }
   
   function doit() {
@@ -44,5 +45,6 @@
 <button type="button" onclick="doit()">
 Click me to scan for CodeLess BLE devices.
 </button>
+<textarea id="log"></textarea>
 </body>
 </html>
