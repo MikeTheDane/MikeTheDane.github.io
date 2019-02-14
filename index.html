@@ -2,6 +2,8 @@
 <head>
 
 <script>
+  var myChar;
+  
   function log(text)
   {
     document.getElementById("log").value += "\n" + text;
@@ -27,11 +29,25 @@
   })
   .then(characteristic => {
     log('Reading Battery Level...');
+    myChar = characteristic;
     return characteristic.readValue();
   })
   .then(value => {
     let batteryLevel = value.getUint8(0);
     log('> Battery Level is ' + batteryLevel + '%');
+  })
+  .catch(error => {
+    log('Argh! ' + error);
+  });
+}
+  
+function write() {
+  let encoder = new TextEncoder('utf-8');
+  let value = 'ATr+PRINT=12345 Hejsa.';
+  log('Setting Characteristic User Description...');
+  myDescriptor.writeValue(encoder.encode(value))
+  .then(_ => {
+    log('> Sending Command: ' + value);
   })
   .catch(error => {
     log('Argh! ' + error);
@@ -49,5 +65,9 @@ Click me to scan for CodeLess BLE devices.
 </button>
 <br/>
 <textarea id="log" rows="25" cols="100" >Log:</textarea>
+<br/>
+<button type="button" onclick="write()">
+Write Something
+</button>
 </body>
 </html>
