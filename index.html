@@ -33,7 +33,7 @@
     return 0;//characteristic.readValue();
   })
   .then(value => {
-    let batteryLevel = value.getUint8(0);
+    let batteryLevel = "hejsa";//value.getUint8(0);
     log('> Battery Level is ' + batteryLevel + '%');
   })
   .catch(error => {
