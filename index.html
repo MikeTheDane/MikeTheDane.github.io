@@ -11,8 +11,9 @@
      log('Requesting Bluetooth Device...');
      navigator.bluetooth.requestDevice({
        filters: [{
-          services: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
-       }]  
+          name: 'CodeLess'
+       }],
+       optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
     })
     .then(device => {
     log('Connecting to GATT Server...');
