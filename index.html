@@ -8,7 +8,7 @@
   {
     document.getElementById("log").value += "\n" + text;
   }
-  //866D3B04E67440DC9C05B7F91BEC6E83
+  
   function doit() {
      log('Requesting Bluetooth Device...');
      navigator.bluetooth.requestDevice({
@@ -25,12 +25,12 @@
   })
   .then(service => {
     log('Getting Battery Level Characteristic...');
-    return service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
+    return service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
   })
   .then(characteristic => {
     log('Reading Battery Level...');
     myChar = characteristic;
-    return characteristic.readValue();
+    return 0;//characteristic.readValue();
   })
   .then(value => {
     let batteryLevel = value.getUint8(0);
