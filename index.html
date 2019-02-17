@@ -20,21 +20,13 @@
     return device.gatt.connect();
   })
   .then(server => {
-    log('Getting Battery Service...');
+    log('Getting CodeLess Service...');
     return server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
   })
   .then(service => {
-    log('Getting Battery Level Characteristic...');
-    return service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
-  })
-  .then(characteristic => {
-    log('Reading Battery Level...');
-    myChar = characteristic;
-    return characteristic.readValue();
-  })
-  .then(value => {
-    let batteryLevel = value.getUint8(0);
-    log('> ' + batteryLevel );
+    log('Getting Inbound Command Characteristic...');
+    myChar = service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
+    return myChar;
   })
   .catch(error => {
     log('Argh! ' + error);
