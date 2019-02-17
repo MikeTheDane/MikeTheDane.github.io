@@ -46,16 +46,9 @@ function write() {
     return;
   }
   log('Trying to write');
-  let encoder = new TextEncoder('utf-8');
-  let value = 'ATr+PRINT=12345 Hejsa.';
-  console.log('Testing the log');
-  myChar.writeValue(encoder.encode(value))
-  .then(_ => {
-    log('> Characteristic User Description changed to: ' + value);
-  })
-  .catch(error => {
-    log('Argh! ' + error);
-  });
+  // Writing something.
+  let value = Uint8Array.of(0x7C,0x35,0x34,0x33,0x32,0x31);
+  myChar.writeValue(value);
 }
   
 </script>  
