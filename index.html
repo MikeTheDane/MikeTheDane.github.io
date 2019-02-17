@@ -28,14 +28,13 @@
     myChar = service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
     return myChar;
   })
-  .then(characteristic => {
+  .then(myChar => {
     log('Writing Heart Rate Control Point Characteristic...');
 
     // Writing something.
-    let value = Uint8Array.of(0x7C,0x31,0x32,0x33);
-    return navigator.bluetooth.myChar.writeValue(value);//characteristic.writeValue(value);
+    let value = Uint8Array.of(0x7C,0x31,0x32,0x33,0x34,0x35);
+    return myChar.writeValue(value);//characteristic.writeValue(value);
   })
-     
   .catch(error => {
     log('Argh! ' + error);
   });
