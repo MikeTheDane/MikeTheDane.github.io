@@ -49,7 +49,7 @@ function write() {
   let encoder = new TextEncoder('utf-8');
   let value = 'ATr+PRINT=12345 Hejsa.';
   log('Setting Characteristic User Description...');
-  myChar..writeValue(encoder.encode(value))
+  myChar.writeValue(encoder.encode(value))
   .then(_ => {
     log('> Characteristic User Description changed to: ' + value);
   })
