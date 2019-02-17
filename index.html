@@ -3,7 +3,7 @@
 
 <script>
   var myChar;
-  var device;
+
   console.log('Going');
   function log(text)
   {
@@ -44,19 +44,16 @@ async function writesome() {
     return;
   }
   log('Trying to write');
-  /*
+  
   try{
     log('Trying to write');
     // Writing something.
-    const server = await device.gatt.connect();
-    const service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
-    const characteristic = await service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
     let value = Uint8Array.of(0x7C,0x35,0x34,0x33,0x32,0x31);
-    //await characteristic.writeValue(value);
+    await myChar.writeValue(value);
   } catch(error) {
     log('Argh! ' + error);
   }
-  */
+  
 }
   
 </script>  
