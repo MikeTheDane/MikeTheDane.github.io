@@ -11,6 +11,11 @@
     document.getElementById("log").value += "\n" + text;
   }
   
+  function incomingData(event){
+    log("We saw some data just now: ");
+  }
+  
+  
   async function doit() {
   try {
     log('Requesting Bluetooth Device...');
@@ -32,10 +37,10 @@
     outboundChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
     
     log('Getting CodeLess Outbound Command Characteristic...');
-    flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
+    const flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
     
-    
-    
+    await flowcontrolChar.startNotifications();
+    flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
     
     log('Ready to communicate');
   } catch(error) {
@@ -51,7 +56,7 @@ async function writesome() {
   try{
     log('Trying to write');
     // Writing something.
-    let value = Uint8Array.of(0x7C,0x35,0x34,0x33,0x32,0x31);
+    let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
     await inboundChar.writeValue(value);
   } catch(error) {
     log('Argh! ' + error);
