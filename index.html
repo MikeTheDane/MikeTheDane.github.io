@@ -30,11 +30,11 @@
   .then(characteristic => {
     log('Reading Battery Level...');
     myChar = characteristic;
-    return 0;//characteristic.readValue();
+    return characteristic.readValue();
   })
   .then(value => {
-    let batteryLevel = "hejsa";//value.getUint8(0);
-    log('> Battery Level is ' + batteryLevel + '%');
+    let batteryLevel = value.getUint8(0);
+    log('> ' + batteryLevel );
   })
   .catch(error => {
     log('Argh! ' + error);
