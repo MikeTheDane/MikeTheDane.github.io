@@ -9,35 +9,32 @@
     document.getElementById("log").value += "\n" + text;
   }
   
-  function doit() {
-     log('Requesting Bluetooth Device...');
-     navigator.bluetooth.requestDevice({
-       filters: [{name: 'CodeLess'}],
-       optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
-    })
-    .then(device => {
-    log('Connecting to GATT Server...');
-    return device.gatt.connect();
-  })
-  .then(server => {
-    log('Getting CodeLess Service...');
-    return server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
-  })
-  .then(service => {
-    log('Getting Inbound Command Characteristic...');
-    myChar = service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
-    return myChar;
-  })
-  .then(myChar => {
-    log('Writing Heart Rate Control Point Characteristic...');
+  async function doit() {
+  try {
+    log('Requesting Bluetooth Device...');
+    const device  = await navigator.bluetooth.requestDevice({
+        filters: [{name: 'CodeLess'}],
+        optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
+    });
 
-    // Writing something.
+    log('Connecting to GATT Server...');
+    const server = await device.gatt.connect();
+
+    log('Getting Heart Rate Service...');
+    const service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
+
+    log('Getting Heart Rate Control Point Characteristic...');
+    const characteristic = await service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
+    myChar = characteristic;
+    log('Writing Heart Rate Control Point Characteristic...');
+    // Writing 1 is the signal to reset energy expended.
     let value = Uint8Array.of(0x7C,0x31,0x32,0x33,0x34,0x35);
-    return myChar.writeValue(value);//characteristic.writeValue(value);
-  })
-  .catch(error => {
+    await characteristic.writeValue(value);
+
+    log('> Energy expended has been reset.');
+  } catch(error) {
     log('Argh! ' + error);
-  });
+  }
 }
   
 function write() {
