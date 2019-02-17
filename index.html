@@ -3,7 +3,7 @@
 
 <script>
   var myChar;
-  
+  console.log('Going');
   function log(text)
   {
     document.getElementById("log").value += "\n" + text;
@@ -41,7 +41,7 @@ function write() {
   log('Trying to write');
   let encoder = new TextEncoder('utf-8');
   let value = 'ATr+PRINT=12345 Hejsa.';
-  console("Test");
+  console.log('Testing the log');
   myChar.writeValue(encoder.encode(value))
   .then(_ => {
     log('> Characteristic User Description changed to: ' + value);
