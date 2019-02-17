@@ -12,6 +12,7 @@
   function doit() {
      log('Requesting Bluetooth Device...');
      navigator.bluetooth.requestDevice({
+       name: ['CodeLess'],
        acceptAllDevices: true,
        optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
     })
