@@ -33,7 +33,7 @@
 
     // Writing something.
     let value = Uint8Array.of(0x7C,0x31,0x32,0x33);
-    return myChar.writeValue(value);//characteristic.writeValue(value);
+    return navigator.bluetooth.myChar.writeValue(value);//characteristic.writeValue(value);
   })
      
   .catch(error => {
