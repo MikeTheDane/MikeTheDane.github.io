@@ -33,7 +33,7 @@
   } catch(error) {
     log('Argh! ' + error);
   }
-}
+  }
   
 async function readBattLevel() {
   if (!battChar) {
@@ -42,7 +42,7 @@ async function readBattLevel() {
   }
   try{
     log('Trying to Read');
-    const value await battChar.readValue(value);
+    const value = await battChar.readValue(value);
     log('> Battery Level is ' + value.getUint8(0) + '%');
   } catch(error) {
     log('Failed ' + error);
