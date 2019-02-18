@@ -16,44 +16,36 @@
     readInValue = await outboundChar.readValue();
     let decoder = new TextDecoder('utf-8');
     log('We saw some data just now: ' + decoder.decode(readInValue));
-    let value = Uint8Array.of(0x00);
-    await outboundChar.writeValue(value);
-    /*
-    const service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
-    const outChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
-    let testIt = outChar.value.getUint8(0);
-    log('We saw some data just now2: ' + testIt);
-    */
   }
-  
-  
+ 
   async function doit() {
-  try {
-    log('Requesting Bluetooth Device...');
-    device  = await navigator.bluetooth.requestDevice({
-        filters: [{name: 'CodeLess'}],
-        optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
-    });
+    try {
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice({
+          filters: [{name: 'CodeLess'}],
+          optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
+      });
 
-    log('Connecting to GATT Server...');
-    server = await device.gatt.connect();
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
 
-    log('Getting CodeLess Service...');
-    const service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
+      log('Getting CodeLess Service...');
+      const service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
 
-    log('Getting CodeLess Inbound Command Characteristic...');
-    inboundChar = await service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
+      log('Getting CodeLess Inbound Command Characteristic...');
+      inboundChar = await service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
     
-    log('Getting CodeLess Outbound Command Characteristic...');
-    outboundChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
+      log('Getting CodeLess Outbound Command Characteristic...');
+      outboundChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
     
-    log('Getting CodeLess Flow Control Characteristic...');
-    const flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
+      log('Getting CodeLess Flow Control Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
     
-    await flowcontrolChar.startNotifications();
-    flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+      // Subscribe to notifications
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
     
-    log('Ready to communicate');
+      log('Ready to communicate');
   } catch(error) {
     log('Failed: ' + error);
   }
@@ -66,11 +58,10 @@ async function writesome() {
   }
   try{
     log('Trying to write');
-    // Writing something.
     let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
     await inboundChar.writeValue(value);
   } catch(error) {
-    log('Argh! ' + error);
+    log('Failed ' + error);
   }
   
 }
@@ -81,14 +72,15 @@ async function writesome() {
 <body>
   <p>CodeLess test:</p>
 
-<button type="button" onclick="doit()">
-Click me to scan for CodeLess BLE devices.
-</button>
-<br/>
-<textarea id="log" rows="25" cols="100" >Log:</textarea>
-<br/>
-<button type="button" onclick="writesome()">
-Write Something
-</button>
+  <button type="button" onclick="doit()">
+    Click me to scan for CodeLess BLE devices.
+  </button>
+  <br/>
+  <textarea id="log" rows="25" cols="100" >Log:</textarea>
+  <br/>
+  <button type="button" onclick="writesome()">
+    Write Something
+  </button>
+
 </body>
 </html>
