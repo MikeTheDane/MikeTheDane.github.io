@@ -13,12 +13,13 @@
   
   async function incomingData(event){
     let readInValue = '';
+    readInValue = await outboundChar.readValue();
+    let decoder = new TextDecoder('utf-8');
+    log('We saw some data just now: ' + decoder.decode(readInValue));
     
-    outboundChar.readValue().then(function(dataView) { 
-      //readInValue = await outboundChar.readValue();
-      let decoder = new TextDecoder('utf-8');
-      log('We saw some data just now: ' + decoder.decode(readInValue));
-    })
+    let testIt = outBoundChar.value.getUint8(0);
+    log('We saw some data just now2: ' + decoder.decode(testIt));
+    
   }
   
   
