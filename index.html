@@ -17,7 +17,8 @@
     let decoder = new TextDecoder('utf-8');
     log('We saw some data just now: ' + decoder.decode(readInValue));
     
-    let testIt = outboundChar.value.getUint8(0);
+    const outChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
+    let testIt = outChar.value.getUint8(0);
     log('We saw some data just now2: ' + testIt);
     
   }
@@ -43,7 +44,7 @@
     log('Getting CodeLess Outbound Command Characteristic...');
     outboundChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
     
-    log('Getting CodeLess Outbound Command Characteristic...');
+    log('Getting CodeLess Flow Control Characteristic...');
     const flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
     
     await flowcontrolChar.startNotifications();
