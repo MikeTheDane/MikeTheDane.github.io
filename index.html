@@ -4,55 +4,52 @@
 <script>
   var battChar;
   
-  console.log('Going');
-  function log(text)
-  {
+  function log(text){
     document.getElementById("log").value += "\n" + text;
   }
  
   async function doit() {
-  try {
-    log('Requesting Bluetooth Device...');
-    const device = await navigator.bluetooth.requestDevice({
-        filters: [{services: ['battery_service']}]});
+    try {
+      log('Requesting Bluetooth Device...');
+      const device = await navigator.bluetooth.requestDevice({
+          filters: [{services: ['battery_service']}]});
 
-    log('Connecting to GATT Server...');
-    const server = await device.gatt.connect();
+      log('Connecting to GATT Server...');
+      const server = await device.gatt.connect();
 
-    log('Getting Battery Service...');
-    const service = await server.getPrimaryService('battery_service');
+      log('Getting Battery Service...');
+      const service = await server.getPrimaryService('battery_service');
 
-    log('Getting Battery Level Characteristic...');
-    const characteristic = await service.getCharacteristic('battery_level');
+      log('Getting Battery Level Characteristic...');
+      const characteristic = await service.getCharacteristic('battery_level');
 
-    battChar = characteristic;
-    log('Reading Battery Level...');
-    const value = await characteristic.readValue();
+      battChar = characteristic;
+      log('Reading Battery Level...');
+      const value = await characteristic.readValue();
 
-    log('> Battery Level is ' + value.getUint8(0) + '%');
-  } catch(error) {
-    log('Argh! ' + error);
-  }
-  }
-  
-async function readBattLevel() {
-  if (!battChar) {
-    log('GodDang');
-    return;
-  }
-  try{
-    log('Trying to Read');
-    const value = await battChar.readValue();
-    log('> Battery Level is ' + value.getUint8(0) + '%');
-  } catch(error) {
-    log('Failed ' + error);
+      log('> Battery Level is ' + value.getUint8(0) + '%');
+    } catch(error) {
+      log('Argh! ' + error);
+    }
   }
   
-}
+  async function readBattLevel() {
+    if (!battChar) {
+      log('GodDang');
+      return;
+    }
+    try{
+      log('Trying to Read');
+      const value = await battChar.readValue();
+      log('> Battery Level is ' + value.getUint8(0) + '%');
+    } catch(error) {
+      log('Failed ' + error);
+    }
+  }
   
 </script>  
-</head>  
 
+</head>  
 <body>
   <p>CodeLess test:</p>
 
