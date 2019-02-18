@@ -17,6 +17,7 @@
     let decoder = new TextDecoder('utf-8');
     log('We saw some data just now: ' + decoder.decode(readInValue));
     
+    const service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
     const outChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
     let testIt = outChar.value.getUint8(0);
     log('We saw some data just now2: ' + testIt);
