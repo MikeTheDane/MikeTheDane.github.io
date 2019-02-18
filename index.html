@@ -12,10 +12,9 @@
   }
   
   async function incomingData(event){
-    await outboundChar.readValue().then(value => {
-            let decoder = new TextDecoder('utf-8');
-            log('We saw some data just now: ' + decoder.decode(value));
-         });
+    const value = await outboundChar.readValue();
+    let decoder = new TextDecoder('utf-8');
+    log('We saw some data just now: ' + decoder.decode(value));
   }
   
   
