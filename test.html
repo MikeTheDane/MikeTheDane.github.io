@@ -45,9 +45,9 @@
       flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
     
       log('Ready to communicate');
-  } catch(error) {
-    log('Failed: ' + error);
-  }
+    } catch(error) {
+      log('Failed: ' + error);
+    }
 }
   
 async function writesome() {
@@ -97,7 +97,7 @@ async function sendAT() {
     Write Something
   </button>
   <br/>
-  <input type="text" id="cmd">ATrI.</input><br>
+  <input type="text" id="cmd"<br>
   <button type="button" onclick="sendAT()">
     Transmit
   </button>
