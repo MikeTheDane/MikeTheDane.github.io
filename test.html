@@ -73,7 +73,7 @@ async function sendAT() {
   }
   var commandToSend = document.getElementById("cmd").value + "\0";  
   try{
-    log('Sending Command (' + commandToSend + '...');
+    log('Sending Command (' + commandToSend + ')...');
     let encoder = new TextEncoder('utf-8');
     await inboundChar.writeValue(encoder.encode(commandToSend));
   } catch(error) {
