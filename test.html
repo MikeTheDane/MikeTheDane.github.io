@@ -71,7 +71,7 @@ async function sendAT() {
     log('GodDang');
     return;
   }
-  var commandToSend = document.getElementById("cmd").value;  
+  var commandToSend = document.getElementById("cmd").value + "\0";  
   try{
     log('Trying to write');
     let encoder = new TextEncoder('utf-8');
