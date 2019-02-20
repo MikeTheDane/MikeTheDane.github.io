@@ -75,7 +75,7 @@ async function sendAT() {
   try{
     log('Trying to write');
     let encoder = new TextEncoder('utf-8');
-    await inboundChar.writeValue(decoder.decode(commandToSend);
+    await inboundChar.writeValue(decoder.decode(commandToSend));
   } catch(error) {
     log('Failed ' + error);
   }
