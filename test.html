@@ -14,7 +14,7 @@
     let readInValue = '';
     readInValue = await outboundChar.readValue();
     let decoder = new TextDecoder('utf-8');
-    log('>' + decoder.decode(readInValue));
+    log(decoder.decode(readInValue));
   }
  
   async function doit() {
@@ -56,7 +56,7 @@ async function writesome() {
     return;
   }
   try{
-    log('Trying to write');
+    log('Sending Command...');
     let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
     await inboundChar.writeValue(value);
   } catch(error) {
@@ -73,7 +73,7 @@ async function sendAT() {
   }
   var commandToSend = document.getElementById("cmd").value + "\0";  
   try{
-    log('Trying to write');
+    log('Sending Command...');
     let encoder = new TextEncoder('utf-8');
     await inboundChar.writeValue(encoder.encode(commandToSend));
   } catch(error) {
