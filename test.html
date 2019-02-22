@@ -7,8 +7,8 @@
   
   function log(text)
   {
-    document.getElementById("log").value += "\n" + text;
     var textarea = document.getElementById('log');
+    textarea.value += "\n" + text;
     textarea.scrollTop = textarea.scrollHeight;
   }
   
