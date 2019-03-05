@@ -1,0 +1,105 @@
+<html>
+<head>
+
+<script>
+  var inboundChar;
+  var outboundChar;
+  
+  function log(text)
+  {
+    var textarea = document.getElementById('log');
+    textarea.value += "\n" + text;
+    textarea.scrollTop = textarea.scrollHeight;
+  }
+  
+  async function incomingData(event){
+    let readInValue = '';
+    readInValue = await outboundChar.readValue();
+    let decoder = new TextDecoder('utf-8');
+    log(decoder.decode(readInValue));
+  }
+ 
+  async function doit() {
+    try {
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice({
+          filters: [{name: 'IoT-585'}],
+          optionalServices: ['2ea78970-7d44-44bb-b097-26183f402400']
+      });
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      log('Getting CodeLess Service...');
+      const service = await server.getPrimaryService('2ea78970-7d44-44bb-b097-26183f402400');
+      log('Getting IoT Command Characteristic...');
+      inboundChar = await service.getCharacteristic('2ea78970-7D44-44bb-b097-26183f402409');
+    
+      log('Getting IoT Reply Characteristic...');
+      outboundChar = await service.getCharacteristic('2ea78970-7D44-44bb-b097-26183f40240a');
+    
+      log('Getting Sensor Data Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic('2ea78970-7D44-44bb-b097-26183f4010');
+    
+      // Subscribe to notifications
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+    
+      log('Ready to communicate');
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+}
+  
+async function writesome() {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  try{
+    log('Sending Command (ATrI)...');
+    let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
+    await inboundChar.writeValue(value);
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+  
+async function sendAT() {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  var commandToSend = document.getElementById("cmd").value + "\0";  
+  try{
+    log('Sending Command (' + commandToSend + ')...');
+    let encoder = new TextEncoder('utf-8');
+    await inboundChar.writeValue(encoder.encode(commandToSend));
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+  
+</script>  
+</head>  
+
+<body>
+  <p>CodeLess test:</p>
+
+  <button type="button" onclick="doit()">
+    Click me to scan for CodeLess BLE devices.
+  </button>
+  <br/>
+  <textarea id="log" rows="25" cols="100" >Log:</textarea>
+  <br/>
+  <button type="button" onclick="writesome()">
+    Send ATrI
+  </button>
+  <br/>
+  <input type="text" id="cmd">
+  <button type="button" onclick="sendAT()">
+    Transmit Command
+  </button>
+
+</body>
+</html>
