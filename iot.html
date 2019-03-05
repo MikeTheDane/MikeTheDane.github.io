@@ -20,7 +20,7 @@
     if( x.getUint8(2)==1){
       let z = x.getUint8(9) + 256 * x.getUint8(10);
       if (z>=0x8000)
-        z=65535-z;
+        z=-(65535-z);
       log(z);
     }
   }
@@ -105,7 +105,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit
+    Transmit!!
   </button>
 
 </body>
