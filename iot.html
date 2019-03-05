@@ -16,7 +16,7 @@
   
   async function incomingData(event){
     let x = event.target.value;
-    log(x.getUint8(1) + ":" + x.getUint8(1));
+    log(x.getUint8(1) + ":" + x.getUint8(2));
   }
  
   async function doit() {
@@ -99,7 +99,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit
+    Transmit!
   </button>
 
 </body>
