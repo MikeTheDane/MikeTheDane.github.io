@@ -5,6 +5,12 @@
   var inboundChar;
   var outboundChar;
   
+  function toHexString(byteArray) {
+  return Array.from(byteArray, function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('')
+  }
+  
   function log(text)
   {
     var textarea = document.getElementById('log');
@@ -17,7 +23,7 @@
     readInValue = await outboundChar.readValue();
     //let decoder = new TextDecoder('utf-8');
     //log(decoder.decode(readInValue));
-    log(readInValue.toString(16));
+    log(toHexString(readInValue));
   }
  
   async function doit() {
@@ -100,7 +106,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit!
+    Transmit
   </button>
 
 </body>
