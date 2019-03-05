@@ -56,7 +56,8 @@ async function writesome() {
   }
   try{
     log('Sending Command (ATrI)...');
-    let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
+    //let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
+    let value = Uint8Array.of(0x01);
     await inboundChar.writeValue(value);
   } catch(error) {
     log('Failed ' + error);
