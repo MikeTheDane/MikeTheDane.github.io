@@ -31,13 +31,13 @@
       log('Getting CodeLess Service...');
       const service = await server.getPrimaryService('2ea78970-7d44-44bb-b097-26183f402400');
       log('Getting IoT Command Characteristic...');
-      inboundChar = await service.getCharacteristic('2ea78970-7D44-44bb-b097-26183f402409');
+      inboundChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f402409');
     
       log('Getting IoT Reply Characteristic...');
-      outboundChar = await service.getCharacteristic('2ea78970-7D44-44bb-b097-26183f40240a');
+      outboundChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f40240a');
     
       log('Getting Sensor Data Characteristic...');
-      const flowcontrolChar = await service.getCharacteristic('2ea78970-7D44-44bb-b097-26183f4010');
+      const flowcontrolChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f4010');
     
       // Subscribe to notifications
       await flowcontrolChar.startNotifications();
