@@ -15,8 +15,9 @@
   async function incomingData(event){
     let readInValue = '';
     readInValue = await outboundChar.readValue();
-    let decoder = new TextDecoder('utf-8');
-    log(decoder.decode(readInValue));
+    //let decoder = new TextDecoder('utf-8');
+    //log(decoder.decode(readInValue));
+    log(readInValue.toString(16));
   }
  
   async function doit() {
@@ -99,7 +100,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit
+    Transmit!
   </button>
 
 </body>
