@@ -21,7 +21,7 @@
     //log(decoder.decode(readInValue));
     //readInValue = event.target.value.getUint8(0);
     //log(readInValue);
-    log(event.target.value);
+    log(event.target.value.toString(16));
   }
  
   async function doit() {
@@ -104,7 +104,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit
+    Transmit!
   </button>
 
 </body>
