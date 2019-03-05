@@ -18,7 +18,7 @@
     let x = event.target.value;
     
     if( x.getUint8(2)==1){
-      log(x.getUint8(5) + 256 * x.getUint8(6));
+      log(x.getUint8(9) + 256 * x.getUint8(10));
     }
   }
  
@@ -102,7 +102,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit!
+    Transmit
   </button>
 
 </body>
