@@ -19,8 +19,9 @@
     //readInValue = await outboundChar.readValue();
     //let decoder = new TextDecoder('utf-8');
     //log(decoder.decode(readInValue));
-    readInValue = event.target.value.getUint8(0);
-    log(readInValue);
+    //readInValue = event.target.value.getUint8(0);
+    //log(readInValue);
+    log(event.target.value);
   }
  
   async function doit() {
@@ -103,7 +104,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit!
+    Transmit
   </button>
 
 </body>
