@@ -15,13 +15,24 @@
   }
   
   async function incomingData(event){
-    let x = event.target.value;
+    let v = event.target.value;
     
-    if( x.getUint8(2)==1){
-      let z = x.getUint8(9) + 256 * x.getUint8(10);
+    if( v.getUint8(2)==1){
+      
+      let x = v.getUint8(5) + 256 * v.getUint8(6);
+      if (x>=0x8000)
+        x=-(65535-x);
+      
+      let y = v.getUint8(7) + 256 * v.getUint8(9);
+      if (y>=0x8000)
+        y=-(65535-y);
+      
+      let z = v.getUint8(9) + 256 * v.getUint8(10);
       if (z>=0x8000)
         z=-(65535-z);
-      log(z);
+      
+      
+      log(x+", "+y+", "+z);
     }
   }
  
@@ -105,7 +116,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit!!
+    Transmit
   </button>
 
 </body>
