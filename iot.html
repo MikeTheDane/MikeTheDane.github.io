@@ -16,6 +16,14 @@
   
   function drawDie(d){
     document.getElementById("myDie").style.display = "inline";
+    if(die%2 > 0){
+      document.getElementById("dot3").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot3").style.display = "none";
+    }
+    
+    
   }
   
   async function incomingData(event){
@@ -145,7 +153,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit!!!!!
+    Transmit
   </button><br>
   
   <svg id="myDie" display=width="500px" height="500px" viewBox="0 0 500 500" style="display:none"
@@ -188,49 +196,49 @@ async function sendAT() {
        y="89.598839"
        ry="10.958051" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot0"
        cx="69.222809"
        cy="103.89775"
        r="7"
        inkscape:label="#path819" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot1"
        cx="115.46044"
        cy="103.89775"
        r="7"
        inkscape:label="#path819-6" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot5"
        cx="69.222809"
        cy="150.66992"
        r="7"
        inkscape:label="#path819-2" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot6"
        cx="115.46044"
        cy="150.66992"
        r="7"
        inkscape:label="#path819-6-6" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot2"
        cx="69.222809"
        cy="127.28383"
        r="7"
        inkscape:label="#path819-4" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot4"
        cx="115.46044"
        cy="127.28383"
        r="7"
        inkscape:label="#path819-6-9" />
     <circle
-       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
        id="dot3"
        cx="92.341621"
        cy="127.28384"
