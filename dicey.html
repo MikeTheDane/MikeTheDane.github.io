@@ -48,11 +48,7 @@
     else{
       document.getElementById("dot2").style.display = "none";
       document.getElementById("dot4").style.display = "none";
-    }
-    
-    
-    
-    
+    } 
     
   }
   
@@ -141,57 +137,19 @@
     }
 }
   
-async function writesome() {
-  if (!inboundChar) {
-    log('GodDang');
-    return;
-  }
-  try{
-    log('Sending Command (ATrI)...');
-    let value = Uint8Array.of(0x01);
-    await inboundChar.writeValue(value);
-  } catch(error) {
-    log('Failed ' + error);
-  }
-  
-}
-  
-async function sendAT() {
-  if (!inboundChar) {
-    log('GodDang');
-    return;
-  }
-  var commandToSend = document.getElementById("cmd").value + "\0";  
-  try{
-    log('Sending Command (' + commandToSend + ')...');
-    let encoder = new TextEncoder('utf-8');
-    await inboundChar.writeValue(encoder.encode(commandToSend));
-  } catch(error) {
-    log('Failed ' + error);
-  }
-  
-}
-  
 </script>  
 </head>  
 
 <body>
-  <p>IoT Sensor test:</p>
+  <h1>Dicey</h1>
 
   <button type="button" onclick="doit()">
-    Click me to scan for CodeLess BLE devices.
+    Click me to scan for a die
   </button>
   <br/>
   <textarea id="log" rows="25" cols="100" >Log:</textarea>
   <br/>
-  <button type="button" onclick="writesome()">
-    Start
-  </button>
   <br/>
-  <input type="text" id="cmd">
-  <button type="button" onclick="sendAT()">
-    Transmittolino
-  </button><br>
   
   <svg id="myDie" display=width="500px" height="500px" viewBox="0 0 500 500" style="display:none"
     <defs
