@@ -23,7 +23,7 @@
       if (x>=0x8000)
         x=-(65535-x);
       
-      let y = v.getUint8(7) + 256 * v.getUint8(9);
+      let y = v.getUint8(7) + 256 * v.getUint8(8);
       if (y>=0x8000)
         y=-(65535-y);
       
@@ -116,7 +116,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmit
+    Transmit!
   </button>
 
 </body>
