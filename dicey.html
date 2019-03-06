@@ -100,7 +100,7 @@
   }
  
   async function doit() {
-    document.getElementById("myDie").scale(2,2)
+    
     try {
       log('Requesting Bluetooth Device...');
       device  = await navigator.bluetooth.requestDevice({
@@ -142,7 +142,7 @@
 </head>  
 
 <body>
-  <h1>Dicey...</h1>
+  <h1>Dicey</h1>
 
   <button type="button" onclick="doit()">
     Click me to scan for a die
@@ -152,7 +152,7 @@
   <br/>
   <br/>
   
-  <svg id="myDie" display=width="1000px" height="1000px" viewBox="0 0 1000 1000" style="display:none"
+  <svg id="myDie" display=width="1000px" height="1000px" viewBox="0 0 1000 1000" style="display:none" transform="scale(2,2)"
     <defs
      id="defs2">
     <linearGradient
