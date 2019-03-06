@@ -23,6 +23,36 @@
       document.getElementById("dot3").style.display = "none";
     }
     
+    if(d > 1){
+      document.getElementById("dot1").style.display = "inline";
+      document.getElementById("dot5").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot1").style.display = "none";
+      document.getElementById("dot5").style.display = "none";
+    }
+    
+    if(d > 3){
+      document.getElementById("dot0").style.display = "inline";
+      document.getElementById("dot6").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot0").style.display = "none";
+      document.getElementById("dot6").style.display = "none";
+    }
+    
+    if(d > 5){
+      document.getElementById("dot2").style.display = "inline";
+      document.getElementById("dot4").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot2").style.display = "none";
+      document.getElementById("dot4").style.display = "none";
+    }
+    
+    
+    
+    
     
   }
   
@@ -153,7 +183,7 @@ async function sendAT() {
   <br/>
   <input type="text" id="cmd">
   <button type="button" onclick="sendAT()">
-    Transmitto
+    Transmittolino
   </button><br>
   
   <svg id="myDie" display=width="500px" height="500px" viewBox="0 0 500 500" style="display:none"
