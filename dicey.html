@@ -1,0 +1,288 @@
+<html>
+<head>
+
+<script>
+  var inboundChar;
+  var outboundChar;
+  
+
+  
+  function log(text)
+  {
+    var textarea = document.getElementById('log');
+    textarea.value += "\n" + text;
+    textarea.scrollTop = textarea.scrollHeight;
+  }
+  
+  function drawDie(d){
+    document.getElementById("myDie").style.display = "inline";
+    if(d % 2 > 0){
+      document.getElementById("dot3").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot3").style.display = "none";
+    }
+    
+    if(d > 1){
+      document.getElementById("dot1").style.display = "inline";
+      document.getElementById("dot5").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot1").style.display = "none";
+      document.getElementById("dot5").style.display = "none";
+    }
+    
+    if(d > 3){
+      document.getElementById("dot0").style.display = "inline";
+      document.getElementById("dot6").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot0").style.display = "none";
+      document.getElementById("dot6").style.display = "none";
+    }
+    
+    if(d > 5){
+      document.getElementById("dot2").style.display = "inline";
+      document.getElementById("dot4").style.display = "inline";
+    }
+    else{
+      document.getElementById("dot2").style.display = "none";
+      document.getElementById("dot4").style.display = "none";
+    }
+    
+    
+    
+    
+    
+  }
+  
+  async function incomingData(event){
+    let v = event.target.value;
+    
+    if( v.getUint8(2)==1){
+      
+      let x = v.getUint8(5) + 256 * v.getUint8(6);
+      if (x>=0x8000)
+        x=-(65535-x);
+      
+      let y = v.getUint8(7) + 256 * v.getUint8(8);
+      if (y>=0x8000)
+        y=-(65535-y);
+      
+      let z = v.getUint8(9) + 256 * v.getUint8(10);
+      if (z>=0x8000)
+        z=-(65535-z);
+      
+      let die = 0;
+      
+      if(Math.abs(x) > Math.abs(y) && Math.abs(x) > Math.abs(z)){
+        // 6 or 1
+        if(x>0)
+          die = 6;
+        else
+          die =1;
+      }
+      else{
+        if(Math.abs(y) > Math.abs(x) && Math.abs(y) > Math.abs(z)){
+          // 6 or 1
+          if(y>0)
+            die = 5;
+          else
+            die =2;
+        }
+        else{
+          if(z>0)
+            die = 4;
+          else
+            die =3;
+        }
+      }
+      
+      //log(x+", "+y+", "+z+"  >  "+die);
+      drawDie(die);
+    }
+  }
+ 
+  async function doit() {
+    try {
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice({
+          filters: [{name: 'IoT-585'}],
+          optionalServices: ['2ea78970-7d44-44bb-b097-26183f402400']
+      });
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      log('Getting IoT Sensor Service...');
+      const service = await server.getPrimaryService('2ea78970-7d44-44bb-b097-26183f402400');
+      log('Getting IoT Command Characteristic...');
+      inboundChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f402409');
+    
+      log('Getting IoT Reply Characteristic...');
+      outboundChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f40240a');
+    
+      log('Getting Sensor Data Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f402410');
+    
+      // Subscribe to notifications
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+      
+      try{
+        log('Sending Start Command...');
+        let value = Uint8Array.of(0x01);
+        await inboundChar.writeValue(value);
+      } catch(error) {
+        log('Failed ' + error);
+      }
+    
+      log('Ready to communicate');
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+}
+  
+async function writesome() {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  try{
+    log('Sending Command (ATrI)...');
+    let value = Uint8Array.of(0x01);
+    await inboundChar.writeValue(value);
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+  
+async function sendAT() {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  var commandToSend = document.getElementById("cmd").value + "\0";  
+  try{
+    log('Sending Command (' + commandToSend + ')...');
+    let encoder = new TextEncoder('utf-8');
+    await inboundChar.writeValue(encoder.encode(commandToSend));
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+  
+</script>  
+</head>  
+
+<body>
+  <p>IoT Sensor test:</p>
+
+  <button type="button" onclick="doit()">
+    Click me to scan for CodeLess BLE devices.
+  </button>
+  <br/>
+  <textarea id="log" rows="25" cols="100" >Log:</textarea>
+  <br/>
+  <button type="button" onclick="writesome()">
+    Start
+  </button>
+  <br/>
+  <input type="text" id="cmd">
+  <button type="button" onclick="sendAT()">
+    Transmittolino
+  </button><br>
+  
+  <svg id="myDie" display=width="500px" height="500px" viewBox="0 0 500 500" style="display:none"
+    <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient916">
+      <stop
+         style="stop-color:#b3b3b3;stop-opacity:1;"
+         offset="0"
+         id="stop912" />
+      <stop
+         style="stop-color:#b3b3b3;stop-opacity:0;"
+         offset="1"
+         id="stop914" />
+    </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient916"
+       id="radialGradient922"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(3.5010129,-3.6752933,1.2949887,1.233581,-395.77871,309.65147)"
+       cx="92.341621"
+       cy="127.28384"
+       fx="92.341621"
+       fy="127.28384"
+       r="38.085907" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:1;fill:url(#radialGradient922);fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1"
+       id="rect815"
+       width="76.171814"
+       height="75.370003"
+       x="54.255714"
+       y="89.598839"
+       ry="10.958051" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot0"
+       cx="69.222809"
+       cy="103.89775"
+       r="7"
+       inkscape:label="#path819" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot1"
+       cx="115.46044"
+       cy="103.89775"
+       r="7"
+       inkscape:label="#path819-6" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot5"
+       cx="69.222809"
+       cy="150.66992"
+       r="7"
+       inkscape:label="#path819-2" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot6"
+       cx="115.46044"
+       cy="150.66992"
+       r="7"
+       inkscape:label="#path819-6-6" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot2"
+       cx="69.222809"
+       cy="127.28383"
+       r="7"
+       inkscape:label="#path819-4" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot4"
+       cx="115.46044"
+       cy="127.28383"
+       r="7"
+       inkscape:label="#path819-6-9" />
+    <circle
+       style="opacity:1;fill:#280b0b;fill-opacity:1;stroke:none;stroke-width:0.26458332;stroke-opacity:1;display:none"
+       id="dot3"
+       cx="92.341621"
+       cy="127.28384"
+       r="7"
+       inkscape:label="#path819-6-9-9" />
+  </g>
+</svg>
+
+</body>
+</html>
