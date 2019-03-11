@@ -97,6 +97,11 @@
       //log(x+", "+y+", "+z+"  >  "+die);
       drawDie(die);
     }
+    else{
+      if(v.getUint8(2)==13){
+         log("Button!");
+      }
+    }
   }
  
   async function doit() {
