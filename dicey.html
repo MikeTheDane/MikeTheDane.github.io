@@ -99,7 +99,10 @@
     }
     else{
       if(v.getUint8(2)==13){
-         log("Button!");
+         if(v.getUint8(3)==1)
+           log("Button Pressed");
+        else
+           log("Button Released");
       }
     }
   }
