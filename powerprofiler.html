@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="" target="_blank">
+  <link rel="stylesheet" href="styles.css">
+
+
+<script>
+
+  var inboundChar;
+  var outboundChar;
+  var device;
+  var server;
+  var service;
+  var current_sleepmode = 1; 
+  var current_conn_intv = 30;
+  var current_led = 0;
+  var current_adv_intv = 600;
+
+
+	function intro_over(){
+		document.getElementById("intro").style.display = "none";
+		document.getElementById("instructions").style.display = "none";
+		document.getElementById("logcard").style.display = "inline";
+    doit();
+	}
+
+  function log(text){
+   	var textarea = document.getElementById('log');
+   	textarea.value += "\n" + text;
+   	textarea.scrollTop = textarea.scrollHeight;
+  }
+
+  async function incomingData(event){
+    let readInValue = '';
+    readInValue = await outboundChar.readValue();
+    let decoder = new TextDecoder('utf-8');
+    log(decoder.decode(readInValue));
+  }
+
+  async function explore(){
+    try{
+      log('Getting CodeLess Service...');
+      service = await server.getPrimaryService('866d3b04-e674-40dc-9c05-b7f91bec6e83');
+      log('Getting CodeLess Inbound Command Characteristic...');
+      inboundChar = await service.getCharacteristic('914f8fb9-e8cd-411d-b7d1-14594de45425');
+    
+      log('Getting CodeLess Outbound Command Characteristic...');
+      outboundChar = await service.getCharacteristic('3bb535aa-50b2-4fbe-aa09-6b06dc59a404');
+    
+      log('Getting CodeLess Flow Control Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
+    
+      // Subscribe to notifications
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+
+      log('Ready to communicate');
+
+      document.getElementById("reconnect_option").style.display = "none";
+
+      document.getElementById("tools").style.display = "inline";
+
+      sendCmd("ATr+IOCFG=10,4");
+
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+  }  
+ 
+  async function doit() {
+    try {
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice({
+          filters: [{name: 'CodeLess'}],
+          optionalServices: ['866d3b04-e674-40dc-9c05-b7f91bec6e83']
+      });
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      
+      explore();
+
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+}
+  
+async function writesome() {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  try{
+    log('Sending Command (ATrI)...');
+    let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
+    await inboundChar.writeValue(value);
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+  
+async function sendAT() {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  var commandToSend = document.getElementById("cmd").value + "\0";  
+  try{
+    log('Sending Command (' + commandToSend + ')...');
+    let encoder = new TextEncoder('utf-8');
+    await inboundChar.writeValue(encoder.encode(commandToSend));
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+
+async function sendCmd(cmd) {
+  if (!inboundChar) {
+    log('GodDang');
+    return;
+  }
+  var commandToSend = cmd + "\0";  
+  try{
+    log('Sending Command (' + commandToSend + ')...');
+    let encoder = new TextEncoder('utf-8');
+    await inboundChar.writeValue(encoder.encode(commandToSend));
+  } catch(error) {
+    log('Failed ' + error);
+  }
+  
+}
+
+async function disconnect(){
+  if (!device) {
+    return;
+  }
+  log('Disconnecting from Bluetooth Device...');
+  if (device.gatt.connected) {
+    device.gatt.disconnect();
+    document.getElementById("tools").style.display = "none";
+    document.getElementById("reconnect_option").style.display = "inline";
+  } else {
+    log('> Bluetooth Device is already disconnected');
+  }
+
+}
+
+async function connect() {
+  log('Connecting to Bluetooth Device...');
+  await device.gatt.connect();
+  log('> Bluetooth Device connected');
+  explore();
+}
+
+function onDisconnected(event) {
+  // Object event.target is Bluetooth Device getting disconnected.
+  log('> Bluetooth Device disconnected');
+}
+
+async function reconnect() {
+  if (!device) {
+    return;
+  }
+  if (device.gatt.connected) {
+    log('> Bluetooth Device is already connected');
+    return;
+  }
+  try {
+    connect();
+  } catch(error) {
+    log('Argh! ' + error);
+  }
+
+}
+
+function sleepmode(mode){
+
+  if(current_sleepmode != mode){
+    log("Change to sleep mode requested by user: " + mode);
+    sendCmd("ATr+SLEEP=" + mode);
+    current_sleepmode = mode;
+  }
+}
+
+function conn_intv(intv){
+
+  if(current_conn_intv != intv){
+    log("Change to connection interval requested by user: " + intv);
+    sendCmd("ATr+GAPUPD=" + (intv/1.25));
+    current_conn_intv = intv;
+  }
+}
+
+function led(mode){
+
+  if(current_led != mode){
+    log("User requested LED change: " + mode);
+    sendCmd("ATr+IO=10," + mode);
+    current_led = mode;
+  }
+}
+
+function adv_intv(intv){
+  if(current_adv_intv != intv){
+    log("User requested change to advertising interval: " + intv);
+    sendCmd("ATr+ADVINTV=" + intv);
+    current_adv_intv = intv;
+  }
+}
+
+</script>
+
+</head>
+<body style="background-color:powderblue;">
+
+<div id="card">
+<h1 style="text-align: center">SmartBond&trade; Power Profiling</h1>
+</div><br>
+
+<div id="intro">
+<div id="card">
+<h1>Introduction</h1>
+This web application is intended for use with the Dialog Semiconductor DA14585 PRO Development kit and the Power Profiler tool of the Dialog Semiconductor SmartSnippets Toolbox. Visit the Dialog Semiconductor web site for details.<br><br>
+The web application will facilitate remote configuration of the DA14585 in order to demonstrate various modes of operation as they pertain to power consumption.<br><br>
+The web application ws developed using Web Bluetooth and has been tested using the Chrome browser on Windows 10. Please make sure to use the most recent release of Chrome.<br>
+</div><br>
+</div>
+
+
+
+<div id="instructions">
+<div id="card">
+<h1>Instructions</h1>
+
+<big>1</big>
+Connect the development kit to the PC and start the SmartSnippets Toolbox using the configuration shown here:
+<br><br><img src="img/ss_config.png"/>
+
+<br><br><big>2</big>
+Use the header pin configuration shown below (total of 7 jumpers):
+<br><br><img src="img/PROkit1.png"/>
+
+<br><br><big>3</big>
+Download this <a href="content/powerprofiler_585.bin">Demo Firmware File</a> and use the SmartSnippets Booter tool to load the code into system RAM of the DA14585. Alternatively, you can prepare the development kit for flash operation and load the firmware into flash. 
+
+<br><br><big>4</big>
+Now place the jumpers on the development kit as shown below (total of 5 jumpers):
+<br><br><img src="img/PROkit2.png"/>
+
+<br><br><big>5</big>
+Open the power profiler tool and click “initialize” and then “start”. You should see a plot similar to the screenshot below:
+<br><br><img src="img/ss_pp.png"/>
+<br>At this point we are ready to start the demonstration. Click the “Connect” button below to scan for the development kit:  
+<br><br><div id="my"><button onclick="intro_over()">Connect via Bluetooth</button></div>
+
+</div>
+</div>
+
+
+<div id="logcard" style="display:none">
+<div id="cardi">
+<b>Log:</b>
+<textarea id="log">Scanning for devices...</textarea>
+</div>
+</div>
+<br>
+
+<div id="tools" style="display:none">
+<div id="card">
+<div class="example">
+    
+    <b>Connection Interval:</b><br>
+    <div class="example">
+      <div><input id="radio1" onclick="conn_intv(this.value)" type="radio" name="radio1" value="7.5" >                   <label for="radio1">7.5ms</label></div>
+      <div><input id="radio2" onclick="conn_intv(this.value)" type="radio" name="radio1" value="10"  >                   <label for="radio2">10ms</label></div>
+      <div><input id="radio3" onclick="conn_intv(this.value)" type="radio" name="radio1" value="30"   checked="checked"> <label for="radio3">30ms</label></div>
+      <div><input id="radio4" onclick="conn_intv(this.value)" type="radio" name="radio1" value="60"  >                   <label for="radio4">60ms</label></div>
+      <div><input id="radio4" onclick="conn_intv(this.value)" type="radio" name="radio1" value="100" >                   <label for="radio4">100ms</label></div>
+    </div>
+    <hr>
+
+    <b>Sleep Mode:</b>
+    <div class="example">
+      <div><input id="radio6" onclick="sleepmode(this.value)" type="radio" name="radio2" value="1" checked="checked"> <label for="radio6">Sleep Mode Enabled</label></div>
+      <div><input id="radio7" onclick="sleepmode(this.value)" type="radio" name="radio2" value="0">                   <label for="radio7">Sleep Mode Disabled</label></div>
+    </div>
+    <hr>
+    
+    <b>LED:</b>
+    <div class="example">
+      <div><input id="radio8" onclick="led(this.value) "type="radio" name="radio3" value="0" checked="checked"> <label for="radio8">LED off</label></div>
+      <div><input id="radio9" onclick="led(this.value) "type="radio" name="radio3" value="1">                   <label for="radio9">LED on</label></div>
+    </div>
+    <hr>
+
+    <b>Advertising Interval (Disconnect to see result):</b>
+    <div class="example">
+      <div><input id="radio10" onclick="adv_intv(this.value)" type="radio" name="radio4" value="50"  >                   <label for="radio10">50ms  </label></div>
+      <div><input id="radio11" onclick="adv_intv(this.value)" type="radio" name="radio4" value="100" checked="checked">  <label for="radio11">100ms </label></div>
+      <div><input id="radio12" onclick="adv_intv(this.value)" type="radio" name="radio4" value="200" >                   <label for="radio12">200ms </label></div>
+      <div><input id="radio13" onclick="adv_intv(this.value)" type="radio" name="radio4" value="600" >                   <label for="radio13">600ms </label></div>
+      <div><input id="radio14" onclick="adv_intv(this.value)" type="radio" name="radio4" value="1000">                   <label for="radio14">1000ms</label></div>
+      <div><input id="radio15" onclick="adv_intv(this.value)" type="radio" name="radio4" value="4000">                   <label for="radio15">4000ms</label></div>
+    </div>
+
+  <br>
+  <div id="disconnect_option">
+    <div id="my"><button id="disconnect_button" onclick="disconnect()">Disconnect</button></div>
+  </div>
+
+</div>
+</div>
+</div>
+  <div id="reconnect_option" style="display:none">
+    <div id="card">
+    <div id="my"><button id="disconnect_button" onclick="reconnect()" >Reconnect</button></div>
+  </div>
+
+</body>
+</html>
