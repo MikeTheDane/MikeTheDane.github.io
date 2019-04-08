@@ -1,0 +1,170 @@
+<html>
+<head>
+<script>
+
+// Check for the various File API support.
+if (window.File && window.FileReader && window.FileList && window.Blob) {
+  // Great success! All the File APIs are supported.
+  // alert('Cool.');
+} else {
+  alert('The File APIs are not fully supported in this browser.');
+}
+
+
+</script>
+</head>
+<body>
+
+<textarea id="log"style="border:1px solid;width: 100%;height: 500px;">Log:</textarea>
+<output id="list"></output>
+
+<style>
+  #byte_content {
+    margin: 5px 0;
+    max-height: 100px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  #byte_range { margin-top: 5px; }
+</style>
+
+
+<div id="byte_range"></div>
+<div id="byte_content"></div>
+
+<button onclick="convert2bin()">calc</button>
+<br><button onclick="letsDoIt()">giveit</button>
+
+<script>
+  var files;
+  var position = 0;
+  var infile;
+  var infile_length;
+  var outfile_length=0;
+  var outfile = new Uint8Array(0x10000);
+  outfile.fill(0xFF);
+  
+  function convert2bin(){
+  	//infile_length = 1000;
+  	while (position < infile_length){
+  		let s = infile.substring(position+7,position+9);
+  		if(s != "00")
+  			{}//log(s + ": 0x" + parseInt(s, 16) + ",  " + position);
+  		else{
+  			let address = parseInt(infile.substring(position+3,position+7),16);
+  			//log("Address: 0x"+address.toString(16));
+  			let len = 16;
+  			for(i=0;i<len;i++){
+  				let b = parseInt(infile.substring(position+9+i*2,position+11+i*2),16);
+  				outfile[address+i] = b;
+  				//log("-" + outfile[address+i].toString(16));
+  			}
+  			//for(i=0;i<len;i++){
+  				//log(":" + outfile[address+i].toString(16));
+  			//}
+  			
+  			outfile_length = address + len;
+  		}
+  		
+  		find_next_colon();
+  	}	
+  	for(i=0x505;i<0x520;i++){
+  	  log("->" + outfile[i].toString(16));
+  	}
+  	log("Done!");
+  }
+
+  var saveByteArray = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (data, name) {
+        var blob = new Blob(data, {type: "octet/stream"}),
+            url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = name;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+  }());
+
+
+  function letsDoIt(){
+    //download('test.bin', outfile);
+    saveByteArray([outfile.slice(0,outfile_length)], 'test.bin');
+
+  }
+
+
+
+  function log(text){
+    	var textarea = document.getElementById('log');
+    	textarea.value += "\n" + text;
+    	textarea.scrollTop = textarea.scrollHeight;
+  }
+  
+  function find_next_colon(){
+     position = infile.indexOf(":",position + 1);
+     if(position<0)
+     	position = infile_length;
+  }
+
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+
+    files = evt.dataTransfer.files; // FileList object.
+
+    // files is a FileList of File objects. List some properties.
+    var output = [];
+    for (var i = 0, f; f = files[i]; i++) {
+      output.push('<li><strong>', escape(f.name), '</strong> (', f.type || 'n/a', ') - ',
+                  f.size, ' bytes, last modified: ',
+                  f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
+                  '</li>');
+    }
+
+    document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
+    readBlob();
+  }
+
+  function readBlob(opt_startByte, opt_stopByte) {
+      
+
+    var file = files[0];
+    
+    var start = parseInt(opt_startByte) || 0;
+    var stop = parseInt(opt_stopByte) || file.size - 1;
+
+    var reader = new FileReader();
+
+    // If we use onloadend, we need to check the readyState.
+    reader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+        document.getElementById('byte_content').textContent = evt.target.result;
+        infile = evt.target.result;
+        document.getElementById('byte_range').textContent = 
+            ['Read bytes: ', start + 1, ' - ', stop + 1,
+             ' of ', file.size, ' byte file'].join('');
+        infile_length = file.size;
+      }
+    };
+
+    var blob = file.slice(start, stop + 1);
+    reader.readAsBinaryString(blob);
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  // Setup the dnd listeners.
+  var dropZone = document.getElementById('log');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);
+</script>
+
+</body>
+</html>
