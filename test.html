@@ -59,7 +59,7 @@ async function writesome() {
   }
   try{
     log('Sending Command (ATrI)...');
-    let value = Uint8Array.of(0x41,0x54,0x72,0x49,0x00);
+    let value = Uint8Array.of(0x41,0x54,0x72,0x49);
     await inboundChar.writeValue(value);
   } catch(error) {
     log('Failed ' + error);
@@ -70,10 +70,10 @@ async function writesome() {
   
 async function sendAT() {
   if (!inboundChar) {
-    log('GodDang');
+    log('Something went wrong!');
     return;
   }
-  var commandToSend = document.getElementById("cmd").value + "\0";  
+  var commandToSend = document.getElementById("cmd").value;  
   try{
     log('Sending Command (' + commandToSend + ')...');
     let encoder = new TextEncoder('utf-8');
