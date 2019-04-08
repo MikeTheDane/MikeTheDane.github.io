@@ -1,0 +1,107 @@
+<html>
+<head>
+<script>
+
+// Check for the various File API support.
+if (window.File && window.FileReader && window.FileList && window.Blob) {
+  
+} else {
+  alert('The File APIs are not fully supported in this browser.');
+}
+
+</script>
+</head>
+<body>
+
+<textarea id="log"style="border:1px solid;width: 100%;height: 500px;">Drag Hex File here:</textarea>
+
+<script>
+  var files;
+  var position = 0;
+  var infile;
+  var infile_length;
+  var outfile_length=0;
+  var outfile = new Uint8Array(0x10000);
+  var nameOfOutput
+  
+  function log(text){
+   	var textarea = document.getElementById('log');
+   	textarea.value += "\n" + text;
+   	textarea.scrollTop = textarea.scrollHeight;
+  }
+
+  function convert2bin(){
+  	while (position < infile_length){
+		let s = infile.substring(position+7,position+9);
+  		if(s == "00"){
+  			let address = parseInt(infile.substring(position+3,position+7),16);
+  			let len = parseInt(infile.substring(position+1,position+3),16);
+  			for(i=0;i<len;i++){
+  				let b = parseInt(infile.substring(position+9+i*2,position+11+i*2),16);
+  				outfile[address+i] = b;
+  			}
+  			outfile_length = address + len;
+  		}	
+  		position = infile.indexOf(":",position + 1);
+     	if(position<0)
+     		position = infile_length;
+  	}
+  	log("File Conversion Complete");
+  	nameOfOutput = files[0].name.substring(0,files[0].name.lastIndexOf(".")) + ".bin";
+  	log("Download as "+nameOfOutput);
+  	saveByteArray([outfile.slice(0,outfile_length)], nameOfOutput);
+
+  }
+
+  var saveByteArray = (function () {
+    var a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+    return function (data, fileName) {
+        var blob = new Blob(data, {type: "octet/stream"}),
+            url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+  }());
+    
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    files = evt.dataTransfer.files; // FileList object.
+    readBlob();
+  }
+
+  function readBlob(opt_startByte, opt_stopByte) {
+    var file = files[0];
+    var reader = new FileReader();
+
+    reader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+        infile = evt.target.result;
+        infile_length = file.size;
+        convert2bin();
+      }
+    };
+
+    var blob = file.slice(0,file.size);
+    reader.readAsBinaryString(blob);
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  // Setup the dnd listeners.
+  outfile.fill(0xFF);
+  var dropZone = document.getElementById('log');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);
+</script>
+
+</body>
+</html>
