@@ -16,7 +16,8 @@
     let readInValue = '';
     readInValue = await outboundChar.readValue();
     let decoder = new TextDecoder('utf-8');
-    log(decoder.decode(readInValue));
+    let s = decoder.decode(readInValue); 
+    log("Received "+s.length + " characters: "+s);
   }
  
   async function doit() {
@@ -42,7 +43,7 @@
       log('Getting CodeLess Flow Control Characteristic...');
       const flowcontrolChar = await service.getCharacteristic('e2048b39-d4f9-4a45-9f25-1856c10d5639');
     
-      // Subscribe to notifications
+      log('Subscribing to CodeLess Notifications...');
       await flowcontrolChar.startNotifications();
       flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
     
