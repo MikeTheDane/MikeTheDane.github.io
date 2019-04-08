@@ -17,7 +17,7 @@
     readInValue = await outboundChar.readValue();
     let decoder = new TextDecoder('utf-8');
     let s = decoder.decode(readInValue); 
-    log("Received "+readInValue.length + " characters: "+s);
+    log("Received: >"+s+"<");
   }
  
   async function doit() {
