@@ -1,0 +1,473 @@
+<html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body style="background-color:powderblue;">
+
+<div id="card">
+<h1 style="text-align: center">SmartBond&trade; SUotA</h1>
+</div><br>
+
+<div id="logcard" style="display:inline">
+<div id="cardi">
+<b>Log:</b>
+<textarea id="log"></textarea>
+</div>
+</div>
+<br>
+
+<div id="dropfile_card" style="display:none;">
+  <div id="card"> 
+    <div style="text-align: center">
+      Drop a firmware file here (bin, hex, or img extension) ...<br><br>
+      <img src="drop_zone.png" style="width:121px;height:72px;"/>    
+    </div>
+  </div>
+  <br>
+</div>
+
+<div id="progress_card" style="display:none;">
+  <div id="card"> 
+    <div id="progress"><br>
+      <div class="progressbar_outer">
+        <div class="progressbar_bar" id="bar">
+        </div>
+      </div>
+      <div id="progresstext" style="font-family: courier; text-align: center">
+      </div>
+    </div>
+  </div>
+  <br>
+</div>
+
+<div id="connect_card">
+  <div id="card">
+    <div id="my">
+      <button type="button" onclick="connect_to_peer()">
+        Scan for devices
+      </button>
+    </div>
+  </div>
+  <br> 
+</div>
+
+<div id="refresh_card" style="display:none;">
+  <div id="card">
+    <div id="my">
+      <button type="button" onclick="location.reload()">
+        Try again
+      </button>
+    </div>
+  </div>
+  <br> 
+</div>
+
+<script>
+  var spotar_mem_dev;
+  var spotar_gpiomap;
+  var spotar_mem_info;
+  var spotar_patch_len;
+  var spotar_patch_data;
+  var spotar_serv_status;
+  var firmware_ptr = 0;
+  var chunk_sent = 0;
+
+  var files;
+  var position = 0;
+  var infile;
+  var infile_length;
+
+  var done;
+
+  var time_start;
+
+  SPOTAR_SERVICE = 0xFEF5;
+
+  SPOTA_MEM_DEV     = "8082caa8-41a6-4021-91c6-56f9b954cc34";
+  SPOTA_GPIOMAP     = "724249f0-5ec3-4b5f-8804-42345af08651";
+  SPOTA_MEM_INFO    = "6c53db25-47a1-45fe-a022-7c92fb334fd4";
+  SPOTA_PATCH_LEN   = "9d84b9a3-000c-49d8-9183-855b673fda31";
+  SPOTA_PATCH_DATA  = "457871e8-d516-4ca1-9116-57d0b17b9cb2";
+  SPOTA_SERV_STATUS = "5f78df94-798c-46f5-990a-b3eb6a065c88";
+
+  RESET_CMD  =  [0x00,0x00,0x00,0xFD];  // Reset SUotA target command
+  FINAL_CMD  =  [0x00,0x00,0x00,0xFE];  // Finalize SUotA command
+  ABORT_CMD  =  [0x00,0x00,0x00,0xFF];  // Abort SUotA command
+  
+  GPIO_CMD   =  [0x00,0x03,0x06,0x05];  // SPI_CLK=P00, SPI_SS=P03, SPI_MOSI=P06, SPI_MISO=P05 (devkit defaults)
+
+  FLASH_CMD  =  [0x00,0x00,0x00,0x13];  // Target firmware is stored in bank with the oldest image
+  EEPROM_CMD =  [0x00,0x00,0x00,0x12];  // Target firmware is stored in bank with the oldest image
+
+  BLOCK_SIZE =  0xA0;                   // Bytes per block over the air (0xA0 = 160 decimal)
+
+  img_header = [0x70,0x51,0xAA,0x00, 0x0C,0x69,0x00,0x00, 0x50,0xD2,0xB6,0x0D,  
+                0x36,0x2E,0x30,0x2E, 0x31,0x30,0x2E,0x35, 0x31,0x33,0x00,0xFF, 0xFF,0xFF,0xFF,0xFF,
+                0xC0,0x9F,0xB6,0x62,
+                0x00,0xFF,0xFF,0xFF, 0xFF,0xFF,0xFF,0xFF,
+                0xFF,0xFF,0xFF,0xFF, 0xFF,0xFF,0xFF,0xFF,
+                0xFF,0xFF,0xFF,0xFF, 0xFF,0xFF,0xFF,0xFF,
+                0xFF,0xFF,0xFF,0xFF, 0xFF,0xFF,0xFF,0xFF
+  ];
+
+  
+  function log(text)
+  {
+    var textarea = document.getElementById('log');
+    textarea.value += "\n" + text;
+    textarea.scrollTop = textarea.scrollHeight;
+  }
+
+  function progress(x,total){
+    var bar = document.getElementById('bar');
+    bar.style = "width:"+(100 * x/total).toString()+"%"; 
+    document.getElementById('progresstext').innerHTML = x.toString()+" of "+total.toString()+" Bytes uploaded";
+  }
+    
+  async function incomingData(event){
+    let v = event.target.value;
+      let x = v.getUint8(0);
+      if( x == 0x02){
+        progress(position,infile_length);
+        if((position<infile_length))
+          setTimeout(function(){upload_image();},10);
+        else if(!done){
+          done = true;
+          log("Image was transferred - Verifying...");
+          readInValue = await spotar_mem_info.readValue();
+          let result = ((readInValue.getUint8(0) + 256 * readInValue.getUint8(1)));//.toString(16)).toUpperCase()
+          log("Bytes received by peer: "+(result+1));
+
+          // Finalize
+          await spotar_mem_dev.writeValue(new Uint8Array(FINAL_CMD));   
+
+          try{ // Reset
+            await spotar_mem_dev.writeValue(new Uint8Array(RESET_CMD)); 
+          }
+          catch(err){
+          }
+
+          log("Update Completed."); 
+          log("Update time: "+ (Date.now()-time_start)/1000+"s");
+        }
+      }
+      else{
+        if(x==0x07)
+          log("Internal Memory Error. Not enough internal memory space for patch!");
+        if(x==0x08)
+          log("Invalid memory device!");
+        if(x==0x09)
+          log("Application error!");
+        if(x==0x11)
+          log("Invalid image bank!");
+        if(x==0x12)
+          log("Invalid image header!");
+        if(x==0x13)
+          log("Invalid image size!");
+        if(x==0x14)
+          log("Invalid product header!");
+        if(x==0x15)
+          log("Same image error!");
+        if(x==0x16)
+          log("Failed to read from external memory device!");
+      }
+  }
+
+  async function onDisconnected(){
+    document.getElementById("refresh_card").style.display = "inline";
+    document.getElementById("dropfile_card").style.display = "none";
+    log("Peer has disconnected.");
+  }
+ 
+  async function connect_to_peer() {
+  
+    firmware_ptr = 0;
+    chunk_sent = 0;
+    position = 0;
+    var name = "";
+    var device;
+
+    try {
+      log('Requesting Bluetooth Device...');
+
+      let options = {
+        filters: [
+          {services: [SPOTAR_SERVICE]}
+        ],
+        optionalServices: [SPOTAR_SERVICE]
+      }
+
+      document.getElementById("connect_card").style.display = "none";
+      document.getElementById("progress_card").style.display = "none";
+      document.getElementById("dropfile_card").style.display = "none";
+      
+      var textarea = document.getElementById('log');
+      textarea.value = "";
+
+      device  = await navigator.bluetooth.requestDevice(options);
+      device.addEventListener('gattserverdisconnected', onDisconnected);
+     
+      name = device.name;
+      log("Connected to ["+name+"]");
+
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      
+      //log('Mapping SUotA Service...');
+      const spotar_service = await server.getPrimaryService(SPOTAR_SERVICE);
+
+      //log(' Getting SPOTA_SERV_STATUS Characteristic...');
+      spotar_serv_status = await spotar_service.getCharacteristic(SPOTA_SERV_STATUS);
+    
+      //log('Subscribing to SPOTA_SERV_STATUS notifications ...');
+      await spotar_serv_status.startNotifications();
+      spotar_serv_status.addEventListener('characteristicvaluechanged', incomingData);
+
+      //log(' Getting SPOTA_MEM_DEV Characteristic...');
+      spotar_mem_dev = await spotar_service.getCharacteristic(SPOTA_MEM_DEV);
+    
+      //log(' Getting SPOTA_GPIOMAP Characteristic...');
+      spotar_gpiomap = await spotar_service.getCharacteristic(SPOTA_GPIOMAP);
+    
+      //log(' Getting SPOTA_MEM_INFO Characteristic...');
+      spotar_mem_info = await spotar_service.getCharacteristic(SPOTA_MEM_INFO);
+
+      //log(' Getting SPOTA_PATCH_LEN Characteristic...');
+      spotar_patch_len = await spotar_service.getCharacteristic(SPOTA_PATCH_LEN);
+    
+      //log(' Getting SPOTA_PATCH_DATA Characteristic...');
+      spotar_patch_data = await spotar_service.getCharacteristic(SPOTA_PATCH_DATA);
+    
+      await spotar_mem_dev.writeValue(new Uint8Array(FLASH_CMD));
+      
+      await spotar_gpiomap.writeValue(new Uint8Array(GPIO_CMD));
+      
+      await spotar_patch_len.writeValue(Uint8Array.of(BLOCK_SIZE,0x00));
+      
+      log('Ready to communicate.');
+
+      document.getElementById("dropfile_card").style.display = "inline";
+      
+    } catch(error) {
+      log('Failed: ' + error);
+      document.getElementById("refresh_card").style.display = "inline";
+    }
+  }
+
+  function handleFileSelect(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    files = evt.dataTransfer.files; // FileList object.
+    readBlob();
+  }
+
+  function toBytesInt32 (num) {
+    arr = new ArrayBuffer(4); // an Int32 takes 4 bytes
+    view = new DataView(arr);
+    view.setUint32(0, num, true); // byteOffset = 0; litteEndian = false
+    return arr;
+  }
+
+  function convert2bin(){
+    let tempStr = String.fromCharCode(0xFF).repeat(0x10000);
+    let idx = 0;
+    let temp_length = 0;
+    while (idx < infile_length){
+      let s = infile.substring(idx+7,idx+9);
+      if(s == "00"){
+        let address = parseInt(infile.substring(idx+3,idx+7),16);
+        let len = parseInt(infile.substring(idx+1,idx+3),16);
+        for(i=0;i<len;i++){
+          let b = parseInt(infile.substring(idx+9+i*2,idx+11+i*2),16);
+          tempStr =  tempStr.substring(0,address+i) + String.fromCharCode(b) + tempStr.substring(address+i+1);
+        }
+        temp_length = address + len;
+      } 
+      idx = infile.indexOf(":",idx + 1);
+      if(idx<0)
+        idx = infile_length;
+    }
+    log("File Conversion Complete.");
+    infile = tempStr.substring(0, temp_length);
+    infile_length = temp_length;
+  }
+
+  function hexStringDump(dumpstr){
+    let s="";
+    for(i=0;i<dumpstr.length;i++){
+      let c= dumpstr.charCodeAt(i).toString(16);
+      if(c.length<2)
+        c="0"+c;
+      s = s+ " 0x"+c;
+      if((i+1) % 16 == 0)
+        s=s+"\n";
+      else{
+            if((i+1) % 8 == 0)
+            s=s+"    ";
+      }
+    }
+    log(s)
+  }
+
+  function readBlob(opt_startByte, opt_stopByte) {
+    var file = files[0];
+    var reader = new FileReader();
+    document.getElementById("dropfile_card").style.display = "none";
+    reader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) { 
+        let filename = escape(file.name)
+        log("Update File: "+filename)
+        
+        infile = evt.target.result;
+        infile_length = file.size;
+
+        if(filename.slice(filename.lastIndexOf('.') + 1) == "hex"){
+          log("Converting hex file to binary...");
+          convert2bin();
+        }
+
+        if(filename.slice(filename.lastIndexOf('.') + 1) == "img"){
+          log("Removing image header");
+          infile =  infile.substring(0x40);
+          infile_length = infile_length - 0x40;
+        }
+
+        //hexStringDump(infile);
+        
+        let infile_crc32 = crc32(infile);
+
+        //log("CRC32:" + infile_crc32);
+        //log("File Length " + infile_length);
+        
+        let timestamp = Math.floor(Date.now() / 1000);
+
+        img_header[7]  = 0xFF & (infile_length & 0xff000000) >> 24;
+        img_header[6]  = 0xFF & (infile_length & 0x00ff0000) >> 16;
+        img_header[5]  = 0xFF & (infile_length & 0x0000ff00) >> 8;
+        img_header[4]  = 0xFF & (infile_length & 0x000000ff);
+
+
+        img_header[11] = 0xFF & (infile_crc32 & 0xff000000) >> 24;
+        img_header[10] = 0xFF & (infile_crc32 & 0x00ff0000) >> 16;
+        img_header[9]  = 0xFF & (infile_crc32 & 0x0000ff00) >> 8;
+        img_header[8]  = 0xFF & (infile_crc32 & 0x000000ff);
+
+        img_header[31] = 0xFF & (timestamp & 0xff000000) >> 24;
+        img_header[30] = 0xFF & (timestamp & 0x00ff0000) >> 16;
+        img_header[29] = 0xFF & (timestamp & 0x0000ff00) >> 8;
+        img_header[28] = 0xFF & (timestamp & 0x000000ff);
+       
+        let temp_str = "";
+        for(i=0;i<0x40;i++){
+          temp_str = temp_str + String.fromCharCode(img_header[i]);
+        }
+        
+        infile = temp_str + infile;
+        infile_length = infile_length + 0x40;
+        
+        log("Updating...");
+
+        // Display the progreess bar
+        document.getElementById("progress_card").style.display = "inline";
+        
+        // Calculate 8bit checksum and append it to the image 
+        let chksum = 0;
+        for(i=0; i<infile_length; i++)
+          chksum = 0xFF & (chksum ^ infile.charCodeAt(i));
+        infile = infile + String.fromCharCode(chksum);
+        infile_length++;
+
+        // log("Checksum: 0x"+ chksum.toString(16));
+        // Prepare for the update process
+        done = false;
+
+        time_start = Date.now();
+        upload_image();
+      }
+    };
+
+    var blob = file.slice(0,file.size);
+    reader.readAsBinaryString(blob);
+    
+  }
+
+  function handleDragOver(evt) {
+    evt.stopPropagation();
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'copy'; 
+  }
+
+  async function getChunk(count){
+    let data = new ArrayBuffer(count);
+    let dataview = new Uint8Array(data);
+    for(i=0; i<count;i++){
+      dataview[i] = infile.charCodeAt(position + i);
+    }
+    position = position + count;
+    return dataview; 
+  }
+
+  async function upload_image(){
+    let chunks_sent = 0;
+    let remaining = infile_length - position;
+    if(remaining < BLOCK_SIZE){
+      await spotar_patch_len.writeValue(Uint8Array.of(remaining,0x00));      
+    }
+
+    while( (position < infile_length) && (chunks_sent < (BLOCK_SIZE/20)) ){
+      chunks_sent++;     
+      if((infile_length - position) < 20){
+        let data2 = new ArrayBuffer(infile_length - position);
+        let dataview2 = new Uint8Array(data2);
+        for(i=0; i<(infile_length - position);i++){
+          dataview2[i] = infile.charCodeAt(position + i);
+        }
+        position = position + (infile_length - position);
+        await spotar_patch_data.writeValue(dataview2); 
+        break;
+      }
+
+      let data = new ArrayBuffer(20);
+      let dataview = new Uint8Array(data);
+      for(i=0; i<20;i++){
+        dataview[i] = infile.charCodeAt(position + i);
+      }
+      position = position + 20;
+       await spotar_patch_data.writeValue(dataview);      
+    }
+  }
+
+  var makeCRCTable = function(){
+    var c;
+    var crcTable = [];
+    for(var n =0; n < 256; n++){
+        c = n;
+        for(var k =0; k < 8; k++){
+            c = ((c&1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        crcTable[n] = c;
+    }
+    return crcTable;
+  }
+
+  var crc32 = function(str) {
+    var crcTable = window.crcTable || (window.crcTable = makeCRCTable());
+    var crc = 0 ^ (-1);
+
+    for (var i = 0; i < str.length; i++ ) {
+      crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    }
+
+    return (crc ^ (-1)) >>> 0;
+  }
+
+  // Setup the drag&drop listeners.
+  var dropZone = document.getElementById('dropfile_card');
+  dropZone.addEventListener('dragover', handleDragOver, false);
+  dropZone.addEventListener('drop', handleFileSelect, false);  
+
+</script>  
+</body>
+</html>
