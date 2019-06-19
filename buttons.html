@@ -1,0 +1,93 @@
+<html>
+<head>
+
+<script>
+  
+  BTN_SERVICE     = "edfec63e-9910-7bac-5241-d8bda69329af";
+  BTN_CHAR        = "6c290d3e-1c03-acf1-ab48-a9b908b7e79e";
+
+  var inboundChar;
+  var outboundChar;
+ 
+  function log(text)
+  {
+    var textarea = document.getElementById('log');
+    textarea.value += "\n" + text;
+    textarea.scrollTop = textarea.scrollHeight;
+  }
+  
+  async function incomingData(event){
+    let value = event.target.value;
+    let event_type = value.getUint8(0);
+    if(event_type == 0)
+    {
+      document.getElementById('cir1').setAttribute("r",0);
+      document.getElementById('cir2').setAttribute("r",0);
+    }
+    if(event_type == 1)
+    {
+      document.getElementById('cir1').setAttribute("r",74);
+      document.getElementById('cir2').setAttribute("r",0);
+    }
+    if(event_type == 2)
+    {
+      document.getElementById('cir1').setAttribute("r",0);
+      document.getElementById('cir2').setAttribute("r",74);
+    } 
+  }
+ 
+  async function ble_connect() {
+    try {
+      
+      let options = {
+        filters: [
+          {services: [BTN_SERVICE]}
+        ],
+        optionalServices: [BTN_SERVICE]
+      }
+
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice(options);
+      
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      
+      log('Getting Button Service...');
+	    const service = await server.getPrimaryService(BTN_SERVICE);
+        	    
+      log('Getting Button Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic(BTN_CHAR);
+    
+      log("Subscribing to notifications...");
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+    
+      log('Ready to communicate');
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+}
+  
+</script>  
+</head>  
+
+<body>
+  <h1>Button test:</h1>
+
+  <button type="button" onclick="ble_connect()">
+    Click me to scan for BLE devices.
+  </button>
+  <br/>
+  <br/>
+  
+  <textarea id="log" rows="8" cols="45" >Log:</textarea>
+  <br/>
+  
+  <svg height="160" width="320">
+    <circle id = "bgnd" cx="80" cy="80" r="75" stroke="black" stroke-width="3" fill="white" />
+    <circle id = "cir1" cx="80" cy="80" r="0" stroke="black" stroke-width="3" fill="red" />
+    <circle id = "bgnd" cx="240" cy="80" r="75" stroke="black" stroke-width="3" fill="white" />
+    <circle id = "cir2" cx="240" cy="80" r="0" stroke="black" stroke-width="3" fill="red" />
+  </svg>
+</body>
+</html>
