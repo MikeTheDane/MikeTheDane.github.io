@@ -1,0 +1,332 @@
+<html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body style="background-color:powderblue;" onload="on_html_loaded()">
+
+<script src="suota.js"></script>
+
+<div id="card">
+  <table style="width:100%"><tr><td>
+  <h1 >SmartBond&trade; SUotA</h1></td>
+  <td>
+    <table align="right"><tr><td>
+      <img id="info_icon" src="info_icon.png" height="40px" style="width: 40px;" onmouseover="document.body.style.cursor = 'pointer'" onmouseout="document.body.style.cursor = 'auto'" onclick="open_information()"/>
+      </td>
+      <td>
+      <img id="settings_icon" src="settingsicon.png" height="40px" style="width: 40px;" onmouseover="document.body.style.cursor = 'pointer'" onmouseout="document.body.style.cursor = 'auto'" onclick="open_settings()"/>
+      </td>
+      </tr>
+      </table>
+    </td></tr>
+  </table>
+</div><br>
+
+<div id="information" style="display:none">
+<div id="intro">
+<div id="card">
+<table style="width:100%"><tr><td>
+  <h1>Introduction</h1></td>
+  <td>
+    <table align="right"><tr>
+      <td>
+      <img id="settings_icon" src="close.png" height="40px" style="width: 40px;" onmouseover="document.body.style.cursor = 'pointer'" onmouseout="document.body.style.cursor = 'auto'" onclick="close_information()"/>
+      </td>
+      </tr>
+      </table>
+    </td></tr>
+  </table>
+This web application is intended for demonstration of the Software-Update-over-the Air (SUotA) provided by Dialog Semiconductor. The demonstrator is suited for use with a Dialog Semiconductor DA14585 development kit or with the Dialog DA14585 IoT Multi Sensor.<br/><br/>
+Follow the setup instructions below and visit the Dialog Semiconductor web site for details.<br/><br/>
+The web application was developed using Web Bluetooth and has been tested using the Chrome browser on Windows 10 and should also work in the Chrome Browser on a MAC and any ChromeBook. Please make sure to use the most recent release of the Chrome Browser.<br><br>
+
+<h1>Using the DA14585 IoT Multi Sensor</h1>
+<img src="sensor_iot.png"/><br>
+
+<big>1</big>
+Download the <a href="SUotA_images.zip"><u>demonstration images</u></a> file folder and extract the files to any folder location on your PC or MAC. Leave the extracted folder open so you can drag them onto the browser when prompted to do so.   
+<br>
+<br><br><big>2</big>
+Power up your DA14585 IoT Multi Sensor to make it advertise. Then click the "Scan for Devices" button below and select the IoT Multi Sensor from the BLE scan window.
+<br>
+<br><br><big>3</big>
+Drag and drop one of the demonstration images onto the drop zone icon when it appears. The firmware upgrade should start immediately.
+<br>
+<br><br><big>4</big>
+After the upgrade has succeeded, make a second attempt to see that the IoT Multi Sensor now advertises with a different name. Don't forget to load the original IoT Sensor firmware image when you are done playing with SUotA.<br/><br/>   
+
+</div>
+<br/>
+</div>
+</div>
+
+<div id="settings" style="display:inline">
+  <div id="card" style="font-family: courier;">
+  
+    <table style="width:100%">
+    <tr>
+    <td>
+    <div id="settings_view">
+        <b>
+        Dialog SoC: <span id="sw_soc">DA14585</span>
+        <br>
+        NVM: <span id="sw_nvm">SPI Flash</span>
+        <br>
+        GPIOs: <span id="sw_gpio">CLK=P0_0, SS=P0_3, MISO=P0_5, MOSI=P0_6</span>
+        <br>
+        Block Size: <span id="sw_blocksize">160</span>
+      </b>
+    </div>
+    </td>
+    </tr>
+    </table>
+  </div>
+</div>
+
+<div id="settings_card" style="display:none">
+  <div id="card">
+    <table style="width:100%"><tr><td>
+  <h1>Hardware Settings</h1></td>
+  <td>
+    <table align="right"><tr>
+      <td>
+      <img id="settings_icon" src="close.png" height="40px" style="width: 40px;" onmouseover="document.body.style.cursor = 'pointer'" onmouseout="document.body.style.cursor = 'auto'" onclick="store_settings(false)"/>
+      </td>
+      </tr>
+      </table>
+    </td></tr>
+  </table>
+        <label><b>Non-volatile storage type:</b></label>
+        <label class="container">SPI FLash
+          <input id="nvm_flash" type="radio" checked="checked" name="radio" onclick="document.getElementById('saveBtn').style.display = 'inline';">
+          <span class="checkmark"></span>
+        </label>
+        <label class="container">I2C EEPROM
+          <input type="radio" name="radio" onclick="alert('Sorry, EEPROM is not yet supported!');document.getElementById('nvm_flash').checked=checked;">
+          <span class="checkmark"></span>
+        </label>
+        <br/>
+        <b>NVM GPIOs:</b>
+
+        <table>
+        <tr><td>
+        SPI_CLK
+        </td><td>
+        <select id="gpio_spi_clk">
+          <option selected="selected" value="00">P0_0</option>
+          <option value="01">P0_1</option>
+          <option value="02">P0_2</option>
+          <option value="03">P0_3</option>
+          <option value="04">P0_4</option>
+          <option value="05">P0_5</option>
+          <option value="06">P0_6</option>
+          <option value="07">P0_7</option>
+          <option value="10">P1_0</option>
+          <option value="11">P1_1</option>
+          <option value="12">P1_2</option>
+          <option value="13">P1_3</option>
+          <option value="20">P2_0</option>
+          <option value="21">P2_1</option>
+          <option value="22">P2_2</option>
+          <option value="23">P2_3</option>
+          <option value="24">P2_4</option>
+          <option value="25">P2_5</option>
+          <option value="26">P2_6</option>
+          <option value="27">P2_7</option>
+          <option value="28">P2_8</option>
+          <option value="29">P2_9</option>
+          <option value="30">P3_0</option>
+          <option value="31">P3_1</option>
+          <option value="32">P3_2</option>
+          <option value="33">P3_3</option>
+          <option value="34">P3_4</option>
+          <option value="35">P3_5</option>
+          <option value="36">P3_6</option>
+          <option value="37">P3_7</option>       
+        </select></td></tr>
+
+        <tr><td>
+        SPI_SS
+        </td><td>
+        <select id="gpio_spi_ss">
+          <option value="00">P0_0</option>
+          <option value="01">P0_1</option>
+          <option value="02">P0_2</option>
+          <option selected="selected" value="03">P0_3</option>
+          <option value="04">P0_4</option>
+          <option value="05">P0_5</option>
+          <option value="06">P0_6</option>
+          <option value="07">P0_7</option>
+          <option value="10">P1_0</option>
+          <option value="11">P1_1</option>
+          <option value="12">P1_2</option>
+          <option value="13">P1_3</option>
+          <option value="20">P2_0</option>
+          <option value="21">P2_1</option>
+          <option value="22">P2_2</option>
+          <option value="23">P2_3</option>
+          <option value="24">P2_4</option>
+          <option value="25">P2_5</option>
+          <option value="26">P2_6</option>
+          <option value="27">P2_7</option>
+          <option value="28">P2_8</option>
+          <option value="29">P2_9</option>
+          <option value="30">P3_0</option>
+          <option value="31">P3_1</option>
+          <option value="32">P3_2</option>
+          <option value="33">P3_3</option>
+          <option value="34">P3_4</option>
+          <option value="35">P3_5</option>
+          <option value="36">P3_6</option>
+          <option value="37">P3_7</option>     
+        </select></td></tr>
+
+        <tr><td>
+        SPI_MISO
+        </td><td>
+        <select id="gpio_spi_miso">
+          <option value="00">P0_0</option>
+          <option value="01">P0_1</option>
+          <option value="02">P0_2</option>
+          <option value="03">P0_3</option>
+          <option value="04">P0_4</option>
+          <option selected="selected" value="05">P0_5</option>
+          <option value="06">P0_6</option>
+          <option value="07">P0_7</option>
+          <option value="10">P1_0</option>
+          <option value="11">P1_1</option>
+          <option value="12">P1_2</option>
+          <option value="13">P1_3</option>
+          <option value="20">P2_0</option>
+          <option value="21">P2_1</option>
+          <option value="22">P2_2</option>
+          <option value="23">P2_3</option>
+          <option value="24">P2_4</option>
+          <option value="25">P2_5</option>
+          <option value="26">P2_6</option>
+          <option value="27">P2_7</option>
+          <option value="28">P2_8</option>
+          <option value="29">P2_9</option>
+          <option value="30">P3_0</option>
+          <option value="31">P3_1</option>
+          <option value="32">P3_2</option>
+          <option value="33">P3_3</option>
+          <option value="34">P3_4</option>
+          <option value="35">P3_5</option>
+          <option value="36">P3_6</option>
+          <option value="37">P3_7</option>     
+        </select></td></tr>
+
+        <tr><td>
+        SPI_MOSI
+        </td><td>
+        <select id="gpio_spi_mosi">
+          <option value="00">P0_0</option>
+          <option value="01">P0_1</option>
+          <option value="02">P0_2</option>
+          <option value="03">P0_3</option>
+          <option value="04">P0_4</option>
+          <option value="05">P0_5</option>
+          <option selected="selected" value="06">P0_6</option>
+          <option value="07">P0_7</option>
+          <option value="10">P1_0</option>
+          <option value="11">P1_1</option>
+          <option value="12">P1_2</option>
+          <option value="13">P1_3</option>
+          <option value="20">P2_0</option>
+          <option value="21">P2_1</option>
+          <option value="22">P2_2</option>
+          <option value="23">P2_3</option>
+          <option value="24">P2_4</option>
+          <option value="25">P2_5</option>
+          <option value="26">P2_6</option>
+          <option value="27">P2_7</option>
+          <option value="28">P2_8</option>
+          <option value="29">P2_9</option>
+          <option value="30">P3_0</option>
+          <option value="31">P3_1</option>
+          <option value="32">P3_2</option>
+          <option value="33">P3_3</option>
+          <option value="34">P3_4</option>
+          <option value="35">P3_5</option>
+          <option value="36">P3_6</option>
+          <option value="37">P3_7</option>     
+        </select></td></tr>
+
+        </table>
+
+        <div id="my">
+          <button type="button" onclick="store_settings(false)">
+            Cancel
+          </button>
+          <button id="saveBtn" type="button" onclick="store_settings(true)">
+            Save
+          </button>
+        </div>
+  </div>
+</div><br>
+
+
+<div id="logcard" style="display:inline">
+  <div id="cardi">
+    <b>Log:</b>
+    <textarea id="log"></textarea>
+  </div>
+</div><br>
+
+
+<div id="dropfile_card" style="display:none;">
+  <div id="card"> 
+    <div style="text-align: center">
+      Drop a firmware file here (bin, hex, or img extension) ...<br><br>
+      <img src="drop_zone.png" style="width:121px;height:72px;"/><br>   
+      ...or...<br><br>  
+      <label for="file-upload" class="custom-file-upload">
+      <i class="fa fa-cloud-upload"></i>Browse for a file
+      </label>
+      <input type="file" id="file-upload" accept=".hex,.img,.bin" name="files[]" multiple /> 
+    </div>
+
+  </div>
+  <br>
+</div>
+
+<div id="progress_card" style="display:none;">
+  <div id="card"> 
+    <div id="progress"><br>
+      <div class="progressbar_outer">
+        <div class="progressbar_bar" id="bar">
+        </div>
+      </div>
+      <div id="progresstext" style="font-family: courier; text-align: center">
+      </div>
+    </div>
+  </div>
+  <br>
+</div>
+
+<div id="connect_card">
+  <div id="card">
+    <div id="my">
+      <button type="button" onclick="connect_to_peer()">
+        Scan for devices
+      </button>
+    </div>
+  </div>
+  <br> 
+</div>
+
+<div id="refresh_card" style="display:none;">
+  <div id="card">
+    <div id="my">
+      <button type="button" onclick="location.reload()">
+        Try again
+      </button>
+    </div>
+  </div>
+  <br> 
+</div>
+
+</body>
+</html>
