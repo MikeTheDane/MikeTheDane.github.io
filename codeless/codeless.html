@@ -32,7 +32,7 @@
 				let readInValue = await outboundChar.readValue();
 				let decoder = new TextDecoder('utf-8');
 				// Log the incoming string (format slightly)
-				log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n',''));
+				log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
 			}
 
 			// Scan, connect and explore CodeLess BLE device
@@ -106,7 +106,7 @@
 		<br/>
 		<br/>Log:<br/>
 		<textarea id="log" rows="25" cols="60" ></textarea>
-		<br/><br/>
+		<br/><br/><br/>
 		<button type="button" onclick="sendAT('ATrI')">
 			Send ATrI
 		</button>
