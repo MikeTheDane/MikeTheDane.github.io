@@ -67,10 +67,11 @@
 
 			// Send an AT command to the CodeLess BLE peer
 			async function sendAT(cmd) {
+				// Display the command in the log
+				log(' -> ' + commandToSend );
 				// Append an extra character as expected by CodeLess
 				var commandToSend = cmd + "\0";
 				try{
-					log(' -> ' + commandToSend );
 					let encoder = new TextEncoder('utf-8');
 					// Send command via GATT Write request 
 					await inboundChar.writeValue(encoder.encode(commandToSend));
