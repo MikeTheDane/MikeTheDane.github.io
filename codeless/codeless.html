@@ -68,7 +68,7 @@
 			// Send an AT command to the CodeLess BLE peer
 			async function sendAT(cmd) {
 				// Display the command in the log
-				log(' -> ' + commandToSend );
+				log(' -> ' + cmd );
 				// Append an extra character as expected by CodeLess
 				var commandToSend = cmd + "\0";
 				try{
