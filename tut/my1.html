@@ -1,0 +1,335 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Feel the Pong</title>
+    <script src="phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 10;
+        }
+    </style>
+    <link rel="shortcut icon" href="favicon.png"/>
+	
+</head>
+<body bgcolor="#31b3d4">
+  
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="game"></div>
+  <script src="phaser.min.js"></script>
+  
+  <div id="pairing" style="display: inline;">
+
+  <button type="button" onclick="doit()">
+    Click me to scan for a paddle
+  </button>
+  <br/>
+  <textarea id="log" rows="15" cols="100" >Log:</textarea>
+  <br/>
+  <br/>
+
+  </div>
+
+</body>
+
+<script type="text/javascript">
+
+  let bomb;
+  let swallhit;
+  let rotation = 0;
+  let paddle;
+  
+
+
+  let score = 0;
+  
+  let hasplayed = false;
+
+  var platforms;
+  
+  var text;
+  //////////////
+
+    let direction = 0;
+    var logo;
+
+    let halted = true;
+
+    let position = 400;
+
+    var inboundChar;
+    var outboundChar;
+    
+    function log(text)
+    {
+        var textarea = document.getElementById('log');
+        textarea.value += "\n" + text;
+        textarea.scrollTop = textarea.scrollHeight;
+    }
+
+    async function incomingData(event){
+    let v = event.target.value;
+    
+    if( v.getUint8(2)==1){
+        
+    	let z = v.getUint8(9) + 256 * v.getUint8(10);
+    	if (z>=0x8000)
+        	z=-(65535-z);
+
+    	position = 400 - z * 312/12000;
+
+        log(z + ", " + position);
+    }
+    else{
+      if(v.getUint8(2)==13){
+         if(v.getUint8(3)==1)
+         {
+           	log("Button Pressed");
+           	bomb.setVelocityY(-600);
+			bomb.setVelocityX(800);
+			var textarea = document.getElementById('log');
+        	textarea.value = "";
+        	direction = 0;
+        	paddle.y = 400;
+        	halted = false;
+        	rotation = 0;
+
+         }
+        else
+           log("Button Released");
+      }
+    }
+  }
+ 
+  async function doit() {
+    
+    try {
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice({
+          filters: [{name: 'IoT-585'}],
+          optionalServices: ['2ea78970-7d44-44bb-b097-26183f402400']
+      });
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      log('Getting IoT Sensor Service...');
+      const service = await server.getPrimaryService('2ea78970-7d44-44bb-b097-26183f402400');
+      log('Getting IoT Command Characteristic...');
+      inboundChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f402409');
+    
+      log('Getting IoT Reply Characteristic...');
+      outboundChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f40240a');
+    
+      log('Getting Sensor Data Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic('2ea78970-7d44-44bb-b097-26183f402410');
+    
+      // Subscribe to notifications
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+      
+      try{
+        log('Sending Start Command...');
+        let value = Uint8Array.of(0x01);
+        await inboundChar.writeValue(value);
+      } catch(error) {
+        log('Failed ' + error);
+      }
+    
+      log('Ready to communicate');
+
+       document.getElementById("pairing").style.display = "none";
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+}
+
+  //////////////
+
+  const config = {
+  type: Phaser.AUTO,
+  parent: 'game',
+  width: 1200,
+  heigth: 800,
+  backgroundColor: '#31b3d4',
+  scale: {
+   //mode: Phaser.Scale.RESIZE,
+   autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  scene: {
+    preload,
+    create,
+    update,
+  },
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: false
+    },
+  }
+};
+
+// Create the game instance
+const game = new Phaser.Game(config);
+
+
+    function preload ()
+    {
+		this.load.image('bomb', 'assets/bomb.png');
+		this.load.image('ground', 'assets/side.png');
+		this.load.image('endwall', 'assets/endwall.png');
+		this.load.image('paddle', 'assets/paddle.png');
+		this.load.audio('paddlehit','assets/squit.wav');
+		this.load.audio('wallhit','assets/wall.wav');
+    	this.load.audio('endhit','assets/battery.wav');}
+
+    function create ()
+    {
+        	
+		text = this.add.text(600, 50, '0 is no big deal').setFontSize(54).setFontFamily("Arial").setOrigin(0.5);
+		
+		bomb = this.physics.add.sprite(
+			100, // x position
+			400, // y position
+			'bomb' // key of image for the sprite
+		);
+		
+		paddle = this.physics.add.sprite(
+			30, // x position
+			400, // y position
+			'paddle' // key of image for the sprite
+		);
+		paddle.setScale(0.5);
+		paddle.setCollideWorldBounds(true);
+				
+		swallhit = this.sound.add('wallhit');
+		endhit = this.sound.add('endhit');
+		paddlehit = this.sound.add('paddlehit');
+				
+		bomb.setCollideWorldBounds(true);
+		bomb.setBounce(1,1);
+		
+		this.physics.world.checkCollision.left = false;
+		this.physics.world.checkCollision.right = false;
+		this.physics.world.checkCollision.up = false;
+		this.physics.world.checkCollision.down = false;
+	
+		//bomb.setVelocityY(-600);
+		//bomb.setVelocityX(800);
+		bomb.setScale(4);
+				
+		platforms = this.physics.add.staticGroup();
+
+		//  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+		platforms.create(600, 760, 'ground');
+		platforms.create(600, 8, 'ground');
+		platforms.create(1192, 400, 'endwall');
+		
+		
+		this.physics.add.collider(bomb, platforms, hitWall, null, this);
+		this.physics.add.collider(bomb, paddle, hitPaddle, null, this);
+		paddle.setImmovable(true);
+		
+		cursors = this.input.keyboard.createCursorKeys();
+	}
+	
+    function update ()
+    {
+		if(!halted)
+			bomb.angle += 5 * rotation;
+		
+		if (isGameOver(this.physics.world))
+		{
+			endhit.play();
+			//alert("LOOOSER!");
+			bomb.x = 100;
+			bomb.y = paddle.y;
+			bomb.setVelocityY(0);
+			bomb.setVelocityX(0);
+			halted = true;
+		}
+				
+		paddle.body.setVelocityX(0);
+        paddle.body.setVelocityY(0);
+        
+        paddle.y = position;
+
+		if(paddle.y < 88)
+		{
+		    paddle.y = 88;
+		    //a_state = 0;
+		    //direction = 0;
+		}
+		if(paddle.y > 680)
+		{
+			//direction = 0;
+			//a_state = 0;
+		    paddle.y = 680;
+		}
+
+		if(halted)
+			bomb.y = paddle.y;
+
+	}
+
+	function hitWall (bomb,platforms)
+	{
+		swallhit.play();
+	
+		if(bomb.y > 400){ 
+			if (bomb.body.velocity.x > 0)
+				rotation = 1
+			else 
+				rotation = -1;
+		}
+		else{
+			if (bomb.body.velocity.x > 0)
+				rotation = -1
+			else 
+				rotation = 1;
+		}
+		
+	}
+
+	function hitPaddle (bomb,platforms)
+	{
+		paddlehit.play();
+	
+		if(bomb.body.velocity.y > 0)
+			rotation = 1;
+		else 
+			rotation = -1;
+		
+		let newYVelocity = 10 *(bomb.y - paddle.y);
+		
+		// Keep the ball Y velocity at or below 850 and at or above -850
+		if(newYVelocity > 850)
+			newYVelocity = 850;
+		if(newYVelocity < -850)
+			newYVelocity = -850;
+		
+		bomb.setVelocityY(newYVelocity);
+		
+		if(bomb.x>paddle.x){
+			bomb.setVelocityX(800);
+			score += 1;
+			text.text = score;
+		}
+		else
+			bomb.setVelocityX(-800);
+		
+	}
+
+
+function isGameOver(world) {
+  let isItOver = false;
+  
+  if((bomb.body.x < -100)||(bomb.body.y<0)||(bomb.body.y>800))
+    isItOver = true;
+  
+  return isItOver
+}
+
+
+</script>
+
+
+</html>
