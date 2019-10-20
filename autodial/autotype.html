@@ -27,7 +27,7 @@ async function incomingData(event){
 	// Log the incoming string (format slightly)
 	//log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
 	let s = decoder.decode(readInValue).replace('\r','').replace('\n','').replace('\0','');
-	document.getElementById("demo").innerHTML = "<h1>"+s+"</h1>";
+	document.getElementById("demo").innerHTML = "<h1>"+s.substring(1)+"</h1>";
 }
 
 // Scan, connect and explore CodeLess BLE device
