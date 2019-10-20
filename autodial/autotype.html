@@ -76,27 +76,32 @@ async function sendAT(cmd) {
 }
 
 
-function play_btn_pressed() {
-  document.getElementById("demo").innerHTML = "Play";
+  function play_btn_pressed() {
+ 	navigator.vibrate([500]);
+	document.getElementById("demo").innerHTML = "Play";
   sendAT("|play#");
 }
 
 function backwards_btn_pressed() {
+  navigator.vibrate([500]);
   document.getElementById("demo").innerHTML = "Back";
   sendAT("|back#");
 }
 
 function from_start_btn_pressed() {
+  navigator.vibrate([500]);
   document.getElementById("demo").innerHTML = "From Start";
   sendAT("|from_start#");
 }
 
 function forward_btn_pressed() {
+  navigator.vibrate([500]);
   document.getElementById("demo").innerHTML = "Forward";
   sendAT("|forward#");
 }
 
 function exit_btn_pressed() {
+  navigator.vibrate([500]);
   document.getElementById("demo").innerHTML = "Exit";
   sendAT("|exit#");
 }
