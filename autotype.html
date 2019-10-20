@@ -1,0 +1,352 @@
+<html>
+<head>
+<script>
+
+var inboundChar;
+var outboundChar;
+			
+// Define the codeless UUIDs 
+var CODELESS_SVC_UUID 	= "866d3b04-e674-40dc-9c05-b7f91bec6e83";
+var INBOUND_CHAR_UUID 	= "914f8fb9-e8cd-411d-b7d1-14594de45425";
+var OUTBOUND_CHAR_UUID 	= "3bb535aa-50b2-4fbe-aa09-6b06dc59a404";
+var CNTRL_CHAR_UUID		= "e2048b39-d4f9-4a45-9f25-1856c10d5639";
+
+// Display text in log field text area 
+function log(text)
+{
+	var textarea = document.getElementById('log');
+	textarea.value += "\n" + text;
+	textarea.scrollTop = textarea.scrollHeight;
+}
+
+// Incoming GATT notification was received
+async function incomingData(event){
+	// Read data from BLE CodeLess peer
+	let readInValue = await outboundChar.readValue();
+	let decoder = new TextDecoder('utf-8');
+	// Log the incoming string (format slightly)
+	log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
+}
+
+// Scan, connect and explore CodeLess BLE device
+async function ble_connect() {
+	try {
+		// Define a scan filter and prepare for interaction with Codeless Service
+		log('Requesting Bluetooth Device...');
+		device  = await navigator.bluetooth.requestDevice({
+			filters: [{name: 'CodeLess'}],
+			optionalServices: [CODELESS_SVC_UUID]
+		});		
+		// Connect to device and perform attribute discovery
+		log('Connecting to GATT Server...');
+		server = await device.gatt.connect();
+		log('Exploring CodeLess Service...');
+		const service = await server.getPrimaryService(CODELESS_SVC_UUID);
+		log('  Mapping CodeLess Inbound Command Characteristic...');
+		inboundChar = await service.getCharacteristic(INBOUND_CHAR_UUID);
+		log('  Mapping CodeLess Outbound Command Characteristic...');
+		outboundChar = await service.getCharacteristic(OUTBOUND_CHAR_UUID);
+		log('  Mapping CodeLess Flow Control Characteristic...');
+		const flowcontrolChar = await service.getCharacteristic(CNTRL_CHAR_UUID);
+		// Subscribe to notifications
+		await flowcontrolChar.startNotifications();
+		flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+		log('Ready to communicate!\n');
+	}
+	catch(error) {
+		log('Failed: ' + error);
+	}
+}
+
+// Send an AT command to the CodeLess BLE peer
+async function sendAT(cmd) {
+	// Display the command in the log
+	log(' -> ' + cmd );
+	// Append an extra character as expected by CodeLess
+	var commandToSend = cmd + "\0";
+	try{
+		let encoder = new TextEncoder('utf-8');
+		// Send command via GATT Write request 
+		await inboundChar.writeValue(encoder.encode(commandToSend));
+	} 
+	catch(error) {
+		log('Failed: ' + error);
+	}
+}
+
+
+function play_btn_pressed() {
+  document.getElementById("demo").innerHTML = "Play";
+  sendAT("play");
+}
+
+function backwards_btn_pressed() {
+  document.getElementById("demo").innerHTML = "Back";
+  sendAT("back");
+}
+
+function from_start_btn_pressed() {
+  document.getElementById("demo").innerHTML = "From Start";
+  sendAT("from_start");
+}
+
+function forward_btn_pressed() {
+  document.getElementById("demo").innerHTML = "Forward";
+  sendAT("forward");
+}
+
+function exit_btn_pressed() {
+  document.getElementById("demo").innerHTML = "Exit";
+  sendAT("exit");
+}
+
+</script>
+</head>
+<body style="background-color:#e6e6e6ff">
+<button type="button" onclick="ble_connect()">
+	Click me to scan for AutoType BLE devices.
+</button>
+<br/>
+<br/>Log:<br/>
+<textarea id="log" rows="6" cols="60" ></textarea>
+<br/><br/><br/>
+
+<div id="demo">-</div>
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 210 297"
+   height="297mm"
+   width="210mm">
+  <defs
+     id="defs2">
+    <filter
+       height="1.0504"
+       y="-0.025199999"
+       width="1.0504"
+       x="-0.025200001"
+       id="filter1297"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur1299"
+         stdDeviation="0.55221108" />
+    </filter>
+    <filter
+       height="1.0504"
+       y="-0.0252"
+       width="1.0504"
+       x="-0.0252"
+       id="filter1335"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur1337"
+         stdDeviation="0.25598438" />
+    </filter>
+    <filter
+       height="1.0504"
+       y="-0.0252"
+       width="1.0504"
+       x="-0.0252"
+       id="filter1345"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur1347"
+         stdDeviation="0.25598438" />
+    </filter>
+    <filter
+       height="1.0504"
+       y="-0.0252"
+       width="1.0504"
+       x="-0.0252"
+       id="filter1373"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur1375"
+         stdDeviation="0.25598438" />
+    </filter>
+    <filter
+       height="1.0504"
+       y="-0.0252"
+       width="1.0504"
+       x="-0.0252"
+       id="filter1383"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur1385"
+         stdDeviation="0.25598438" />
+    </filter>
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <rect
+       ry="0.58814156"
+       y="2.7700007"
+       x="2.7022653"
+       height="142.52138"
+       width="151.03307"
+       id="rect1956"
+       style="opacity:1;fill:#e6e6e6;fill-opacity:1;stroke:#e6e6e6;stroke-width:4.16499996;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <circle
+       r="63.342876"
+       cy="74.030693"
+       cx="78.218796"
+       id="path1954"
+       style="opacity:1;fill:none;fill-opacity:1;stroke:#666666;stroke-width:4.16499996;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <ellipse
+       style="opacity:0.25;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363;filter:url(#filter1297)"
+       id="ellipse1283"
+       cx="79.806282"
+       cy="75.618172"
+       rx="26.295765"
+       ry="26.295767" />
+    <g
+       transform="translate(-21.648832,-64.679226)"
+       id="play_btn" onclick="play_btn_pressed();">
+      <ellipse
+         style="opacity:1;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363"
+         id="path815-5"
+         cx="99.86763"
+         cy="138.70992"
+         rx="26.295765"
+         ry="26.295767" />
+      <path
+         style="fill:#00ff00;stroke:none;stroke-width:0.19515574px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 138.56208,169.47021 c 2.98625,-1.71253 8.95875,-5.13758 8.95875,-5.13758 2.35931,-1.353 3.7423,-2.8544 0,-5.01664 l -9.19369,-5.31197 c -1.87982,-1.08614 -3.36634,0.36813 -3.36634,3.36887 v 8.67502 c 0,4.08932 2.01772,4.33043 3.60128,3.4223 z"
+         id="path1116"
+         transform="matrix(1.3569957,0,0,1.3545149,-91.250809,-80.4167)" />
+    </g>
+    <g
+       transform="translate(-21.648832,-64.679226)"
+       id="forward_btn" onclick="forward_btn_pressed();">
+      <circle
+         r="12.189733"
+         cy="139.76823"
+         cx="148.68359"
+         id="circle1339"
+         style="opacity:0.25;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363;filter:url(#filter1345)" />
+      <circle
+         style="opacity:1;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363"
+         id="path815-7"
+         cx="147.62527"
+         cy="138.70992"
+         r="12.189733" />
+      <path
+         style="fill:#00ff00;stroke:none;stroke-width:0.42232499px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 138.56208,169.47021 c 2.98625,-1.71253 8.95875,-5.13758 8.95875,-5.13758 2.35931,-1.353 3.7423,-2.8544 0,-5.01664 l -9.19369,-5.31197 c -1.87982,-1.08614 -3.36634,0.36813 -3.36634,3.36887 v 8.67502 c 0,4.08932 2.01772,4.33043 3.60128,3.4223 z"
+         id="path1116-9"
+         transform="matrix(0.52688454,0,0,0.74493077,68.861264,17.574988)" />
+      <path
+         id="path1429"
+         d="m 138.56208,169.47021 c 2.98625,-1.71253 8.95875,-5.13758 8.95875,-5.13758 2.35931,-1.353 3.7423,-2.8544 0,-5.01664 l -9.19369,-5.31197 c -1.87982,-1.08614 -3.36634,0.36813 -3.36634,3.36887 v 8.67502 c 0,4.08932 2.01772,4.33043 3.60128,3.4223 z"
+         style="fill:#00ff00;stroke:none;stroke-width:0.42232499px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         transform="matrix(0.52688454,0,0,0.74493077,77.327936,17.574988)" />
+    </g>
+    <g
+       transform="translate(-21.648832,-64.679226)"
+       id="backwards_btn"  onclick="backwards_btn_pressed();">
+      <circle
+         r="12.189733"
+         cy="139.76823"
+         cx="53.168324"
+         id="circle1301"
+         style="opacity:0.25;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363;filter:url(#filter1335)" />
+      <circle
+         style="opacity:1;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363"
+         id="path815"
+         cx="52.109989"
+         cy="138.70992"
+         r="12.189733" />
+      <path
+         id="path1429-8"
+         d="m 138.56208,169.47021 c 2.98625,-1.71253 8.95875,-5.13758 8.95875,-5.13758 2.35931,-1.353 3.7423,-2.8544 0,-5.01664 l -9.19369,-5.31197 c -1.87982,-1.08614 -3.36634,0.36813 -3.36634,3.36887 v 8.67502 c 0,4.08932 2.01772,4.33043 3.60128,3.4223 z"
+         style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.42232499px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         transform="matrix(-0.52688454,0,0,-0.74493077,122.02526,259.75022)" />
+      <path
+         transform="matrix(-0.52688454,0,0,-0.74493077,131.02109,259.75022)"
+         style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.42232499px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 138.56208,169.47021 c 2.98625,-1.71253 8.95875,-5.13758 8.95875,-5.13758 2.35931,-1.353 3.7423,-2.8544 0,-5.01664 l -9.19369,-5.31197 c -1.87982,-1.08614 -3.36634,0.36813 -3.36634,3.36887 v 8.67502 c 0,4.08932 2.01772,4.33043 3.60128,3.4223 z"
+         id="path1561" />
+    </g>
+    <g
+       transform="translate(-21.648832,-64.679226)"
+       id="exit_btn" onclick="exit_btn_pressed();">
+      <circle
+         transform="rotate(-90)"
+         style="opacity:0.25;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363;filter:url(#filter1383)"
+         id="circle1377"
+         cx="-187.52588"
+         cy="100.92596"
+         r="12.189733" />
+      <circle
+         r="12.189733"
+         cy="99.86763"
+         cx="-186.46756"
+         id="circle1266"
+         style="opacity:1;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363"
+         transform="rotate(-90)" />
+      <g
+         id="g1583"
+         transform="translate(0.0819195,0.12008981)">
+        <path
+           id="path1577"
+           d="m 95.547891,181.71726 8.475639,9.26042"
+           style="fill:none;stroke:#d40000;stroke-width:4.86499977;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        <path
+           style="fill:none;stroke:#d40000;stroke-width:4.86499977;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 104.41592,182.10965 -9.260419,8.47564"
+           id="path1579" />
+      </g>
+    </g>
+    <g
+       transform="translate(-21.648832,-64.679226)"
+       id="from_start_btn"  onclick="from_start_btn_pressed();">
+      <circle
+         transform="rotate(-90)"
+         style="opacity:0.25;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363;filter:url(#filter1373)"
+         id="circle1351"
+         cx="-92.010612"
+         cy="100.92596"
+         r="12.189733" />
+      <circle
+         r="12.189733"
+         cy="99.86763"
+         cx="-90.952278"
+         id="circle1268"
+         style="opacity:1;fill:#333333;fill-opacity:1;stroke:none;stroke-width:3.20099998;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.94472363"
+         transform="rotate(-90)" />
+      <g
+         id="g1848">
+        <path
+           id="path1561-7"
+           d="m 104.80015,85.36505 c -1.5734,1.275717 -4.72022,3.827142 -4.72022,3.827142 -1.243083,1.007891 -1.971759,2.12633 0,3.737049 l 4.84401,3.95705 c 0.99045,0.809099 1.77367,-0.274231 1.77367,-2.509575 v -6.462289 c 0,-3.04626 -1.0631,-3.225871 -1.89746,-2.549377 z"
+           style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+        <path
+           style="fill:none;stroke:#ff0000;stroke-width:4.86499977;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 96.146296,87.490324 v 6.9625"
+           id="path1579-1" />
+      </g>
+    </g>
+  </g>
+</svg>
+
+</body>
+</html>
