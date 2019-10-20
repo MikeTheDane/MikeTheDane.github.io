@@ -25,7 +25,9 @@ async function incomingData(event){
 	let readInValue = await outboundChar.readValue();
 	let decoder = new TextDecoder('utf-8');
 	// Log the incoming string (format slightly)
-	log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
+	//log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
+	let s = decoder.decode(readInValue).replace('\r','').replace('\n','').replace('\0','');
+	document.getElementById("demo").innerHTML = "<h1>"+s+"</h1>";
 }
 
 // Scan, connect and explore CodeLess BLE device
@@ -78,31 +80,31 @@ async function sendAT(cmd) {
 
   function play_btn_pressed() {
  	navigator.vibrate([50]);
-	document.getElementById("demo").innerHTML = "Play";
+	document.getElementById("demo").innerHTML = "<h1>Play</h1>";
   sendAT("|play#");
 }
 
 function backwards_btn_pressed() {
   navigator.vibrate([50]);
-  document.getElementById("demo").innerHTML = "Back";
+  document.getElementById("demo").innerHTML = "<h1>Back</h1>";
   sendAT("|back#");
 }
 
 function from_start_btn_pressed() {
   navigator.vibrate([50]);
-  document.getElementById("demo").innerHTML = "From Start";
+  document.getElementById("demo").innerHTML = "<h1>From Start</h1>";
   sendAT("|from_start#");
 }
 
 function forward_btn_pressed() {
   navigator.vibrate([50]);
-  document.getElementById("demo").innerHTML = "Forward";
+  document.getElementById("demo").innerHTML = "<h1>Forward</h1>";
   sendAT("|forward#");
 }
 
 function exit_btn_pressed() {
   navigator.vibrate([50]);
-  document.getElementById("demo").innerHTML = "Exit";
+  document.getElementById("demo").innerHTML = "<h1>Exit</h1>";
   sendAT("|exit#");
 }
 
