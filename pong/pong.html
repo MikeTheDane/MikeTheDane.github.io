@@ -1,0 +1,473 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>Feel the Pong</title>
+    <script src="phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 10;
+        }
+      
+
+    </style>
+    <link rel="shortcut icon" href="favicon.png"/>
+	
+</head>
+<body bgcolor="#31b3d4">
+  
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="game"></div>
+  <script src="phaser.min.js"></script>
+  
+  <div id="pairing" style="display: none;">
+
+  	<button type="button" onclick="doit()">
+    	Click me to scan for a paddle
+  	</button>
+  	<br/>
+  	<textarea id="log" rows="15" cols="100">Log:</textarea>
+  	<br/>
+  	<br/>
+
+  </div>
+  
+</body>
+
+<script type="text/javascript">
+
+  let bomb;
+  let swallhit;
+  let rotation = 0;
+  let paddle;
+  let pair_btn;
+  let life1;
+  let life2;
+  let life3;
+  let lives_remaining = 3;
+
+  let game_over = false;
+
+  let BALL_DEFAULT = 153;
+  let X_VELO_s = 900;
+  let X_VELO_d = 200;
+
+  let start_up_list = [
+  	[0x02,0x68,0x7E,0x11],
+  	[0x02,0x68,0x7E,0x11],
+  	[0x02,0x68,0x7E,0x11],
+  	[0x02,0x68,0x7E,0x11],
+  	[0x03,0x00,0x00,0x00],
+
+  ];
+
+  var ble_command_timer;
+
+
+  let score = 0;
+  
+  let hasplayed = false;
+
+  var platforms;
+  
+  var text;
+  //////////////
+
+    let direction = 0;
+    var logo;
+
+    let halted = true;
+
+    let position = 400;
+
+    var inboundChar;
+    var outboundChar;
+    
+    var position_accumulated = 4 * 400;
+
+    function log(text)
+    {
+        var textarea = document.getElementById('log');
+        textarea.value += "\n" + text;
+        textarea.scrollTop = textarea.scrollHeight;
+    }
+
+    // Send an AT command to the CodeLess BLE peer
+	async function ble_send(cmd) {
+		try{
+			// Send command via GATT Write request 
+			await inboundChar.writeValue(new Uint8Array(cmd));
+		} 
+		catch(error) {
+			log('Failed: ' + error);
+		}
+	}
+
+	function ble_command_sequencer(){
+		if(start_up_list.length > 0)
+		{
+			ble_send(start_up_list.shift());
+		}
+		else
+		  clearInterval(ble_command_timer);
+	}
+
+
+    async function incomingData(event){
+    let v = event.target.value;
+    if( v.getUint8(0)==1){
+        
+        let z = v.getUint16(1,true);
+
+    	if (z>=0x8000)
+         	z=-(65535-z);
+
+    	position = 400 - z * 312/12000;
+
+    	position_accumulated = position_accumulated - position_accumulated / 4 + position;
+
+    	position = position_accumulated / 4;
+
+        //log(" " + z);
+    }
+    else{
+      if(v.getUint8(0)==2){
+         if(v.getUint8(1)==1)
+         {
+           	log("Button Pressed");
+           	
+           	if(halted && (lives_remaining >= 0))
+           	{
+           		bomb.x = BALL_DEFAULT;
+           		bomb.setVelocityY(-600);
+				bomb.setVelocityX(X_VELO);
+				var textarea = document.getElementById('log');
+        		textarea.value = "";
+        		direction = 0;
+        		halted = false;
+        		rotation = 0;
+        	}
+
+        	if(game_over)
+        	{
+        		paddle.angle = 0;
+        		lives_remaining = 3;
+        		life3.visible = true;
+				life2.visible = true;
+				life1.visible = true;
+				bomb.visible = true;
+				game_over = false;
+				score = 0;
+				text.text = "Score: "+score;
+				text2.text = '';
+				X_VELO = X_VELO_s;
+        	}
+
+         }
+        else
+           log("Button Released");
+      }
+    }
+  }
+ 
+  async function doit() {
+    
+    try {
+      log('Requesting Bluetooth Device...');
+      device  = await navigator.bluetooth.requestDevice({
+          filters: [{name: 'Pong'}],
+          optionalServices: ['18424398-7cbc-11e9-8f9e-2a86e4085a59']
+      });
+      log('Connecting to GATT Server...');
+      server = await device.gatt.connect();
+      log('Getting IoT Sensor Service...');
+      const service = await server.getPrimaryService('18424398-7cbc-11e9-8f9e-2a86e4085a59');
+      log('Getting IoT Command Characteristic...');
+      inboundChar = await service.getCharacteristic('2d86686a-53dc-25b3-0c4a-f0e10c8dee20');
+    
+      log('Getting Sensor Data Characteristic...');
+      const flowcontrolChar = await service.getCharacteristic('15005991-b131-3396-014c-664c9867b917');
+    
+      // Subscribe to notifications
+      await flowcontrolChar.startNotifications();
+      flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+      
+      log('Ready to communicate');
+
+      ble_command_timer = setInterval(ble_command_sequencer, 70);
+
+      //document.getElementById("pairing").style.display = "none";
+    } catch(error) {
+      log('Failed: ' + error);
+    }
+}
+
+  //////////////
+
+  const config = {
+  type: Phaser.AUTO,
+  parent: 'game',
+  width: 1200,
+  heigth: 800,
+  backgroundColor: '#31b3d4',
+  scale: {
+   //mode: Phaser.Scale.RESIZE,
+   autoCenter: Phaser.Scale.CENTER_BOTH
+  },
+  scene: {
+    preload,
+    create,
+    update,
+  },
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: false
+    },
+  }
+};
+
+// Create the game instance
+const game = new Phaser.Game(config);
+
+
+    function preload ()
+    {
+		this.load.image('bomb',		'assets/golfball.png'	);
+		this.load.image('ground',	'assets/side.png'		);
+		this.load.image('endwall',	'assets/endwall.png'	);
+		this.load.image('paddle', 	'assets/paddle_d.png'	);
+		this.load.audio('paddlehit','assets/squit.wav'		);
+		this.load.audio('wallhit',	'assets/wall.wav'		);
+    	this.load.audio('endhit',	'assets/battery.wav'	);
+    	this.load.image('pair_btn', 'assets/ble_logo.png'	);
+    }
+
+    function create ()
+    {
+        	
+		text = this.add.text(600, 50, 'Click to Connect:').setFontSize(54).setFontFamily("Arial").setOrigin(0.5);
+		text2 = this.add.text(600, 400, '').setFontSize(100).setFontFamily("Arial").setOrigin(0.5);
+		
+		bomb = this.physics.add.sprite(
+			BALL_DEFAULT, // x position
+			400, // y position
+			'bomb' // key of image for the sprite
+		);
+
+		life1 = this.physics.add.sprite(
+			30, // x position
+			50, // y position
+			'bomb' // key of image for the sprite
+		);
+
+		life2 = this.physics.add.sprite(
+			30, // x position
+			110, // y position
+			'bomb' // key of image for the sprite
+		);
+
+		life3 = this.physics.add.sprite(
+			30, // x position
+			170, // y position
+			'bomb' // key of image for the sprite
+		);
+		
+		paddle = this.physics.add.sprite(
+			60, // x position
+			400, // y position
+			'paddle' // key of image for the sprite
+		);
+		paddle.setScale(0.5);
+		paddle.setCollideWorldBounds(true);
+				
+		swallhit = this.sound.add('wallhit');
+		endhit = this.sound.add('endhit');
+		paddlehit = this.sound.add('paddlehit');
+				
+		bomb.setCollideWorldBounds(true);
+		bomb.setBounce(1,1);
+		
+		this.physics.world.checkCollision.left = false;
+		this.physics.world.checkCollision.right = false;
+		this.physics.world.checkCollision.up = false;
+		this.physics.world.checkCollision.down = false;
+	
+		
+		bomb.setScale(0.02);
+		life1.setScale(0.015)
+		life2.setScale(0.015)
+		life3.setScale(0.015)
+		
+		
+
+		platforms = this.physics.add.staticGroup();
+
+		//  Scale it to fit the width of the game (the original sprite is 400x32 in size)
+		platforms.create(600, 760, 'ground');
+		platforms.create(600, 8, 'ground');
+		platforms.create(1192, 400, 'endwall');
+		
+		
+		this.physics.add.collider(bomb, platforms, hitWall, null, this);
+		this.physics.add.collider(bomb, paddle, hitPaddle, null, this);
+		paddle.setImmovable(true);
+		
+		cursors = this.input.keyboard.createCursorKeys();
+		halted = true;
+		X_VELO = X_VELO_s;
+
+
+		pair_btn = this.add.image(600, 200, 'pair_btn');
+	    
+	    pair_btn.setScale(1)
+	    pair_btn.setInteractive();
+	    this.input.on('gameobjectdown',onObjectClicked);
+
+		
+		
+	}
+	
+	function onObjectClicked(pointer,gameObject) {
+		pair_btn.visible = false;
+		text.text = "Score: "+score;
+		doit();
+	}
+
+    function update ()
+    {
+		if(!halted)
+			bomb.angle += 5 * rotation;
+
+		//if(game_over)
+		//	paddle.angle += 5;
+		
+		if (isBallLost(this.physics.world) || halted)
+		{
+			if (!halted)
+			{
+				endhit.play();
+
+				if(lives_remaining ==3)
+					life3.visible = false;
+			    if(lives_remaining ==2)
+					life2.visible = false;
+				if(lives_remaining ==1)
+					life1.visible = false;
+			    
+			    
+			    
+				lives_remaining--;
+
+				if (lives_remaining <0 )
+				{
+					text2.text = "Game Over!";
+					game_over = true;
+					bomb.visible = false;
+				}
+				bomb.setVelocityY(0);
+				bomb.setVelocityX(0);
+				bomb.x = 160;
+				halted = true;
+		    }
+		    bomb.x = BALL_DEFAULT;
+		    bomb.setVelocityY(0);
+			bomb.setVelocityX(0);
+		    bomb.y = paddle.y;
+		}
+				
+		paddle.body.setVelocityX(0);
+        paddle.body.setVelocityY(0);
+        
+        paddle.y = position;
+
+		if(paddle.y < 88)
+		{
+		    paddle.y = 88;
+		    //a_state = 0;
+		    //direction = 0;
+		}
+		if(paddle.y > 680)
+		{
+			//direction = 0;
+			//a_state = 0;
+		    paddle.y = 680;
+		}
+
+		if(halted)
+			bomb.y = paddle.y;
+
+	}
+
+	
+
+	function hitWall (bomb,platforms)
+	{
+		swallhit.play();
+	
+		if(bomb.y > 400){ 
+			if (bomb.body.velocity.x > 0)
+				rotation = 1
+			else 
+				rotation = -1;
+		}
+		else{
+			if (bomb.body.velocity.x > 0)
+				rotation = -1
+			else 
+				rotation = 1;
+		}
+		
+	}
+
+	function hitPaddle (bomb,platforms)
+	{
+		//paddlehit.play();
+	
+		if(bomb.body.velocity.y > 0)
+			rotation = 1;
+		else 
+			rotation = -1;
+		
+		let newYVelocity = 10 *(bomb.y - paddle.y);
+		
+		// Keep the ball Y velocity at or below 850 and at or above -850
+		if(newYVelocity > 850)
+			newYVelocity = 850;
+		if(newYVelocity < -850)
+			newYVelocity = -850;
+		
+		bomb.setVelocityY(newYVelocity);
+		
+		if(bomb.x > paddle.x + 30){
+			if(!halted){
+				ble_send([0x01,0x0A,50,10])
+				score += 1;
+				paddlehit.play();
+			}
+			// Speed up the ball?
+			if(score<100)
+				X_VELO = X_VELO_s + (Math.floor(score/10) * X_VELO_d);
+			if(!game_over)
+				text.text = "Score: "+ score;
+			bomb.setVelocityX(X_VELO);
+		}
+		else
+			bomb.setVelocityX(-X_VELO);
+		
+	}
+
+
+function isBallLost(world) {
+  let isItOver = false;
+  
+  if((bomb.body.x < -100)||(bomb.body.y<0)||(bomb.body.y>800))
+    isItOver = true;
+  
+  return isItOver;
+}
+
+</script>
+
+
+</html>
