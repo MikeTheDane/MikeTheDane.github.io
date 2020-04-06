@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DSPS Configurator</title>
+
+  <style>
+  body {
+    margin      : 0;
+    padding     : 1.5em;
+    font-family : Georgia,Utopia,Charter,serif;
+    color: #303030;
+    font-size: 100%;
+  }
+  .big{ 
+    width: 20px; 
+    height: 20px;
+  }
+
+  input:invalid {
+    border: 4px solid red;
+    border-radius:5px;
+  }
+
+  input:valid {
+    border: 2px solid black;
+    border-radius:5px;
+  }
+
+  </style>
+
+<script>
+
+      var versionChar;
+      var discoverChar;
+      var writeChar;
+      var readChar;
+      
+      // Define the codeless UUIDs 
+      var DSPS_CFG_SVC_UUID   =         "a247a39b-0a3d-42c1-80d1-ea762753c6a0";
+      var VERSION_CHAR_UUID   =         "a247a39b-0a3d-42c1-80d1-ea762753c6a1";
+      var DISCOVER_ELEMENTS_CHAR_UUID = "a247a39b-0a3d-42c1-80d1-ea762753c6a2";
+      var WRITE_ELEMENTS_CHAR_UUID =    "a247a39b-0a3d-42c1-80d1-ea762753c6a3";
+
+      // Incoming GATT notification was received
+      async function incomingDiscoverResponse(event){
+        let v = event.target.value;
+        let num_elements= v.getUint8(0);
+        log("Number of elements: "+ num_elements);
+        log("More?: "+ v.getUint8(1));
+        for(i=0;i<num_elements;i++)
+        {
+          log("Element #"+i+": "+ v.getUint8(i+2)+", "+v.getUint8(i+3));
+        }
+
+
+      }
+
+       // Incoming GATT notification was received
+      async function incomingWriteResponse(event){
+        
+      }
+
+      async function ble_send_discover_request(cmd) {
+        try{
+          // Send command via GATT Write request 
+          await discoverChar.writeValue(new Uint8Array(cmd));
+        } 
+        catch(error) {
+          log('Failed: ' + error);
+        }
+      }
+
+      async function ble_send_read_request(cmd) {
+        try{
+          // Send command via GATT Write request 
+          await discoverChar.writeValue(new Uint8Array(cmd));
+        } 
+        catch(error) {
+          log('Failed: ' + error);
+        }
+      }
+
+      // Scan, connect and explore CodeLess BLE device
+      async function ble_connect() {
+        try {
+          // Define a scan filter and prepare for interaction with Codeless Service
+          log('Requesting Bluetooth Device...');
+          
+          
+          device  = await navigator.bluetooth.requestDevice({
+            filters: [{services: [0xFEF5]}],
+            optionalServices: [DSPS_CFG_SVC_UUID]
+          });     
+          // Connect to device and perform attribute discovery
+          log('Connecting to GATT Server...');
+          server = await device.gatt.connect();
+          log('Exploring DSPS Configuration Service...');
+          const service = await server.getPrimaryService(DSPS_CFG_SVC_UUID);
+          
+          log('  Mapping DSPS Version Characteristic...');
+          const versionChar = await service.getCharacteristic(VERSION_CHAR_UUID);
+          
+          log('  Mapping DSPS Discover Characteristic...');
+          discoverChar = await service.getCharacteristic(DISCOVER_ELEMENTS_CHAR_UUID);
+          // Subscribe to notifications
+          await discoverChar.startNotifications();
+          discoverChar.addEventListener('characteristicvaluechanged', incomingDiscoverResponse);
+
+          /*
+          log('  Mapping DSPS Write Elements Characteristic...');
+          writeChar = await service.getCharacteristic(WRITE_ELEMENTS_CHAR_UUID);
+          // Subscribe to notifications
+          await writeChar.startNotifications();
+          writeChar.addEventListener('characteristicvaluechanged', incomingWriteResponse);
+          */
+/*
+          log('  Mapping DSPS Read Elements Characteristic...');
+          readChar = await service.getCharacteristic(WRITE_ELEMENTS_CHAR_UUID);
+          // Subscribe to notifications
+          await readChar.startNotifications();
+          readChar.addEventListener('characteristicvaluechanged', incomingReadResponse);
+*/          
+          
+/*
+          let readInValue = await versionChar.readValue();
+          let decoder = new TextDecoder('utf-8');
+          // Log the incoming string (format slightly)
+          log(" <- " + decoder.decode(readInValue));
+*/
+          //ble_send_discover_request([0x40]);
+
+          //ble_send_read_request([0x04]);
+
+          log('Ready to communicate!\n');
+        }
+        catch(error) {
+          log('Failed: ' + error);
+        }
+      }
+
+      // Send an AT command to the CodeLess BLE peer
+      async function sendAT(cmd) {
+        // Display the command in the log
+        log(' -> ' + cmd );
+        // Append an extra character as expected by CodeLess
+        var commandToSend = cmd + "\0";
+        try{
+          let encoder = new TextEncoder('utf-8');
+          // Send command via GATT Write request 
+          await inboundChar.writeValue(encoder.encode(commandToSend));
+        } 
+        catch(error) {
+          log('Failed: ' + error);
+        }
+      }
+
+      
+    </script>
+
+</head>
+
+<body style="background-color: powderblue;">
+
+<div style="background-color: powderblue;border: 1px solid #000; padding: 6px 12px;border-radius: 8px 8px 8px 8px;">
+  <h1>DSPS Peripheral Configurator</h1>
+  <div style="background-color: white;padding: 6px; border-radius: 8px 8px 8px 8px;">
+    <button type="button" onclick="ble_connect()">
+      Click me to scan for CodeLess BLE devices.
+    </button>
+    <br/>
+    
+    <div id="tab_advertising">
+
+    <br/><h3><b>Advertising Interval:</b></h3> 
+    <input type="number" id="adv_intv_min" name="quantity" min="100" max="4600" value="640" style="font-size: 100%;" required><label>&nbsp;ms</label><br/>
+    
+    <br/><h3><b>Advertising Channels:</b></h3> 
+    <input type="checkbox" checked="checked" id="ch37" class="big" name="channels"><label>Channel 37</label><br/>
+    <input type="checkbox" checked="checked" id="ch38" class="big" name="channels"><label>Channel 38</label><br/>
+    <input type="checkbox" checked="checked" id="ch39" class="big" name="channels"><label>Channel 39</label><br/>
+    
+    <br/><h3><b>Address Type:</b></h3> 
+    <input type="radio" id="address_type_public" name="address_type" value="0"  class="big"><label>Public</label><br/>
+    
+    <div id="public" style="display:none;font-size: 100%;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+     Address [hex]:
+    <input style="font-size: 100%;" id="bd_addr" value="80:CE:00:00:EA:00"
+    pattern="[a-fA-F0-9][a-fA-F0-9]([ .:-]?[a-fA-F0-9][a-fA-F0-9]){5}"><br/></div>
+    
+    <input type="radio" id="address_type" name="address_type" value="1" class="big"><label>Random</label><br/>
+    <input type="radio" id="address_type" name="address_type" value="2" class="big"><label>Static Random</label><br/>
+    <input type="radio" id="address_type" name="address_type" value="3" class="big" checked="checked"><label>Device Unique Static Random</label><br/>
+
+    <br/><h3><b>Bluetooth Device Name:</b></h3>
+    <input type="text" id="bd_name" value="Dialog DSPS" maxlength="28" style="font-size: 100%;"><br/>
+
+    <br/><h3><b>Baud Rate [bits/s]:</b></h3> 
+    <input type="radio" id="baudrate0" name="baudrate" class="big" value="0"><label>9,600</label><br/>
+    <input type="radio" id="baudrate1" name="baudrate" class="big" value="1"><label>19,200</label><br/>
+    <input type="radio" id="baudrate2" name="baudrate" class="big" value="2"><label>38,400</label><br/>
+    <input type="radio" id="baudrate3" name="baudrate" class="big" value="3"><label>57,600</label><br/>
+    <input type="radio" id="baudrate4" name="baudrate" class="big" value="4" checked="checked"><label>115,200</label><br/>
+    <input type="radio" id="baudrate5" name="baudrate" class="big" value="5"><label>230,400</label><br/>
+    <input type="radio" id="baudrate6" name="baudrate" class="big" value="6"><label>460,800</label><br/>
+    <input type="radio" id="baudrate7" name="baudrate" class="big" value="7"><label>921,600</label><br/>
+
+    <br/>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="log">
+
+</div>
+
+<script>
+
+function log(s)
+{
+  //document.getElementById('log').innerHTML += s+"<br/>";
+  console.log(s);
+}
+
+
+var brate = document.getElementsByName("baudrate");
+
+for (var i=0, len=brate.length; i<len; i++) 
+{     
+    brate[i].onchange = function() {
+      log('Baudrate selected: ' + this.value);
+    };
+}
+
+var addr_type = document.getElementsByName("address_type");
+
+for (var i=0, len=addr_type.length; i<len; i++) 
+{     
+    addr_type[i].onchange = function() {
+      let id = this.id;
+      let elm = document.getElementById("public");
+      if(this.value==0)
+        elm.style = "display :inline";
+      else
+        elm.style = "display :none";
+
+      log('Address Type Selected: ' + this.value);
+    };
+}
+
+var channels = document.getElementsByName("channels");
+
+for (var i=0, len=channels.length; i<len; i++) 
+{     
+    channels[i].onchange = function() {
+      var s=0;
+      for(var ch=0;ch<3;ch++){
+        let elm = document.getElementById("ch"+(ch+37));
+        if (elm.checked == true)
+          s = s + (2**ch);
+      }
+      log('Channels selected: '+ (s));
+      if(s==0){
+        alert("At least one Advertising channel must be selected!");
+        this.checked = true;
+      }
+    };
+}
+
+</script>
+   
+</body>
+</html> 
