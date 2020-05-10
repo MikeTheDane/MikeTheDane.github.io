@@ -10,6 +10,7 @@ var w_button_use_style ='margin:0 auto; display:block; border-radius:4px;';
 function w_button_use_handler(widget_index)
 {
 	console.log("Button widget with Index: " + widget_index + " was pressed");
+	navigator.vibrate(1000);
 	// execute the user defined action for this widget
 }
 
