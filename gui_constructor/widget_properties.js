@@ -1,20 +1,33 @@
 var _g = "<hr/>";
 
+/*
 var widget_cfg_html =
 `<div class='widget_edit' id='$id_cfg' draggable='true' ondragstart='drag(event)' ondrop='drop(event,$widget_index)'
  onclick = 'expand_widget("cfg_details_$id")' style="text-align:center;"
  ondragover='allowDrop(event)'><b>$widget_type [$id]</b>
     <div id="cfg_details_$id" style="display:none;">
-    <img src="hide.png" onclick='implode_widget("cfg_details_$id")' style="width: 15px;left: 35;position: absolute;"/>
-    <img src="hide.png" onclick='remove_widget("$widget_index")' style="width: 15px;left: 60;position: absolute;"/>
+    <img src="hide.png" onclick='implode_widget("cfg_details_$id")' style="width: 15px;text-align:left;"/>
+    <img src="delete.png" onclick='remove_widget("$widget_index")' style="width: 30px;left: 60;position: absolute;"/>
     <div style"display:flex;text-align:left">`;
+*/
+var widget_cfg_html =
+`<div class='widget_edit' id='$id_cfg' draggable='true' ondragstart='drag(event)' ondrop='drop(event,$widget_index)'
+ onclick = 'expand_widget("cfg_details_$id")'
+ ondragover='allowDrop(event)'><b>$widget_type [$id]</b>
+    <div id="cfg_details_$id" style="display:none;">
+    <img src="hide.png" onclick='implode_widget("cfg_details_$id")' style="border-radius: 3px;border: 1px solid black;width: 30px;height:30px;float:left;padding:5px;"/>
+    <img src="delete.png" onclick='remove_widget("$widget_index")' style="border-radius: 3px;border: 1px solid black;width: 30px;height:30px;float:right;padding:5px;"/>
+    <div style"display:flex;text-align:left">
+    `;
+
+
 
 var property_label =
 `Label <input type="text" onchange="w_label_change($widget_index);" id="cfg_label_$id" value="$label"/>`
 
 var property_style_raw = 
 `Styling (CSS) 
- <input type="text" size="50" onchange="w_styling_change($widget_index);" id="cfg_styling_$id" value="$style"/>
+ <input size="60" onchange="w_styling_change($widget_index);" id="cfg_styling_$id" value="$style"/>
  <button id="$id" onclick="w_style_default_handler($widget_index,$default_style);">Use Default</button>`;
 
 var property_input_filter =
@@ -37,7 +50,7 @@ var property_parser =
    <br/>Number of characters <input id="cfg_parser_length_$id" type="number" min="1" max="100" value="$value" onchange="w_parser_count_change($widget_index)"/>
  </div>
  <div style="display:$visibleB">
-   <br>Parse as little-endian <input type="checkbox" id="cfg_endianess_$id" $checked onchange="w_parser_endianess_change($widget_index)"/>
+   <br>Parse as little-endian <input type="checkbox" class="largeCheckbox" id="cfg_endianess_$id" $checked onchange="w_parser_endianess_change($widget_index)"/>
  </div>`;
 
 var property_font_size = `Font size <input type="number" min="1" max="100" value="14" onchange="w_font_size_changed($widget_index)"/>Pixels`;

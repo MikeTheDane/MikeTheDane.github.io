@@ -1,7 +1,7 @@
 
 var w_dynamic_text_use_html = '<span  id="$id" style="$style">$label</span>';
 
-var w_dynamic_text_use_style ='margin:0 auto; display:block;text-align: center;padding: 5px 5px 5px 5px;color:white';
+var w_dynamic_text_use_style ='margin:0 auto; display:block;text-align: center;padding: 5px 5px 5px 5px;color:black;font-size:30px';
 
 function w_dynamic_text_constructor(widget_index)
 {

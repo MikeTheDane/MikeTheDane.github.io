@@ -1,7 +1,7 @@
 
 var w_image_use_html = '<img id="$id" style="$style" src="$image"/>';
 
-var w_image_use_style ='margin:0 auto; display:block;border-radius: 4px; padding-bottom: 10px;';
+var w_image_use_style ='margin:0 auto; display:block;border-radius: 4px; padding-bottom: 10px;width:100%';
 
 var w_image_cfg_defaults = {"id":"","type":"image","src":"img1","expanded":true,"deletethis":true};
 
