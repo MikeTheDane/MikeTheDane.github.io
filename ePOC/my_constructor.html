@@ -118,10 +118,11 @@ select{
 </div>
 <script>
 
+/*
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 console.log("URL parameter:" + urlParams.get('mode'));
-
+*/
 
 var edit_stage = `<h1>Done in a Day&trade;, ePOC Editor</h1><hr><table ><tr><td style="vertical-align:top" width="400px">
 
@@ -150,7 +151,7 @@ var run_stage = `
 `;
 
 var main_stage_element = document.getElementById("main_stage")
-if(urlParams.get('mode') == 'edit')
+if(window.location.href.indexOf("edit") > -1)
   main_stage_element.innerHTML = edit_stage;
 else
   main_stage_element.innerHTML = run_stage;
@@ -455,7 +456,7 @@ generate_filter_object();
 
 draw_widgets();
 
-if(urlParams.get('mode') == 'edit')
+if(window.location.href.indexOf("edit") > -1)
   draw_config();
 //check_widget_trigger_filters([99,99,4,0,11,22,33,44,55,77]);
 
