@@ -14,6 +14,11 @@ default_gui = `
 
 		"widgets":
 		[
+			{"id":"w5","type":"image","expanded":false,"src":"img1","style":"margin:0 auto;display:block;border-radius: 4px;padding-bottom: 10px;padding-top: 10px;width:80%","box_style":"padding-top: 0px;border-radius:10px;background: rgba(100, 100, 100, 0.5);"},
+			{"id":"w6","type":"image","expanded":false,"src":"img1","style":"margin:0 auto;display:block;border-radius: 4px;padding-bottom: 10px;padding-top: 10px;width:80%","box_style":"padding-top: 0px;border-radius:10px;background: rgba(100, 100, 100, 0.5);"},
+			{"id":"w7","type":"image","expanded":false,"src":"img1","style":"margin:0 auto;display:block;border-radius: 4px;padding-bottom: 10px;padding-top: 10px;width:80%","box_style":"padding-top: 0px;border-radius:10px;background: rgba(100, 100, 100, 0.5);"},
+			{"id":"w8","type":"image","expanded":false,"src":"img1","style":"margin:0 auto;display:block;border-radius: 4px;padding-bottom: 10px;padding-top: 10px;width:80%","box_style":"padding-top: 0px;border-radius:10px;background: rgba(100, 100, 100, 0.5);"},
+			{"id":"w9","type":"image","expanded":false,"src":"img1","style":"margin:0 auto;display:block;border-radius: 4px;padding-bottom: 10px;padding-top: 10px;width:80%","box_style":"padding-top: 0px;border-radius:10px;background: rgba(100, 100, 100, 0.5);"},
 			{"id":"w0","type":"image","expanded":false,"src":"img1","style":"margin:0 auto;display:block;border-radius: 4px;padding-bottom: 10px;padding-top: 10px;width:80%","box_style":"padding-top: 0px;border-radius:10px;background: rgba(100, 100, 100, 0.5);"},
 			{"id":"w1","type":"dynamic_text","label":"0","style":"font-size: 30px;color:white;margin:0 auto;display:block;text-align: center;padding: 5px 5px 5px 5px;","expanded":false,"trigger":{"s":0,"filter":"|00"},"parser_start":1,"parser_count":4,"parser_style":0,"prepend":"Temperature ","append":"&#176;F","parser_little_endian":1},
 			{"id":"w2","type":"button","label":"Button","style":"background-color: blue;color: white;border: none;padding: 15px 32px;text-align:center;text-decoration:none;display:inline-block;font-size: 16px;border-radius: 8px;margin:0 auto;display:block;","expanded":false,"onclick":"w_button_use_handler(id);"},
