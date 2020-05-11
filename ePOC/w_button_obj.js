@@ -10,6 +10,7 @@ var w_button_use_style ='background-color: blue;color: white;border: none;paddin
 function w_button_use_handler(widget_index)
 {
 	console.log("Button widget with Index: " + widget_index + " was pressed");
+	navigator.vibrate(200);
 	// execute the user defined action for this widget
 }
 
