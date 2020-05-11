@@ -1,0 +1,469 @@
+<html>
+
+<head>
+<link href='https://fonts.googleapis.com/css?family=Akronim' rel='stylesheet'>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="widget_properties.js"></script>
+<script src="my_json.json"></script>
+<script src="w_button_obj.js"></script>
+<script src="w_static_text_obj.js"></script>
+<script src="w_dynamic_text_obj.js"></script>
+<script src="w_image_obj.js"></script>
+
+<style>
+
+/* The device with borders */
+.smartphone {
+  position: relative;
+  width: 360px;
+  height: 640px;
+  margin: auto;
+  border: 16px black solid;
+  border-top-width: 60px;
+  border-bottom-width: 60px;
+  border-radius: 36px;
+}
+
+/* The horizontal line on the top of the device */
+.smartphone:before {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 5px;
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /*background: #333;*/
+  border-radius: 10px;
+}
+
+/* The circle on the bottom of the device */
+.smartphone:after {
+  content: '';
+  display: block;
+  width: 35px;
+  height: 35px;
+  position: absolute;
+  left: 50%;
+  bottom: -65px;
+  transform: translate(-50%, -50%);
+  background: #333;
+  border-radius: 50%;
+
+}
+
+/* The screen (or content) of the device */
+.smartphone .content {
+  width: 360px;
+  height: 640px;
+  /*background: white;*/
+  background-image: "beans.jpg";
+}
+
+/* Styles widgets as displayed during editing */
+.widget_edit{
+	background-color:gainsboro;
+	padding: 3px;
+	border: 1px solid #000000;
+	border-radius: 5px;
+  cursor: pointer;
+  margin: auto;
+  font-size: 30;
+}
+
+button {
+  background-color: lightgrey;
+  border: none;
+  color: black;
+  padding: 10px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+button:active { 
+   filter: brightness(75%);
+   transform: scale(0.9,0.9);
+} 
+
+input{
+   height: 30;
+  font-size: 20;
+}
+
+input.largeCheckbox{
+   width:30px;
+   height:30px;
+}
+
+select{
+   height: 30;
+  font-size: 20;
+}
+
+</style>
+
+</head>
+
+<body style="margin:auto;text-align:center;max-width:1720px">
+
+<dialog id="advanced_styling" style="border-radius: 10px;border: 1px solid black; max-width:400px; font-size: 30px;">
+</dialog>
+
+<div id="main_stage">
+
+</div>
+<script>
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+console.log("URL parameter:" + urlParams.get('mode'));
+
+
+var edit_stage = `<h1>Done in a Day&trade;, ePOC Editor</h1><hr><table ><tr><td style="vertical-align:top" width="400px">
+
+<div class="smartphone">
+  <div class="content">
+    <div id="gui_pane" style="overflow-y: scroll;height: 100%; background-image:  url('beans.jpg');background-size: cover;">?</div>
+  </div>
+</div>
+
+<br/>
+</td>
+<td style="vertical-align:top;padding-left:30px;">
+<div id="cfg_pane" style="overflow-y: scroll;margin:auto;max-width:700;min-width:700;height:740;background-color:white;border-radius: 5px;border: 1px solid black;padding:5px;padding-left: 15px;padding-right: 15px;">
+</div>
+
+<br/>
+<br/>
+<br/>
+<br/>
+</td>
+</tr>
+</table>`
+
+var run_stage = `
+    <div id="gui_pane" style="overflow-y: scroll;height: 100%; background-image:  url('beans.jpg');background-size: cover;">?</div>
+`;
+
+var main_stage_element = document.getElementById("main_stage")
+if(urlParams.get('mode') == 'edit')
+  main_stage_element.innerHTML = edit_stage;
+else
+  main_stage_element.innerHTML = run_stage;
+
+
+var reject_widget_expansion = false;
+
+function remove_widget(widget_index)
+{
+  var r = confirm("Are you sure that you wan to delete this widget?");
+  if (r == true) 
+  {
+    reject_widget_expansion = true;
+    widgets.splice(widget_index,1);
+    console.log("Widgets "+JSON.stringify(widgets));
+    draw_widgets();
+    draw_config();
+  }
+}
+
+function expand_widget(cfg_widget_details_id)
+{
+  //console.log("Trying to expand "+cfg_widget_details_id);
+  remove_widget_type_selectors();
+  if(!reject_widget_expansion)
+  {
+    if(document.getElementById(cfg_widget_details_id) != null)
+    {
+      if(document.getElementById(cfg_widget_details_id).style.display == "none")
+      {
+        document.getElementById(cfg_widget_details_id).style.display = "inline";
+        let id = cfg_widget_details_id.substring(12);
+        for(let widget_idx = 0; widget_idx<widgets.length;widget_idx++)
+        {
+          if(widgets[widget_idx].id == id)
+          widgets[widget_idx].expanded = true;
+        }
+      }
+  }
+  }
+  reject_widget_expansion = false;
+}
+
+function implode_widget(cfg_widget_details_id)
+{
+  reject_widget_expansion = true;
+  //console.log("Imploding widget " + cfg_widget_details_id);
+  remove_widget_type_selectors();
+  document.getElementById(cfg_widget_details_id).style.display="none";
+  let id = cfg_widget_details_id.substring(12);
+  for(let widget_idx = 0; widget_idx<widgets.length;widget_idx++)
+  {
+    if(widgets[widget_idx].id == id)
+      widgets[widget_idx].expanded = false;
+  }
+  //console.log(JSON.stringify(widgets));
+}
+
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
+   document.getElementById(ev.target.id).style = "-webkit-filter: blur(5px);-moz-filter: blur(5px);-o-filter: blur(5px);-ms-filter: blur(5px); filter: blur(5px);";
+
+  
+}
+
+function drop(ev, target) {
+  ev.preventDefault();
+  var source = ev.dataTransfer.getData("text");
+  swap_widgets(source,target);
+}
+
+function widget_id_to_widget_index(widget_id)
+{
+  widget_id = widget_id.substring(0,widget_id.length -4);
+  for(let widget_idx=0;widget_idx<widgets.length;widget_idx++)
+  {
+    if(widgets[widget_idx].id == widget_id)
+      return widget_idx;
+  }
+}
+
+function swap_widgets(source,target)
+{
+  // Convert source id to widget_index
+  let source_widget_idx = widget_id_to_widget_index(source);
+ 
+  // Take a copy of the dragged widget
+  let temp = JSON.stringify(widgets[source_widget_idx]);
+
+  // Remove the dragged source widget from widgets array
+  widgets.splice(source_widget_idx,1);
+
+  // Insert the dragged source widget above target widget
+  widgets.splice(target,0,JSON.parse(temp)); 
+
+  draw_widgets();
+  draw_config();
+}
+
+// Read in json script
+var gui_json = JSON.parse(default_gui);
+var images = gui_json.images;
+var widgets = gui_json.widgets;
+var next_new_widget_id = "w0";
+
+
+document.title = gui_json.document.title;
+document.body.style.backgroundColor = gui_json.document.background_color;
+
+function arrayToHexString(byte_array)
+{
+  var hexChars = "0123456789ABCDEF";
+  s = "";
+  for( let i=0;i<byte_array.length;i++)
+    s = s + hexChars.charAt((byte_array[i] >> 4) & 0x0f) + hexChars.charAt(byte_array[i] & 0x0f);
+  return s;
+}
+
+function hexStringToArray(hex_string)
+{
+  let result = [];
+  for( let i=0; i<hex_string.length/2;i++)
+  {
+    let s = "0x"+hex_string.charAt(i*2)+hex_string.charAt(i*2+1);
+    result.push(parseInt(s));
+  }
+  return result;
+}
+
+function draw_widgets()
+{
+  //var gui = "<div style='text-align:center;'><h1>"+gui_json.document.page_title+"</h1></div>";
+  var gui = "";
+  //gui = gui + '<div style="display:inline-block;text-align:center;margin: 0 auto; ">';
+  let max_id = 0;
+  for(widget=0;widget<widgets.length;widget++)
+  {
+    let x = parseInt( widgets[widget].id.substring(1)); 
+    if(x > max_id)
+      max_id = x;
+    
+    let widget_type = widgets[widget].type;
+    
+    if(widget_type == "button")
+      gui = gui + w_button_constructor(widget);
+    
+    else if(widget_type == "static_text")
+  	  gui = gui + w_static_text_constructor(widget);
+
+    else if(widget_type == "dynamic_text")
+      gui = gui + w_dynamic_text_constructor(widget);
+
+    else if(widget_type == "image")
+      gui = gui + w_image_constructor(widget);
+
+  }
+  document.getElementById("gui_pane").innerHTML = gui;
+  console.log(JSON.stringify(widgets));
+  next_new_widget_id = "w" + (max_id+1);
+  //console.log("Next widget id to be used will be: " + next_new_widget_id);
+}
+
+function remove_widget_type_selectors()
+{
+  for(let i=0;i<widgets.length+1;i++)
+  {
+    document.getElementById("widget_add_"+ i).style.display = "block";
+    document.getElementById("style_selector_"+i).style.display = "none";
+    document.getElementById("style_selector2_"+i).style.display = "none";
+    document.getElementById("style_selector3_"+i).style.display = "inline";
+  }
+}
+
+function insert_new_widget_dialog(separator)
+{
+  console.log("Inserting new widget before widget_index: " + separator);
+  remove_widget_type_selectors();
+  document.getElementById("widget_add_"+ separator).style.display = "none";
+  //expand_widget("cfg_details_w"+widget);
+  document.getElementById("style_selector_"+ separator).style.display = "block";
+  document.getElementById("style_selector2_"+ separator).style.display = "block";
+  document.getElementById("style_selector2_"+ separator).style.display = "none";
+}
+
+function insert_widget_type(separator)
+{
+  let elm_id = "style_selection_"+separator;
+  let elm = document.getElementById(elm_id);
+  //console.log(elm_id);
+  console.log("Inserting new widget of type index " + elm.selectedIndex+ " above widget_idx "+separator);
+  remove_widget_type_selectors();
+
+  if(elm.selectedIndex == 0)
+    w_new_image_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 1)
+    w_new_button_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 2)
+    w_new_static_text_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 3)
+    w_new_dynamic_text_widget(separator, next_new_widget_id);
+
+  draw_widgets();
+  draw_config();
+}
+//remove_widget_type_selectors()
+var cfg_separator = 
+`<div style="height:6px"></div><div id="widget_add_$separator" style="text-align:center;" onclick="insert_new_widget_dialog($separator);">
+ <div id="style_selector3_$separator" style="padding:10px"><span style="cursor: pointer;border: 1px solid #000000;border-radius: 5px;background-color:cyan;" onclick="insert_new_widget_dialog($separator);"><big><b>&nbsp;+&nbsp;</b></big></span></div></div>
+ <div  id="style_selector_$separator" 
+    style="margin:0 auto;display:none; padding: 3px; border: 1px solid #000000; background-color:cyan;border-radius: 5px;">
+    Select widget type to insert
+    <select id="style_selection_$separator"> 
+      <option>Image</option>
+      <option>Button</option>
+      <option>Static Text</option>
+      <option>Dynamic Text</option>
+    </select>
+    <button onclick="insert_widget_type($separator);">Insert</button>
+    <button onclick="remove_widget_type_selectors();">Cancel</button>
+</div>
+<div id="style_selector2_$separator" style="display:none;"><br/>
+</div><div style="height:6px"></div>`;
+
+function draw_config()
+{
+  var cfg = '<span style="text-align: center;"><h2>Editor</h2></span>'+cfg_separator;
+  let widget = 0;
+  cfg = cfg.replace(/\$separator/g,widget);
+  for(widget=0;widget<widgets.length;widget++)
+  {
+    let widget_type = widgets[widget].type;
+
+    if(widget_type == "button")	
+      cfg = cfg + w_button_cfg(widget) + cfg_separator; 
+    else if(widget_type == "static_text")	
+      cfg = cfg+ w_static_text_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "dynamic_text")  
+      cfg = cfg + w_dynamic_text_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "image")	
+      cfg = cfg + w_image_cfg(widget) + cfg_separator ; 
+    cfg = cfg.replace(/\$separator/g,widget+1);
+    
+  }
+  cfg = cfg.replace(/\$separator/g,widget+1);
+  document.getElementById("cfg_pane").innerHTML = cfg;
+  
+  for(let widget_idx=0;widget_idx<widgets.length;widget_idx++)
+  {
+    if(widgets[widget_idx].expanded == true)
+      expand_widget("cfg_details_"+ widgets[widget_idx].id);
+  }
+  
+}
+
+
+
+var trigger_filters=[];
+
+function generate_filter_object()
+{
+  trigger_filters=[];
+  // Run through all triggers in every widget to construct a trigger filter object
+  for(widget_idx = 0; widget_idx<widgets.length;widget_idx++)
+  {
+    // Does the widget have a trigger object?
+    if(widgets[widget_idx].trigger != null)
+    {  
+      let start = widgets[widget_idx].trigger.s;
+      //console.log("Widget_idx: "+widget_idx+", Trigger:  "+widgets[widget_idx].trigger.filter.toString()+" s: "+start);
+      let filter = widgets[widget_idx].trigger.filter;
+      trigger_filters.push({"widget":widget_idx,"s":start, "filter":filter});
+    }
+  } 
+}
+
+// Check incoming data for matching widget trigger filters
+function check_widget_trigger_filters(incoming_data)
+{
+  // Run through filters to find any matches
+  for(f=0;f<trigger_filters.length;f++)
+  {
+    // Initially make sure that the test array length is larger than or equal to the filter length 
+    var a = incoming_data.slice(trigger_filters[f].s, trigger_filters[f].s + trigger_filters[f].filter.length);
+    //console.log("Testing  against: "+a.toString());
+    if(a.length == trigger_filters[f].filter.length)
+    {
+      //console.log("Comparing filter to "+a.toString());
+      // Was this a match?
+      if(JSON.stringify(a)==JSON.stringify(trigger_filters[f].filter))
+        console.log("Matching filter found for widget_idx: " + trigger_filters[f].widget + ", filter_idx: "+f);
+    }
+  }
+}
+
+
+generate_filter_object();
+//console.log("Filters "+JSON.stringify(trigger_filters));
+
+draw_widgets();
+
+if(urlParams.get('mode') == 'edit')
+  draw_config();
+//check_widget_trigger_filters([99,99,4,0,11,22,33,44,55,77]);
+
+var a = [99,99,4,0,11,22,33,44,55,77];
+//console.log(arrayToHexString(a));
+//console.log(hexStringToArray("112233").toString());
+
+</script>
+</body>
+
+</html>
