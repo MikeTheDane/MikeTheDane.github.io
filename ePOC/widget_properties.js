@@ -21,31 +21,20 @@ var property_style_raw =
 `;
 
 var property_input_filter =
-`Input Filter <input type="text" onchange="w_filter_change($widget_index);" id="cfg_filter_$id" value="$filter"/>`;
+`Filter <input type="text" onchange="w_filter_change($widget_index);" id="cfg_filter_$id" value="$filter"/>`;
 
 var property_output_data = 
-`Output (hex digits) <input type="text" onchange="w_output_data_change($widget_index);" id="cfg_output_$id" value="$output"/>`;
+`Command <input type="text" onchange="w_output_data_change($widget_index);" id="cfg_output_$id" value="$output"/>`;
 
 var property_parser =
 `Start parsing at index 
  <input id="cfg_parser_start_$id" type="number" min="0" max="100" value="$parser_start_value" onchange="w_parser_start_change($widget_index);"/><br/>
- Parse incoming data as 
- <select id="cfg_parser_type_$id" onchange="w_parser_type_change($widget_index);">
-   <option value="0">String</option>
-   <option value="1">uint8</option>
-   <option value="2">uint16</option>
-   <option value="3">uint32</option>
- </select>
- <div style="display:$visibleA">
-   <br/>Number of characters <input id="cfg_parser_length_$id" type="number" min="1" max="100" value="$value" onchange="w_parser_count_change($widget_index)"/>
- </div>
- <div style="display:$visibleB">
-   <br>Parse as little-endian <input type="checkbox" class="largeCheckbox" id="cfg_endianess_$id" $checked onchange="w_parser_endianess_change($widget_index)"/>
- </div>`;
+ Number of characters <input id="cfg_parser_length_$id" type="number" min="1" max="100" value="$value" onchange="w_parser_count_change($widget_index)"/>
+ `;
 
  var property_parser_append = `
- Prepend String <input type="text" onchange="w_filter_prepend_change($widget_index);" id="cfg_filter_$id" value="$prepend"/>
- <br>Append String <input type="text" onchange="w_filter_append_change($widget_index);" id="cfg_filter_$id" value="$append"/>
+ Prepend String <input type="text" onchange="w_parser_prepend_change($widget_index);" id="cfg_prepend_$widget_index" value="$prepend"/>
+ <br>Append String <input type="text" onchange="w_parser_append_change($widget_index);" id="cfg_append_$widget_index" value="$append"/>
  `;
 
 var property_font_size = `Font size <input type="number" min="1" max="100" value="14" onchange="w_font_size_changed($widget_index)"/>Pixels`;
@@ -57,6 +46,13 @@ var property_font_color =
 var property_background_color =
 `Background color <input type="color" id="b_color_$widget_index" value="#FFFFFF" onchange="w_b_color_changed($widget_index)">
  &nbsp;Opacity <input type="number" min="0" max="100" value="0" onchange="w_b_color_opacity_changed($widget_index)"/>%`;
+
+var property_image_selection =
+`Image
+    <select id="image_selection_$widget_index" onchange="image_changed($widget_index)"> 
+    $list_of_images
+    </select>`;
+
 
 function redraw()
 {
@@ -91,7 +87,13 @@ function generate_cfg_widget(widget_type, widget_style, widget_index, widget_pro
 	s = s.replace("$value",widgets[widget_index].parser_count);
 	s = s.replace("$widget_type", widget_type);
 	s = s.replace("$default_style","'"+ widget_style +"'");
-	s = s.replace("$output","5566");
+	
+	if(widgets[widget_index].output ==null)
+	{
+		widgets[widget_index].output = "|00";
+	}
+	
+	s = s.replace("$output",widgets[widget_index].output);
 
 	// Display style
 	if(widgets[widget_index].style == null)
@@ -192,16 +194,41 @@ function w_parser_endianess_change(widget_index)
   redraw();
 }
 
+function w_parser_prepend_change(widget_index)
+{
+  let cfg_widget_id = "cfg_prepend_"+widget_index;
+  let elm = document.getElementById(cfg_widget_id);
+  widgets[widget_index].prepend = elm.value;
+  console.log("Widget w"+widget_index+" Parser prepend was changed to "+elm.value);
+  redraw();
+}
+
+function w_parser_append_change(widget_index)
+{
+  let cfg_widget_id = "cfg_append_"+widget_index;
+  let elm = document.getElementById(cfg_widget_id);
+  widgets[widget_index].append = elm.value;
+  console.log("Widget w"+widget_index+" Parser append was changed to "+elm.value);
+  redraw();
+}
+
+function w_output_data_change(widget_index)
+{
+	console.log("Output changed. Widget_idx:  "+widget_index);
+	let elm_value = document.getElementById("cfg_output_w"+widget_index).value;
+	widgets[widget_index].output = elm_value;
+	console.log("Value changed to  "+elm_value);
+}
+
 function w_filter_change(widget_index)
 {
   cfg_widget_id = "cfg_filter_"+widgets[widget_index].id;
-  elm = document.getElementById(cfg_widget_id);
-  widgets[widget_index].trigger.filter = hexStringToArray(elm.value);
+  let elm = document.getElementById(cfg_widget_id);
+  widgets[widget_index].trigger.filter = elm.value;
   
   console.log("Widget w"+widget_index+" Filter was changed to "+elm.value);
   generate_filter_object();
   console.log("Filters Now "+JSON.stringify(trigger_filters));
-  //check_widget_trigger_filters([99,99,4,0,11,22,33,44,55,77]);
   redraw();
 }
 
@@ -289,6 +316,71 @@ function styling_dialog_btn(button, widget_index)
 	}
 }
 
+
+function project_settings()
+{
+  dialog_elm = document.getElementById("project_settings"); 
+  console.log("Project Editor opened");
+  let s = `Project Options<hr>
+	
+	<div class="tooltip" style="float:left;">
+	<button id="showdialog1" style="float:left;background-color:lightgrey;width:250px;" onclick="save_project_locally();">Save Locally</button><br/><br/>
+	<span class="tooltiptext">Save project to browser storage</span></div><br>
+	
+	<div class="tooltip" style="float:left;">
+	<button id="showdialog2" style="float:left;background-color:lightgrey;width:250px;" onclick="upload_project();">Upload Project</button><br/><br/>
+	<span class="tooltiptext">Upload a project from your harddrive</span></div><br>
+
+	<div class="tooltip" style="float:left;">
+	<button id="showdialog3" style="float:left;background-color:lightgrey;width:250px;" onclick="download_project();">Download Project</button><br/><br/>
+	<span class="tooltiptext">Save project to your harddrive</span></div><br>
+
+	<div class="tooltip" style="float:left;">
+	<button id="showdialog3" style="float:left;background-color:lightgray;width:250px;" onclick="close_project_dialog();">Close</button><br/><br/>
+    <span class="tooltiptext">Close this window</span></div><br>
+`;
+
+  dialog_elm.innerHTML = s;
+  dialog_elm.showModal();
+}
+
+function draw_image_management()
+{
+  dialog_elm = document.getElementById("image_management"); 
+  let s = `Images<hr><div style="height: 150px; overflow-y: scroll; overflow-x:hidden;border: 1px solid black;border-radius: 3px;"><table><tr>`;
+
+  // List all images with a trash bin to the left
+  for(let image_idx = 0; image_idx < images.length; image_idx++)
+  {
+  	s = s + `<td width="40px">
+  					<img src="delete.png" onclick='delete_img(`+image_idx+`)' style="border-radius: 3px;border: 1px solid black;width: 15px;height:15px;padding:4px;"/></td>
+  				<td style="font-size:20px;">`+images[image_idx].id +`</td></tr>`; 	
+  }
+  s = s + `</table></div><br/>
+	
+	<div class="tooltip">
+	  <button id="showdialog1" style="float:left;background-color:lightgrey;width:250px;" onclick="upload_image();">Upload new image</button>
+	  <span class="tooltiptext">Upload an image to browser storage</span>
+	</div><hr/>
+    
+    <div class="tooltip">
+	  <button id="showdialog3" style="float:left;background-color:lightgray;width:250px;" onclick="close_image_dialog();">Close</button>
+      <span class="tooltiptext">Close this window</span>
+    </div>		
+
+`;
+
+  dialog_elm.innerHTML = s;
+}
+
+function image_management()
+{
+  console.log("Image Management opened");
+  draw_image_management();
+  dialog_elm = document.getElementById("image_management"); 
+  dialog_elm.showModal();
+}
+
 function w_style_handler(widget_index, default_style)
 {
   dialog_elm = document.getElementById("advanced_styling"); 
@@ -305,4 +397,127 @@ function w_style_handler(widget_index, default_style)
   console.log("style "+ widgets[widget_index].style);
   dialog_elm.innerHTML = s;
   dialog_elm.showModal();
+}
+
+function save_project_locally()
+{
+	localStorage.setItem("project_script", JSON.stringify(gui_json));
+	close_project_dialog();
+}
+
+function close_project_dialog()
+{
+	let dialog_elm = document.getElementById("project_settings"); 
+	dialog_elm.close();
+}
+
+function download_project()
+{
+	var json_file_content = JSON.stringify(gui_json);
+	var data = new Blob([json_file_content], {type: 'application/json'});
+
+	var elem = window.document.createElement('a');
+    elem.href = window.URL.createObjectURL(data);
+    elem.download = 'my_project.json';        
+    document.body.appendChild(elem);
+    elem.click();        
+    document.body.removeChild(elem);
+    close_project_dialog();
+}
+
+function upload_project()
+{
+	var elem = window.document.createElement('input');
+	elem.type = "file";
+	elem.accept = ".json";
+	elem.id = "file-selector";
+	elem.addEventListener
+	('change', (event) => 
+		{
+      		const fileList = event.target.files;
+      		console.log(fileList[0]);
+      		var reader = new FileReader();
+            reader.onload = function(event) {
+         		console.log(event.target.result); 
+         		gui_json = JSON.parse(event.target.result); 
+         		images = gui_json.images;
+				widgets = gui_json.widgets;
+				next_new_widget_id = "w0";  
+				localStorage.setItem("project_script", JSON.stringify(gui_json));        
+         		redraw();
+       		}
+            reader.readAsText(fileList[0]);
+    	}
+    );
+    document.body.appendChild(elem);
+    elem.click();        
+    document.body.removeChild(elem);
+    close_project_dialog();     		
+}
+
+function close_image_dialog()
+{
+	let dialog_elm = document.getElementById("image_management"); 
+	dialog_elm.close();
+}
+
+function delete_img(image_idx)
+{
+  images.splice(image_idx,1);
+  draw_image_management();
+}
+
+function encodeImageFileAsURL(element) 
+{
+  var file = element.files[0];
+  var reader = new FileReader();
+  reader.onloadend = function() {
+    console.log('RESULT', reader.result)
+  }
+  reader.readAsDataURL(file);
+}
+
+function upload_image()
+{
+   var elem = window.document.createElement('input');
+	elem.type = "file";
+	elem.accept = "image/*";
+	elem.id = "file-selector";
+	elem.addEventListener
+	('change', (event) => 
+		{
+      		var file = elem.files[0];
+  			var reader = new FileReader();
+  			reader.onloadend = function() 
+  			{
+    			console.log('image file size: ' + elem.files[0].size + " octets");
+    			if(elem.files[0].size > 250 * 1024)
+    			{
+    				alert("Image size exceeds 250kB!\nUpload rejected.");
+    			}
+    			else
+    			{
+    				var img = {};
+    				img.src = reader.result;
+    				img.id = elem.files[0].name;
+	    			images.push(img);
+	    			localStorage.setItem("project_script", JSON.stringify(gui_json));        
+         		    redraw();
+    			}
+    			draw_image_management();
+  			}
+  			reader.readAsDataURL(file);
+    	}
+    );
+    document.body.appendChild(elem);
+    elem.click();        
+    document.body.removeChild(elem);
+    draw_image_management();     	
+}
+
+function image_changed(widget_index)
+{
+	let image_id = document.getElementById("image_selection_" + widget_index).value;
+	widgets[widget_index].src = image_id;
+	redraw(); 
 }

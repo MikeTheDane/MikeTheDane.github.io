@@ -12,6 +12,8 @@ function w_button_use_handler(widget_index)
 	console.log("Button widget with Index: " + widget_index + " was pressed");
 	navigator.vibrate(50);
 	// execute the user defined action for this widget
+	let cmd = widgets[widget_index].output;
+	sendAT(cmd);
 }
 
 function w_button_constructor(widget_index)

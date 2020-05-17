@@ -5,9 +5,6 @@ var w_image_use_style ='margin:0 auto; display:block;border-radius: 4px; padding
 
 var w_image_cfg_defaults = {"id":"","type":"image","src":"img1","expanded":true,"deletethis":true};
 
-var w_image_cfg_html = `Image Source: $image`;
-
-
 function find_image_index_by_src(image_src)
 { 
   for(image_idx=0; image_idx<images.length; image_idx++)
@@ -40,7 +37,9 @@ function w_image_constructor(widget_index)
 		s = s.replace("$box_style",w_image_use_style);
 	else
 		s = s.replace("$box_style",widgets[widget_index].box_style);
-	
+
+
+
     return s;	
 }
 
@@ -48,10 +47,22 @@ function w_image_cfg(widget_index)
 {
 	let image_idx = find_image_index_by_src(widgets[widget_index].src);
     
-    let properties = [property_style_raw, _g];
+    let properties = [property_style_raw, _g, property_image_selection, _g];
 	let s = generate_cfg_widget("Image Widget", w_image_use_style, widget_index, properties);
 	
     s = s.replace(/\$image/g,widgets[widget_index].src);
+
+	let options = "";
+	//<option>Image</option>
+	for (let image_idx = 0; image_idx < images.length; image_idx++)
+	{
+		if(images[image_idx].id == widgets[widget_index].src)
+			options = options + "<option selected>" + images[image_idx].id +" </option>"
+		else
+		 	options = options + "<option>" + images[image_idx].id +" </option>"
+	}
+
+	s = s.replace("$list_of_images",options);
 
 	return s;
 }

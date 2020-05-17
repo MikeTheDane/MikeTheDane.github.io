@@ -4,131 +4,50 @@
 <link href='https://fonts.googleapis.com/css?family=Akronim' rel='stylesheet'>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="widget_properties.js"></script>
-<script src="my_json.json"></script>
+<script src="my_json.js"></script>
 <script src="w_button_obj.js"></script>
 <script src="w_static_text_obj.js"></script>
 <script src="w_dynamic_text_obj.js"></script>
 <script src="w_image_obj.js"></script>
-
-<style>
-
-/* The device with borders */
-.smartphone {
-  position: relative;
-  width: 360px;
-  height: 640px;
-  margin: auto;
-  border: 16px black solid;
-  border-top-width: 60px;
-  border-bottom-width: 60px;
-  border-radius: 36px;
-}
-
-/* The horizontal line on the top of the device */
-.smartphone:before {
-  content: '';
-  display: block;
-  width: 60px;
-  height: 5px;
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  /*background: #333;*/
-  border-radius: 10px;
-}
-
-/* The circle on the bottom of the device */
-.smartphone:after {
-  content: '';
-  display: block;
-  width: 35px;
-  height: 35px;
-  position: absolute;
-  left: 50%;
-  bottom: -65px;
-  transform: translate(-50%, -50%);
-  background: #333;
-  border-radius: 50%;
-
-}
-
-/* The screen (or content) of the device */
-.smartphone .content {
-  width: 360px;
-  height: 640px;
-  /*background: white;*/
-  background-image: "beans.jpg";
-}
-
-/* Styles widgets as displayed during editing */
-.widget_edit{
-	background-color:gainsboro;
-	padding: 3px;
-	border: 1px solid #000000;
-	border-radius: 5px;
-  cursor: pointer;
-  margin: auto;
-  font-size: 30;
-}
-
-button {
-  background-color: lightgrey;
-  border: none;
-  color: black;
-  padding: 10px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  border-radius: 8px;
-}
-
-button:active { 
-   filter: brightness(75%);
-   transform: scale(0.9,0.9);
-} 
-
-input{
-   height: 30;
-  font-size: 20;
-}
-
-input.largeCheckbox{
-   width:30px;
-   height:30px;
-}
-
-select{
-   height: 30;
-  font-size: 20;
-}
-
-</style>
+<script src="codeless.js"></script>
+<link rel="stylesheet" type="text/css" href="epoc_styles.css">
 
 </head>
 
-<body style="margin:auto;text-align:center;max-width:1720px">
+<body style="margin:auto;text-align:center;max-width:1200px;">
 
 <dialog id="advanced_styling" style="border-radius: 10px;border: 1px solid black; max-width:400px; font-size: 30px;">
 </dialog>
 
-<div id="main_stage">
+<dialog id="project_settings" style="border-radius: 10px;border: 1px solid black; font-size: 20px;">
+</dialog>
+
+<dialog id="image_management" style="border-radius: 10px;border: 1px solid black; font-size: 20px;">
+</dialog>
+
+<dialog id="ble_activity" style="background-color: black;border-radius: 10px;border: 1px solid black; font-size: 20px;">
+  <div style="color:white;">Please Wait</div><div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+</dialog>
+
+<dialog id="live_scan" style="border-radius: 10px;border: 1px solid black; font-size: 20px;">
+  Scan for Bluetooth device
+  <br/><button onclick="ble_connect_phone();" style="background-color:green;color:white">Scan</button>
+</dialog>
+
+<div id="main_stage" style="background-color: #E9E9E9;padding: 10px" >
 
 </div>
 <script>
 
-/*
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-console.log("URL parameter:" + urlParams.get('mode'));
-*/
+var ble_is_connected = false;
 
-var edit_stage = `<h1>Done in a Day&trade;, ePOC Editor</h1><hr><table ><tr><td style="vertical-align:top" width="400px">
+var edit_stage = `<h1>Done in a Day&trade;, ePOC Editor</h1><table ><tr><td style="vertical-align:top" width="400px">
 
 <div class="smartphone">
   <div class="content">
-    <div id="gui_pane" style="overflow-y: scroll;height: 100%; background-image:  url('beans.jpg');background-size: cover;">?</div>
+    <div id="gui_pane" style="overflow-y: scroll;height: 100%; background-image:  url('beans1.jpg');background-size: cover;">?</div>
   </div>
 </div>
 
@@ -138,20 +57,19 @@ var edit_stage = `<h1>Done in a Day&trade;, ePOC Editor</h1><hr><table ><tr><td 
 <div id="cfg_pane" style="overflow-y: scroll;margin:auto;max-width:700;min-width:700;height:740;background-color:white;border-radius: 5px;border: 1px solid black;padding:5px;padding-left: 15px;padding-right: 15px;">
 </div>
 
-<br/>
-<br/>
-<br/>
-<br/>
 </td>
 </tr>
-</table>`
+</table>
+<div style="max-width:1150px;padding: 10px;height: 50px;border:1px solid black;border-radius:5px">
+  <button id="ble_control_btn" onclick="ble_toggle_connection();" style="background-color:lightblue !important;float:right">Scan</button>
+</div><br>`
 
 var run_stage = `
-    <div id="gui_pane" style="overflow-y: scroll;height: 100%; background-image:  url('beans.jpg');background-size: cover;background-repeat:repeat-y">?</div>
+    <div id="gui_pane" style="overflow-y: scroll;height: 100%; background-image:  url('beans1.jpg');background-size: cover;">?</div>
 `;
 
 var main_stage_element = document.getElementById("main_stage")
-if(window.location.href.indexOf("edit") > -1)
+if((window.location.href.indexOf("edit") > -1) || (window.location.href.indexOf("default") > -1))
   main_stage_element.innerHTML = edit_stage;
 else
   main_stage_element.innerHTML = run_stage;
@@ -166,7 +84,7 @@ function remove_widget(widget_index)
   {
     reject_widget_expansion = true;
     widgets.splice(widget_index,1);
-    console.log("Widgets "+JSON.stringify(widgets));
+    //console.log("Widgets "+JSON.stringify(widgets));
     draw_widgets();
     draw_config();
   }
@@ -216,9 +134,6 @@ function allowDrop(ev) {
 
 function drag(ev) {
   ev.dataTransfer.setData("text", ev.target.id);
-   document.getElementById(ev.target.id).style = "-webkit-filter: blur(5px);-moz-filter: blur(5px);-o-filter: blur(5px);-ms-filter: blur(5px); filter: blur(5px);";
-
-  
 }
 
 function drop(ev, target) {
@@ -256,10 +171,24 @@ function swap_widgets(source,target)
 }
 
 // Read in json script
-var gui_json = JSON.parse(default_gui);
+var gui_json 
+if((localStorage.project_script != null) && (!(window.location.href.indexOf("default") > -1)))
+  gui_json = JSON.parse(localStorage.project_script);
+else  
+  gui_json= JSON.parse(default_gui);
 var images = gui_json.images;
 var widgets = gui_json.widgets;
 var next_new_widget_id = "w0";
+var running_live = false;
+
+if(!((window.location.href.indexOf("edit") > -1) || (window.location.href.indexOf("default") > -1)))
+{
+   let dialog_elm = document.getElementById("live_scan");
+   dialog_elm.showModal();
+   console.log("Running live");
+   running_live = true;
+}
+
 
 
 document.title = gui_json.document.title;
@@ -313,19 +242,23 @@ function draw_widgets()
 
   }
   document.getElementById("gui_pane").innerHTML = gui;
-  console.log(JSON.stringify(widgets));
+  //console.log(JSON.stringify(widgets));
   next_new_widget_id = "w" + (max_id+1);
+  generate_filter_object();
   //console.log("Next widget id to be used will be: " + next_new_widget_id);
 }
 
 function remove_widget_type_selectors()
 {
+  if(!running_live)
+  {
   for(let i=0;i<widgets.length+1;i++)
   {
-    document.getElementById("widget_add_"+ i).style.display = "block";
-    document.getElementById("style_selector_"+i).style.display = "none";
-    document.getElementById("style_selector2_"+i).style.display = "none";
-    document.getElementById("style_selector3_"+i).style.display = "inline";
+      document.getElementById("widget_add_"+ i).style.display = "block";
+      document.getElementById("style_selector_"+i).style.display = "none";
+      document.getElementById("style_selector2_"+i).style.display = "none";
+      document.getElementById("style_selector3_"+i).style.display = "inline";
+    }
   }
 }
 
@@ -360,13 +293,21 @@ function insert_widget_type(separator)
   draw_widgets();
   draw_config();
 }
-//remove_widget_type_selectors()
+
+/*
+<div class="tooltip">
+    <button id="showdialog3" style="float:left;background-color:lightgray;width:250px;" onclick="close_image_dialog();">Close</button>
+      <span class="tooltiptext">Close this window</span>
+    </div>  
+*/
+
 var cfg_separator = 
 `<div style="height:6px"></div><div id="widget_add_$separator" style="text-align:center;" onclick="insert_new_widget_dialog($separator);">
- <div id="style_selector3_$separator" style="padding:10px"><span style="cursor: pointer;border: 1px solid #000000;border-radius: 5px;background-color:cyan;" onclick="insert_new_widget_dialog($separator);"><big><b>&nbsp;+&nbsp;</b></big></span></div></div>
+ <div id="style_selector3_$separator" style="padding:10px"><div class="tooltip"<span style="cursor: pointer;border: 1px solid #000000;border-radius: 5px;background-color:white;" onclick="insert_new_widget_dialog($separator);"><big>
+ <b>&nbsp;+&nbsp;</b></big><span class="tooltiptext">Insert widget here</span></span></div></div></div>
  <div  id="style_selector_$separator" 
-    style="margin:0 auto;display:none; padding: 3px; border: 1px solid #000000; background-color:cyan;border-radius: 5px;">
-    Select widget type to insert
+    style="margin:0 auto;display:none; padding: 3px; border: 1px solid #000000; background-color:white;border-radius: 5px;font-size:20px;">
+    Widget type
     <select id="style_selection_$separator"> 
       <option>Image</option>
       <option>Button</option>
@@ -381,7 +322,9 @@ var cfg_separator =
 
 function draw_config()
 {
-  var cfg = '<span style="text-align: center;"><h2>Editor</h2></span>'+cfg_separator;
+  var cfg = `<table><tr><td width ="60px"><img src="edit_20px.png" onclick='project_settings();' style="border-radius: 3px;border: 1px solid black;width: 30px;height:30px;padding:5px;"/></td>
+    <td width ="60px"><img src="edit_20px.png" onclick='image_management();' style="border-radius: 3px;border: 1px solid black;width: 30px;height:30px;padding:5px;"/></td>
+    <td><span style="padding-left:100px;"><h2>Editor</h2></span><br/></td></tr></table>`+cfg_separator;
   let widget = 0;
   cfg = cfg.replace(/\$separator/g,widget);
   for(widget=0;widget<widgets.length;widget++)
@@ -400,8 +343,11 @@ function draw_config()
     
   }
   cfg = cfg.replace(/\$separator/g,widget+1);
-  document.getElementById("cfg_pane").innerHTML = cfg;
-  
+ 
+  let elm = document.getElementById("cfg_pane");
+  if(elm != null)
+    elm.innerHTML = cfg;
+
   for(let widget_idx=0;widget_idx<widgets.length;widget_idx++)
   {
     if(widgets[widget_idx].expanded == true)
@@ -435,34 +381,109 @@ function generate_filter_object()
 function check_widget_trigger_filters(incoming_data)
 {
   // Run through filters to find any matches
+  let found = false
   for(f=0;f<trigger_filters.length;f++)
   {
     // Initially make sure that the test array length is larger than or equal to the filter length 
-    var a = incoming_data.slice(trigger_filters[f].s, trigger_filters[f].s + trigger_filters[f].filter.length);
-    //console.log("Testing  against: "+a.toString());
-    if(a.length == trigger_filters[f].filter.length)
+    if(incoming_data.length >= trigger_filters[f].filter.length)
     {
-      //console.log("Comparing filter to "+a.toString());
+      
+      let incoming_data_part = incoming_data.substring(0,trigger_filters[f].filter.length);
+      console.log("Comparing filter "+incoming_data_part+" to "+trigger_filters[f].filter);
       // Was this a match?
-      if(JSON.stringify(a)==JSON.stringify(trigger_filters[f].filter))
+      if(incoming_data_part == trigger_filters[f].filter)
+      {
+        found = true;
         console.log("Matching filter found for widget_idx: " + trigger_filters[f].widget + ", filter_idx: "+f);
+        let widget_index = trigger_filters[f].widget;
+        let widget_type = widgets[widget_index].type;
+        console.log("Widget type is "+ widget_type);
+        
+        let begin = widgets[widget_index].parser_start;
+        let count = widgets[widget_index].parser_count;
+        let parsed_string = "";
+        if(count == 0)
+          parsed_string = incoming_data.substring(begin);
+        else
+          parsed_string = incoming_data.substring(begin,begin + count);
+
+        console.log("Parsed string from incoming data: "+parsed_string);
+
+        if(widget_type == "dynamic_text")
+        {
+          widgets[widget_index].label = widgets[widget_index].prepend + parsed_string + widgets[widget_index].append;
+          redraw();
+        }
+        
+      }
     }
   }
 }
 
+function ble_toggle_connection()
+{
+  if (ble_is_connected)
+  {
+      dialog_elm = document.getElementById("ble_activity");
+      dialog_elm.showModal();
+  
+      ble_disconnect();
+  }
+  else
+    ble_connect();
+}
 
-generate_filter_object();
+function ble_connection_completed()
+{
+   let elm = document.getElementById("ble_control_btn");
+   if(elm != null)
+   {
+     elm.innerHTML = "Disconnect";
+     elm.style = "background-color: orange !important;float:right;";
+   }
+   ble_is_connected = true;
+   dialog_elm = document.getElementById("ble_activity");
+   dialog_elm.close();
+}
+
+function ble_connection_failed_or_disconnected()
+{
+   let elm = document.getElementById("ble_control_btn");
+   if(elm != null)
+   {
+     elm.innerHTML = "Scan";
+     elm.style = "background-color:lightblue !important;float:right;";
+   }
+   ble_is_connected = false;
+   let dialog_elm = document.getElementById("ble_activity");
+   dialog_elm.close();
+   dialog_elm = document.getElementById("live_scan");
+   dialog_elm.showModal(); 
+}
+
+function ble_connect_phone()
+{
+  let dialog_elm = document.getElementById("live_scan");
+  dialog_elm.close();
+  ble_connect(); 
+}
+
+function message_received(message)
+
+{
+  check_widget_trigger_filters(message);
+}
+
+//generate_filter_object();
 //console.log("Filters "+JSON.stringify(trigger_filters));
 
 draw_widgets();
 
-if(window.location.href.indexOf("edit") > -1)
+if((window.location.href.indexOf("edit") > -1)||(window.location.href.indexOf("default") > -1))
   draw_config();
-//check_widget_trigger_filters([99,99,4,0,11,22,33,44,55,77]);
 
-var a = [99,99,4,0,11,22,33,44,55,77];
-//console.log(arrayToHexString(a));
-//console.log(hexStringToArray("112233").toString());
+//check_widget_trigger_filters("|00 and some shit");
+
 
 </script>
 </body>

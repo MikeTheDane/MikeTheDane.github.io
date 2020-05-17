@@ -25,7 +25,7 @@ function w_dynamic_text_constructor(widget_index)
 function w_dynamic_text_cfg(widget_index)
 {
 	let properties = [
-		property_style_raw, _g, property_label, _g, property_input_filter, property_parser, property_parser_append, _g];
+		property_style_raw, _g, property_label, _g, property_input_filter, _g, property_parser, property_parser_append, _g];
 
 	let s = generate_cfg_widget("Dynamic Text Widget", w_dynamic_text_use_style, widget_index, properties);
 	return s;
