@@ -1,0 +1,123 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+	
+	<head>
+		
+		<meta charset="UTF-8">
+		<title>CodeLess Web Bluetooth Application</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script>
+
+			var inboundChar;
+			var outboundChar;
+			
+			// Define the codeless UUIDs 
+			var CODELESS_SVC_UUID 	= "866d3b04-e674-40dc-9c05-b7f91bec6e83";
+			var INBOUND_CHAR_UUID 	= "914f8fb9-e8cd-411d-b7d1-14594de45425";
+			var OUTBOUND_CHAR_UUID 	= "3bb535aa-50b2-4fbe-aa09-6b06dc59a404";
+			var CNTRL_CHAR_UUID		= "e2048b39-d4f9-4a45-9f25-1856c10d5639";
+
+			// Display text in log field text area 
+			function log(text)
+			{
+				var textarea = document.getElementById('log');
+				textarea.value += "\n" + text;
+				textarea.scrollTop = textarea.scrollHeight;
+			}
+
+			// Incoming GATT notification was received
+			async function incomingData(event){
+				// Read data from BLE CodeLess peer
+				let readInValue = await outboundChar.readValue();
+				let decoder = new TextDecoder('utf-8');
+				// Log the incoming string (format slightly)
+				log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
+			}
+
+			// Scan, connect and explore CodeLess BLE device
+			async function ble_connect() {
+				try {
+					// Define a scan filter and prepare for interaction with Codeless Service
+					log('Requesting Bluetooth Device...');
+					device  = await navigator.bluetooth.requestDevice({
+						filters: [{name: 'CLv2'}],
+						optionalServices: [CODELESS_SVC_UUID]
+					});		
+					// Connect to device and perform attribute discovery
+					log('Connecting to GATT Server...');
+					server = await device.gatt.connect();
+					log('Exploring CodeLess Service...');
+					const service = await server.getPrimaryService(CODELESS_SVC_UUID);
+					log('  Mapping CodeLess Inbound Command Characteristic...');
+					inboundChar = await service.getCharacteristic(INBOUND_CHAR_UUID);
+					log('  Mapping CodeLess Outbound Command Characteristic...');
+					outboundChar = await service.getCharacteristic(OUTBOUND_CHAR_UUID);
+					log('  Mapping CodeLess Flow Control Characteristic...');
+					const flowcontrolChar = await service.getCharacteristic(CNTRL_CHAR_UUID);
+					// Subscribe to notifications
+					await flowcontrolChar.startNotifications();
+					flowcontrolChar.addEventListener('characteristicvaluechanged', incomingData);
+					log('Ready to communicate!\n');
+				}
+				catch(error) {
+					log('Failed: ' + error);
+				}
+			}
+
+			// Send an AT command to the CodeLess BLE peer
+			async function sendAT(cmd) {
+				// Display the command in the log
+				log(' -> ' + cmd );
+				// Append an extra character as expected by CodeLess
+				var commandToSend = cmd + "\0";
+				try{
+					let encoder = new TextEncoder('utf-8');
+					// Send command via GATT Write request 
+					await inboundChar.writeValue(encoder.encode(commandToSend));
+				} 
+				catch(error) {
+					log('Failed: ' + error);
+				}
+			}
+
+			// If enter key was pressed by user while editing, send command immediately
+			function wasEnter(elem) {
+				if(event.key === 'Enter') {
+					sendAT(document.getElementById("cmd").value);
+				}
+			}
+
+		</script>
+
+	</head>
+
+	<body>
+
+		<h1>CodeLess:</h1>
+		<p>
+			Load the Dialog CodeLess firmware on a development kit and use this Web Page to send and receive commands via Web Bluetooth.<br/>
+			Additional information: 
+			<a href='https://www.dialog-semiconductor.com/products/smartbondtm-codeless-commands'>CodeLess AT Commands</a><br/>
+			Right click to view the source code of this implementation.
+		</p>
+		<button type="button" onclick="ble_connect()">
+			Click me to scan for CodeLess BLE devices.
+		</button>
+		<br/>
+		<br/>Log:<br/>
+		<textarea id="log" rows="25" cols="60" ></textarea>
+		<br/><br/><br/>
+		<button type="button" onclick="sendAT('ATrI')">
+			Send ATrI
+		</button>
+		<br/><br/>
+		<input type="text" id="cmd" onkeydown="wasEnter(this)">
+		<button type="button" onclick="sendAT(document.getElementById('cmd').value)">
+			Transmit Command
+		</button>
+
+	</body>
+
+</html>
