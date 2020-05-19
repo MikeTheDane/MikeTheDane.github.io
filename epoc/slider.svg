@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg6652"
+   version="1.1"
+   viewBox="0 0 18.466116 10.0089"
+   height="10.0089mm"
+   width="18.466116mm">
+  <defs
+     id="defs6646" />
+  <metadata
+     id="metadata6649">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-0.78330716,-286.70389)"
+     id="layer1">
+    <g
+       id="g7213">
+      <ellipse
+         style="opacity:1;fill:#4d4d4d;fill-opacity:1;fill-rule:evenodd;stroke:#4d4d4d;stroke-width:0.46499997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.55072464"
+         id="path6600"
+         cx="10.016365"
+         cy="291.70834"
+         rx="9.0005579"
+         ry="4.7719498" />
+      <ellipse
+         style="opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.76499999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="path6600-4"
+         cx="9.9454956"
+         cy="291.68472"
+         rx="8.3863468"
+         ry="4.0868678" />
+      <ellipse
+         style="opacity:1;fill:#e6e6e6;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.46499997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="$left_circle"
+         cx="6.5437016"
+         cy="291.66107"
+         rx="3.0238094"
+         ry="2.8348215" />
+      <ellipse
+         style="opacity:1;fill:#e6e6e6;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.46499997;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="$right_circle"
+         cx="13.347275"
+         cy="291.61386"
+         rx="3.0238094"
+         ry="2.8348215" />
+    </g>
+  </g>
+</svg>

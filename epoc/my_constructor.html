@@ -1,0 +1,622 @@
+<html>
+
+<head>
+<link href='https://fonts.googleapis.com/css?family=Akronim' rel='stylesheet'>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="widget_properties.js"></script>
+<script src="my_json.js"></script>
+<script src="w_button_obj.js"></script>
+<script src="w_static_text_obj.js"></script>
+<script src="w_dynamic_text_obj.js"></script>
+<script src="w_image_obj.js"></script>
+<script src="w_progress_bar_obj.js"></script>
+<script src="w_slider_obj.js"></script>
+<script src="w_toggle_obj.js"></script>
+<script src="w_gauge_obj.js"></script>
+
+<script src="codeless.js"></script>
+<link rel="stylesheet" type="text/css" href="epoc_styles.css">
+
+</head>
+
+<body style="margin:auto;text-align:center;max-width:1200px;">
+
+<dialog id="advanced_styling" style="border-radius: 10px;border: 1px solid black; max-width:400px; font-size: 30px;">
+</dialog>
+
+<dialog id="project_settings" style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
+</dialog>
+
+<dialog id="image_management" style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
+</dialog>
+
+<dialog id="ble_activity" style="background-color: black;border-radius: 10px;border: 1px solid black; font-size: 20px;">
+  <div style="color:white;">Please Wait</div><div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+</dialog>
+
+
+<dialog id="live_scan" style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
+  Scan for Bluetooth device<br/>
+  <br/><button onclick="ble_connect_phone();" style="background-color:green;color:white">Scan</button>
+  <br/>
+  <br/><button onclick="upload_project();" style="background-color:black;color:white">Upload ePOC script</button>
+</dialog>
+
+<dialog id="document_management_dialog" style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
+
+</dialog>
+
+<div id="main_stage" style="background-color: #E9E9E9;padding: 10px" >
+
+</div>
+<script>
+
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+var ble_is_connected = false;
+
+
+//background-image:  url('unknown.png')
+var edit_stage = `<h1>Done in a Day&trade;, ePOC Editor</h1><table ><tr><td style="vertical-align:top" width="400px">
+
+<div class="smartphone">
+  <div class="content">
+    <div id="gui_pane" style="cursor: pointer;overflow-y: scroll;height: 100%;width:100%">?</div>
+  </div>
+</div>
+
+<br/>
+</td>
+<td style="vertical-align:top;padding-left:30px;">
+
+<div><table><tr>
+    <td width ="50px">
+      <div class="tooltip"><img src="files.png" onclick='project_settings();' style="border-radius: 3px;border: 1px solid black;width:30px;height:30px;padding:5px;background-color:white"/><span class="tooltiptext">Project File</span></div>
+
+    </td>
+    <td width ="50px">
+      <div class="tooltip"><img src="settings.png" onclick='document_management();' style="border-radius: 3px;border: 1px solid black;width: 30px;height:30px;padding:5px;background-color:white"/><span class="tooltiptext">Project Settings</span></div>
+    </td>
+    <td width ="50px">
+      <div class="tooltip"><img src="images.png" onclick='image_management();' style="border-radius: 3px;border: 1px solid black;width: 30px;height:30px;padding:5px;background-color:white"/><span class="tooltiptext">Images</span></div>
+    </td>
+    
+    <td></td></tr></table></div>
+
+<div id="cfg_pane" style="overflow-y: scroll;margin:auto;max-width:550;min-width:550;height:700;background-color:white;border-radius: 5px;border: 1px solid black;padding:5px;padding-left: 15px;padding-right: 15px;">
+</div>
+
+</td>
+</tr>
+</table>
+<div style="max-width:1150px;padding: 10px;height: 50px;border:1px solid black;border-radius:5px">
+  <button id="ble_control_btn" onclick="ble_toggle_connection();" style="background-color:lightblue !important;float:right">Scan</button>
+</div><br>`
+
+//background-size: cover;
+
+var run_stage = `
+    <div id="gui_pane" style="overflow-y: scroll;height: 100%;width:100%">?</div>
+`;
+
+var main_stage_element = document.getElementById("main_stage")
+if((window.location.href.indexOf("edit") > -1) || (window.location.href.indexOf("default") > -1))
+  main_stage_element.innerHTML = edit_stage;
+else
+  main_stage_element.innerHTML = run_stage;
+
+
+var reject_widget_expansion = false;
+
+function remove_widget(widget_index)
+{
+  var r = confirm("Are you sure that you wan to delete this widget?");
+  if (r == true) 
+  {
+    reject_widget_expansion = true;
+    widgets.splice(widget_index,1);
+    //console.log("Widgets "+JSON.stringify(widgets));
+    draw_widgets();
+    draw_config();
+  }
+}
+
+function expand_widget(cfg_widget_details_id)
+{
+  //console.log("Trying to expand "+cfg_widget_details_id);
+  remove_widget_type_selectors();
+  if(!reject_widget_expansion)
+  {
+    if(document.getElementById(cfg_widget_details_id) != null)
+    {
+      if(document.getElementById(cfg_widget_details_id).style.display == "none")
+      {
+        document.getElementById(cfg_widget_details_id).style.display = "inline";
+        let id = cfg_widget_details_id.substring(12);
+        for(let widget_idx = 0; widget_idx<widgets.length;widget_idx++)
+        {
+          if(widgets[widget_idx].id == id)
+          widgets[widget_idx].expanded = true;
+        }
+      }
+  }
+  }
+  reject_widget_expansion = false;
+}
+
+function implode_widget(cfg_widget_details_id)
+{
+  reject_widget_expansion = true;
+  //console.log("Imploding widget " + cfg_widget_details_id);
+  remove_widget_type_selectors();
+  document.getElementById(cfg_widget_details_id).style.display="none";
+  let id = cfg_widget_details_id.substring(12);
+  for(let widget_idx = 0; widget_idx<widgets.length;widget_idx++)
+  {
+    if(widgets[widget_idx].id == id)
+      widgets[widget_idx].expanded = false;
+  }
+  //console.log(JSON.stringify(widgets));
+}
+
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev, target) {
+  ev.preventDefault();
+  var source = ev.dataTransfer.getData("text");
+  swap_widgets(source,target);
+}
+
+function widget_id_to_widget_index(widget_id)
+{
+  widget_id = widget_id.substring(0,widget_id.length -4);
+  for(let widget_idx=0;widget_idx<widgets.length;widget_idx++)
+  {
+    if(widgets[widget_idx].id == widget_id)
+      return widget_idx;
+  }
+}
+
+function swap_widgets(source,target)
+{
+  // Convert source id to widget_index
+  let source_widget_idx = widget_id_to_widget_index(source);
+ 
+  // Take a copy of the dragged widget
+  let temp = JSON.stringify(widgets[source_widget_idx]);
+
+  // Remove the dragged source widget from widgets array
+  widgets.splice(source_widget_idx,1);
+
+  // Insert the dragged source widget above target widget
+  widgets.splice(target,0,JSON.parse(temp)); 
+
+  draw_widgets();
+  draw_config();
+}
+
+// Read in json script
+var gui_json 
+if((localStorage.project_script != null) && (!(window.location.href.indexOf("default") > -1)))
+  gui_json = JSON.parse(localStorage.project_script);
+else  
+  gui_json= JSON.parse(default_gui);
+var images = gui_json.images;
+var widgets = gui_json.widgets;
+var next_new_widget_id = "w0";
+var running_live = false;
+var back_ground_image = "";
+
+if(!((window.location.href.indexOf("edit") > -1) || (window.location.href.indexOf("default") > -1)))
+{
+   let dialog_elm = document.getElementById("live_scan");
+   dialog_elm.showModal();
+   console.log("Running live");
+   running_live = true;
+}
+
+
+
+document.title = gui_json.document.title;
+document.body.style.backgroundColor = gui_json.document.background_color;
+
+function arrayToHexString(byte_array)
+{
+  var hexChars = "0123456789ABCDEF";
+  s = "";
+  for( let i=0;i<byte_array.length;i++)
+    s = s + hexChars.charAt((byte_array[i] >> 4) & 0x0f) + hexChars.charAt(byte_array[i] & 0x0f);
+  return s;
+}
+
+function hexStringToArray(hex_string)
+{
+  let result = [];
+  for( let i=0; i<hex_string.length/2;i++)
+  {
+    let s = "0x"+hex_string.charAt(i*2)+hex_string.charAt(i*2+1);
+    result.push(parseInt(s));
+  }
+  return result;
+}
+
+function draw_widgets()
+{
+  //var gui = "<div style='text-align:center;'><h1>"+gui_json.document.page_title+"</h1></div>";
+  var gui = "";
+  //gui = gui + '<div style="display:inline-block;text-align:center;margin: 0 auto; ">';
+  let max_id = 0;
+  for(widget=0;widget<widgets.length;widget++)
+  {
+    let x = parseInt( widgets[widget].id.substring(1)); 
+    if(x > max_id)
+      max_id = x;
+    
+    let widget_type = widgets[widget].type;
+    
+    if(widget_type == "button")
+      gui = gui + w_button_constructor(widget);
+    
+    else if(widget_type == "static_text")
+  	  gui = gui + w_static_text_constructor(widget);
+
+    else if(widget_type == "dynamic_text")
+      gui = gui + w_dynamic_text_constructor(widget);
+
+    else if(widget_type == "image")
+      gui = gui + w_image_constructor(widget);
+
+    else if(widget_type == "progress_bar")
+      gui = gui + w_progress_bar_constructor(widget);
+
+    else if(widget_type == "slider")
+      gui = gui + w_slider_constructor(widget);
+
+    else if(widget_type == "toggle")
+      gui = gui + w_toggle_constructor(widget);
+
+    else if(widget_type == "gauge")
+      gui = gui + w_gauge_constructor(widget);
+
+  }
+  document.getElementById("gui_pane").innerHTML = gui;
+  let temp_style  = `cursor: pointer;overflow-y: scroll;height: 100%;background-size:cover;background-image:url('$data');`;
+  document.getElementById("gui_pane").style = temp_style.replace("$data",gui_json.document.background_img);
+  
+  //console.log(JSON.stringify(widgets));
+  next_new_widget_id = "w" + (max_id+1);
+  generate_filter_object();
+  //console.log("Next widget id to be used will be: " + next_new_widget_id);
+}
+
+function remove_widget_type_selectors()
+{
+  (!running_live)
+  {
+  for(let i=0;i<widgets.length+1;i++)
+  {
+      document.getElementById("widget_add_"+ i).style.display = "block";
+      document.getElementById("style_selector_"+i).style.display = "none";
+      document.getElementById("style_selector2_"+i).style.display = "none";
+      document.getElementById("style_selector3_"+i).style.display = "inline";
+    }
+  }
+  
+}
+
+function insert_new_widget_dialog(separator)
+{
+  console.log("Inserting new widget before widget_index: " + separator);
+  remove_widget_type_selectors();
+  document.getElementById("widget_add_"+ separator).style.display = "none";
+  //expand_widget("cfg_details_w"+widget);
+  document.getElementById("style_selector_"+ separator).style.display = "block";
+  document.getElementById("style_selector2_"+ separator).style.display = "block";
+  document.getElementById("style_selector2_"+ separator).style.display = "none";
+}
+
+function insert_widget_type(separator)
+{
+  let elm_id = "style_selection_"+separator;
+  let elm = document.getElementById(elm_id);
+  //console.log(elm_id);
+  console.log("Inserting new widget of type index " + elm.selectedIndex+ " above widget_idx "+separator);
+  remove_widget_type_selectors();
+
+  if(elm.selectedIndex == 0)
+    w_new_image_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 1)
+    w_new_button_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 2)
+    w_new_static_text_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 3)
+    w_new_dynamic_text_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 4)
+    w_new_progress_bar_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 5)
+    w_new_slider_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 6)
+    w_new_toggle_widget(separator, next_new_widget_id);
+  else if(elm.selectedIndex == 7)
+    w_new_gauge_widget(separator, next_new_widget_id);
+
+  draw_widgets();
+  draw_config();
+}
+
+
+var cfg_separator = 
+`<div style="height:6px"></div><div id="widget_add_$separator" style="text-align:center;" onclick="insert_new_widget_dialog($separator);">
+ <div id="style_selector3_$separator" style="padding:10px"><div class="tooltip"<span style="cursor: pointer;border: 1px solid #000000;border-radius: 5px;background-color:white;" onclick="insert_new_widget_dialog($separator);"><big>
+ <b>&nbsp;+&nbsp;</b></big><span class="tooltiptext">Insert widget here</span></span></div></div></div>
+ <div  id="style_selector_$separator" 
+    style="margin:0 auto;display:none; padding: 3px; border: 1px solid #000000; background-color:white;border-radius: 5px;font-size:20px;">
+    Widget type
+    <select id="style_selection_$separator"> 
+      <option>Image</option>
+      <option>Button</option>
+      <option>Static Text</option>
+      <option>Dynamic Text</option>
+      <option>Progress Bar</option>
+      <option>Slider</option>
+      <option>Toggle Switch</option>
+      <option>Gauge</option>
+    </select>
+    <button onclick="insert_widget_type($separator);">Insert</button>
+    <button onclick="remove_widget_type_selectors();">Cancel</button>
+</div>
+<div id="style_selector2_$separator" style="display:none;"><br/>
+</div><div style="height:6px"></div>`;
+
+function draw_config()
+{
+  var cfg = cfg_separator;
+  let widget = 0;
+  cfg = cfg.replace(/\$separator/g,widget);
+  for(widget=0;widget<widgets.length;widget++)
+  {
+    let widget_type = widgets[widget].type;
+
+    if(widget_type == "button")	
+      cfg = cfg + w_button_cfg(widget) + cfg_separator; 
+    else if(widget_type == "static_text")	
+      cfg = cfg+ w_static_text_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "dynamic_text")  
+      cfg = cfg + w_dynamic_text_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "image")	
+      cfg = cfg + w_image_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "progress_bar")  
+      cfg = cfg + w_progress_bar_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "slider")  
+      cfg = cfg + w_slider_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "toggle")  
+      cfg = cfg + w_toggle_cfg(widget) + cfg_separator ; 
+    else if(widget_type == "gauge")  
+      cfg = cfg + w_gauge_cfg(widget) + cfg_separator ; 
+    
+
+    cfg = cfg.replace(/\$separator/g,widget+1);
+    
+  }
+  cfg = cfg.replace(/\$separator/g,widget+1);
+ 
+  let elm = document.getElementById("cfg_pane");
+  if(elm != null)
+    elm.innerHTML = cfg;
+
+  for(let widget_idx=0;widget_idx<widgets.length;widget_idx++)
+  {
+    if(widgets[widget_idx].expanded == true)
+      expand_widget("cfg_details_"+ widgets[widget_idx].id);
+  }
+  
+}
+
+
+
+var trigger_filters=[];
+
+function generate_filter_object()
+{
+  trigger_filters=[];
+  // Run through all triggers in every widget to construct a trigger filter object
+  for(widget_idx = 0; widget_idx<widgets.length;widget_idx++)
+  {
+    // Does the widget have a trigger object?
+    if(widgets[widget_idx].trigger != null)
+    {  
+      let start = widgets[widget_idx].trigger.s;
+      //console.log("Widget_idx: "+widget_idx+", Trigger:  "+widgets[widget_idx].trigger.filter.toString()+" s: "+start);
+      let filter = widgets[widget_idx].trigger.filter;
+      trigger_filters.push({"widget":widget_idx,"s":start, "filter":filter});
+    }
+  } 
+}
+
+// Check incoming data for matching widget trigger filters
+function check_widget_trigger_filters(incoming_data)
+{
+  // Run through filters to find any matches
+  let found = false
+  for(f=0;f<trigger_filters.length;f++)
+  {
+    // Initially make sure that the test array length is larger than or equal to the filter length 
+    if(incoming_data.length >= trigger_filters[f].filter.length)
+    {
+      
+      let incoming_data_part = incoming_data.substring(0,trigger_filters[f].filter.length);
+      //console.log("Comparing filter "+incoming_data_part+" to "+trigger_filters[f].filter);
+      // Was this a match?
+      if(incoming_data_part == trigger_filters[f].filter)
+      {
+        found = true;
+        //console.log("Matching filter found for widget_idx: " + trigger_filters[f].widget + ", filter_idx: "+f);
+        let widget_index = trigger_filters[f].widget;
+        let widget_type = widgets[widget_index].type;
+        //console.log("Widget type is "+ widget_type);
+        
+        let begin = widgets[widget_index].parser_start;
+        let count = widgets[widget_index].parser_count;
+        let parsed_string = "";
+        if(count == 0)
+          parsed_string = incoming_data.substring(begin);
+        else
+          parsed_string = incoming_data.substring(begin,begin + count);
+
+        //console.log("Parsed string from incoming data: "+parsed_string);
+
+        if(widget_type == "dynamic_text")
+        {
+          //widgets[widget_index].label = widgets[widget_index].prepend + parsed_string + widgets[widget_index].append;
+          let elm = document.getElementById("dyn_text_"+widget_index);
+          elm.innerHTML = widgets[widget_index].prepend + parsed_string + widgets[widget_index].append;
+          //redraw();
+        }
+
+        if(widget_type == "progress_bar")
+        {
+          widgets[widget_index].value = parsed_string;
+          let elm = document.getElementById("w_progress_bar_value_"+widget_index);
+          elm.value = parsed_string;
+          //redraw();
+        }
+        if(widget_type == "toggle")
+        {
+          widgets[widget_index].value = parsed_string;
+          remote_toggle(widget_index,parsed_string);
+        }
+        if(widget_type == "gauge")
+        {
+          gauge_set_needle(widget_index, parsed_string);
+        }
+        
+      }
+    }
+  }
+}
+
+function ble_toggle_connection()
+{
+  if (ble_is_connected)
+  {
+      dialog_elm = document.getElementById("ble_activity");
+      dialog_elm.showModal();
+  
+      ble_disconnect();
+  }
+  else
+    ble_connect();
+}
+
+function ble_connection_completed()
+{
+   let elm = document.getElementById("ble_control_btn");
+   if(elm != null)
+   {
+     elm.innerHTML = "Disconnect";
+     elm.style = "background-color: orange !important;float:right;";
+   }
+   ble_is_connected = true;
+   dialog_elm = document.getElementById("ble_activity");
+   dialog_elm.close();
+}
+
+function ble_connection_failed_or_disconnected()
+{
+   let elm = document.getElementById("ble_control_btn");
+   if(elm != null)
+   {
+     elm.innerHTML = "Scan";
+     elm.style = "background-color:lightblue !important;float:right;";
+   }
+   ble_is_connected = false;
+   let dialog_elm = document.getElementById("ble_activity");
+   dialog_elm.close();
+   if(running_live)
+   {
+      dialog_elm = document.getElementById("live_scan");
+      dialog_elm.showModal(); 
+   }
+}
+
+function ble_connect_phone()
+{
+  let dialog_elm = document.getElementById("live_scan");
+  dialog_elm.close();
+  ble_connect(); 
+  document.body.requestFullscreen();
+}
+
+function message_received(message)
+
+{
+  check_widget_trigger_filters(message);
+}
+
+function document_management()
+{
+  let elm = document.getElementById("document_management_dialog")
+  let s = `Project Settings<hr>Background Image
+    <select id="background_image_selection" onchange="back_ground_image_changed()"> 
+    $list_of_images
+    </select><br/>
+    <hr/><button onclick="close_document_dialog();">Close</button>`;
+  let options = "";
+  //<option>Image</option>
+  for (let image_idx = 0; image_idx < images.length; image_idx++)
+  {
+    if(images[image_idx].id == gui_json.document.background_file)
+      options = options + "<option selected>" + images[image_idx].id +" </option>"
+    else
+      options = options + "<option>" + images[image_idx].id +" </option>"
+  }
+
+  s = s.replace("$list_of_images",options);
+  elm.innerHTML = s;
+  elm.showModal();
+}
+
+function close_document_dialog()
+{
+  let elm = document.getElementById("document_management_dialog");
+  elm.close();
+}
+
+function back_ground_image_changed()
+{
+  let image_id = document.getElementById('background_image_selection').value;
+  for(let i=0;i<images.length;i++)
+  {
+    if(images[i].id == image_id)
+    {
+      gui_json.document.background_img = images[i].src;
+      gui_json.document.background_file = image_id;
+      break;
+    }
+  }
+  redraw();
+}
+
+//generate_filter_object();
+//console.log("Filters "+JSON.stringify(trigger_filters));
+
+draw_widgets();
+
+if((window.location.href.indexOf("edit") > -1)||(window.location.href.indexOf("default") > -1))
+  draw_config();
+
+//check_widget_trigger_filters("|00 and some shit");
+
+let debug=document.getElementById("codeless");
+
+
+</script>
+</body>
+
+</html>
