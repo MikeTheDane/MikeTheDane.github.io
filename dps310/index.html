@@ -1,0 +1,354 @@
+<html>
+
+<head>
+
+<link href='https://fonts.googleapis.com/css?family=Akronim' rel='stylesheet'>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="dps310.js"></script>
+<link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+
+<body style="margin:auto;text-align:center;max-width:1200px;background-image: url('bluesky.jpg');background-size: cover;">
+
+<div style="width:100%;background-color: white;">
+<img src="2333-logo-small.png" alt="" width="70%" style="padding-top: 20px;padding-bottom: 20px;" />
+</div> 
+<br/>
+<dialog id="ble_activity" style="background-color: black;border-radius: 10px;border: 1px solid black; font-size: 20px;">
+  <div style="color:white;">Please Wait</div><div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+</dialog>
+
+
+<dialog id="live_scan" open style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
+  Scan for Bluetooth LE device<br/>
+  <br/><button onclick="ble_connect_phone();" style="background-color:green;color:white">Scan</button>
+</dialog>
+
+<div id="stage"></div>
+
+<div style="margin:auto;text-align:center;width:100%;position: absolute;bottom:0;background-color: white;">
+<img src="diasemi.png" alt="" width="40%"  style="padding-top: 10px;padding-bottom: 10px;"/>
+</div>
+
+<script>
+
+var scales = [];
+var offsets = [];
+
+var w_temp_text_use_html = `<div id="temp" style="border-style: solid; border-width: 2px;border-radius: 8px;border-color:white;width: 45%;margin:0 auto; display:block;text-align: center;padding: 5px 5px 5px 5px;font-size:30px;background-color: black;color:white;opacity: 0.4;"></div>`
+var w_pres_text_use_html = `<div id="pres" style="border-style: solid; border-width: 2px;border-radius: 8px;border-color:white;width: 45%;margin:0 auto; display:block;text-align: center;padding: 5px 5px 5px 5px;font-size:30px;background-color: black;;opacity: 0.4;color:white;"></div>`
+
+var w_gauge_use_html = `<div style="margin: auto;width: 250px;padding:5px;"> 
+<svg width="250px" height="250px" version="1.1" viewBox="0 0 93.143 93.143" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <linearGradient id="linearGradient16115" x1="170.09" x2="71.249" y1="118.97" y2="118.6" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#999" offset="0"/>
+   <stop stop-color="#4d4d4d" offset="1"/>
+  </linearGradient>
+ </defs>
+ <g transform="translate(-18.677 -72.096)">
+  <circle cx="65.248" cy="118.67" r="44.971" fill="#ccc" stroke="#999" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".94472" stroke-width="3.2015"/>
+  <circle cx="65.248" cy="118.67" r="42.565" stroke="#333" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".94472" stroke-width="3.2015"/>
+  <use width="100%" height="100%" fill="#f2f2f2" xlink:href="#rect15623"/>
+  <circle cx="65.248" cy="118.67" r="40.16" fill="url(#linearGradient16115)" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".94472" stroke-width="1.2965"/>
+  <g fill="#f2f2f2">
+   <rect id="rect15623" x="24.985" y="116.21" width="9.5614" height="4.5634" ry=".68178" fill="#f2f2f2"/>
+   <use transform="rotate(45 65.248 118.69)" width="100%" height="100%" xlink:href="#rect15623"/>
+   <use transform="rotate(90 65.248 118.69)" width="100%" height="100%" xlink:href="#rect15623"/>
+   <use transform="rotate(135 65.248 118.69)" width="100%" height="100%" xlink:href="#rect15623"/>
+   <use transform="rotate(180 65.248 118.69)" width="100%" height="100%" xlink:href="#rect15623"/>
+   <use transform="rotate(225 65.248 118.69)" width="100%" height="100%" xlink:href="#rect15623"/>
+   <use transform="rotate(-45 65.248 118.69)" width="100%" height="100%" xlink:href="#rect15623"/>
+   <rect transform="rotate(22.5)" x="65.022" y="83.809" width="10.394" height="1.7537" ry=".65765"/>
+   <rect transform="rotate(67.5)" x="93.945" y="-15.738" width="10.394" height="1.7537" ry=".65765"/>
+   <rect transform="rotate(112.5)" x="44.006" y="-106.58" width="10.394" height="1.7537" ry=".65765"/>
+   <rect transform="rotate(157.5)" x="-55.541" y="-135.5" width="10.394" height="1.7537" ry=".65765"/>
+   <rect transform="rotate(202.5)" x="-146.38" y="-85.562" width="10.394" height="1.7537" ry=".65765"/>
+   <rect transform="rotate(-22.5)" x="-25.819" y="133.75" width="10.394" height="1.7537" ry=".65765"/>
+  </g>
+  <flowRoot transform="scale(.26458)" fill="#000000" font-family="sans-serif" font-size="40px" letter-spacing="0px" word-spacing="0px" style="line-height:1.25" xml:space="preserve"><flowRegion><rect x="80.714" y="638.23" width="148.57" height="41.429"/></flowRegion><flowPara>Energy</flowPara></flowRoot>
+  <text x="65.551552" y="146.71658" fill="#ececec" font-family="'Californian FB'" font-size="5.6444px" letter-spacing="0px" stroke="#e6e6e6" stroke-width=".26458" text-align="center" text-anchor="middle" word-spacing="0px" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="gauge_label$widget_index" x="65.551552" y="146.71658">label_$widget_index</tspan><tspan id="units_$widget_index" x="65.551552" y="153.77214">unit_$widget_index</tspan></text>
+  <circle cx="65.248" cy="118.67" r="3.9449" fill="#ccc" stroke="#333" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".94472" stroke-width="3.2015"/>
+  <g fill="#ececec" font-family="'Californian FB'" font-size="8.4667px" letter-spacing="0px" stroke="#e6e6e6" stroke-width=".26458" word-spacing="0px">
+   <text x="36.249977" y="121.4637" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num1_$widget_index" x="36.249977" y="121.4637">number1_$widget_index</tspan></text>
+   <text x="65.202957" y="95.288879" text-align="center" text-anchor="middle" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num3_$widget_index" x="65.202957" y="95.288879">number3_$widget_index</tspan></text>
+   <text x="44.12133" y="102.924" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num2_$widget_index" x="44.12133" y="102.924">number2_$widget_index</tspan></text>
+   <text x="85.849915" y="102.924" text-align="end" text-anchor="end" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num4_$widget_index" x="85.849915" y="102.924">number4_$widget_index</tspan></text>
+   <text x="94.269333" y="121.4637" text-align="end" text-anchor="end" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num5_$widget_index" x="94.269333" y="121.4637">number5_$widget_index</tspan></text>
+   <text x="44.993683" y="139.51208" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num0_$widget_index" x="44.993683" y="139.51208">number0_$widget_index</tspan></text>
+   <text x="85.506729" y="139.51208" text-align="end" text-anchor="end" style="font-feature-settings:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;line-height:1.25" xml:space="preserve"><tspan id="num6_$widget_index" x="85.506729" y="139.51208">number6_$widget_index</tspan></text>
+  </g>
+  <path id="needle_$widget_index" style="transform-origin:  65.248px 118.67px;" d="m67.35 121.03c-1.2894-0.63792-2.9337-0.66006-4.2886-0.0576-0.23448 0.1042-0.44234 0.16791-0.46189 0.14155-0.01959-0.0266 0.55212-7.3192 1.2704-16.206l1.306-16.158 0.18521 8.59e-4c0.10183 4.96e-4 0.18502 0.03791 0.1848 0.08318-1.62e-4 0.04524 0.50601 7.3477 1.125 16.228 0.61894 8.88 1.1176 16.152 1.1082 16.159-0.0093 8e-3 -0.20253-0.0781-0.4291-0.19018z" fill="#FFFFFF" stroke-width="0"/>
+  <circle id="dot_$widget_index" cx="65.248" cy="118.67" r="3.9449" fill="#43c4feff" stroke="#333" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".94472" stroke-width="3.201"/>
+ </g>
+</svg>
+</div>`;
+
+function w_gauge_constructor(widget_index, min, max, unit, label)
+{
+  // Construct an progress bar 
+  let s = w_gauge_use_html;
+  
+  s = s.replace(/\$widget_index/g,widget_index);
+  
+  let x = max-min;
+  let a = 0.6;
+  let b = 1.2;
+  let c = 2.4;
+  let d = 3;
+  let scale = 0;
+  while (x>scale){
+    if(x<=d)
+      scale=d;
+    if(x<=c)
+      scale=c;
+    if(x<=b)
+      scale=b;
+    if(x<=a)
+      scale=a;
+    a=a*10;
+    b=b*10;
+    c=c*10;
+    d=d*10;
+  }
+
+    console.log("Scale is "+scale);
+
+  // Draw and Redraw
+    let delta = scale/6;
+    s = s.replace("number0_"+widget_index, min);
+    s = s.replace("number1_"+widget_index, delta*1+min);
+    s = s.replace("number1_"+widget_index, delta*1+min);
+    s = s.replace("number2_"+widget_index, delta*2+min);
+    s = s.replace("number3_"+widget_index, delta*3+min);
+    s = s.replace("number4_"+widget_index, delta*4+min);
+    s = s.replace("number5_"+widget_index, delta*5+min);
+    s = s.replace("number6_"+widget_index, delta*6+min);
+
+    s = s.replace("unit_"+widget_index, unit);
+    s = s.replace("label_"+widget_index, label);
+
+    scales[widget_index] = scale;
+    offsets[widget_index] = min;
+    return s; 
+}
+
+var ble_is_connected = false;
+
+var c0,c1,c00,c01,c10,c11,c20,c21,c30;
+
+function parseCoef()
+{
+  
+  let s = "";
+  for(let i=0;i<18;i++)
+    s = s + coefValues.getUint8(i).toString(16) + " ";
+  log(s);
+  log("---");
+
+  // c0: 12 bit 2's complement
+  c0  = coefValues.getUint8(0) << 4 | ((coefValues.getUint8(1)>>4) & 0x0F);
+  if(c0 > (2**11 - 1))
+    c0 = c0 - 2**12;
+  
+  // c1: 12 bit 2's complement
+  c1  = (coefValues.getUint8(1) & 0x0F) << 8 | coefValues.getUint8(2);
+  if(c1 > (2**11 - 1))
+    c1 = c1 - 2**12;
+
+  // c00: 20 bit 2's complement
+  c00 = coefValues.getUint32(3) >> 12;
+  if(c00 > (2**19 - 1))
+    c00 = c00 - 2**20;
+  
+  // c10: 20 bit 2's complement
+  c10 = (coefValues.getUint8(5) & 0x0F) * 65536 + coefValues.getUint16(6); 
+  if(c10 > (2**19 - 1))
+    c10 = c10 - 2**20;
+  
+  // c01: 16 bit 2's complement
+  c01 = coefValues.getUint16(8);
+  if(c01 > (2**15 - 1))
+    c01 = c01 - 2**16;  
+
+  // c11: 16 bit 2's complement
+  c11 = coefValues.getUint16(10);
+  if(c11 > (2**15 - 1))
+    c11 = c11 - 2**16;
+  
+  // c20: 16 bit 2's complement
+  c20 = coefValues.getUint16(12);
+  if(c20 > (2**15 - 1))
+    c20 = c20 - 2**16;
+  
+  // c21: 16 bit 2's complement
+  c21 = coefValues.getUint16(14);
+  if(c21 > (2**15 - 1))
+    c21 = c21 - 2**16;
+  
+  // 16 bit 2's complement
+  c30 = coefValues.getUint16(16);
+  if(c30 > (2**15 - 1))
+    c30 = c30 - 2**16;
+
+  log(c0);
+  log(c1);
+  log(c00);
+  log(c10);
+  log(c01);
+  log(c11);
+  log(c20);
+  log(c21);
+  log(c30);
+
+  /*
+c0 = 221
+c1 = -292
+c00 = 82266
+c10 = -54075
+c01 = -3062
+c11 = 1425
+c20 = -10824
+c21 = 110
+c30 = -1634
+Temperature = 30.89 *C
+Pressure = 1013.75 hPa
+
+  */
+}
+
+function ble_toggle_connection()
+{
+  if (ble_is_connected)
+  {
+      dialog_elm = document.getElementById("ble_activity");
+      dialog_elm.showModal();
+  
+      ble_disconnect();
+  }
+  else
+    ble_connect();
+}
+
+function greyTheDots()
+{
+  var innerDot = document.getElementById("dot_0");
+  if(innerDot)
+  {
+    innerDot.setAttribute("fill","#000000");
+  }
+
+  innerDot = document.getElementById("dot_1");
+  if(innerDot)
+  {
+    innerDot.setAttribute("fill","#000000");
+  }
+}
+
+function gauge_set_needle(widget_index, x)
+{
+  var innerArrow = document.getElementById("needle_"+widget_index);
+  x = (x-offsets[widget_index])/scales[widget_index] * 270 -135;
+  if(innerArrow)
+    innerArrow.setAttribute("transform", "rotate("+x+")");
+  
+  var innerDot = document.getElementById("dot_"+widget_index);
+  if(innerDot)
+  {
+    innerDot.setAttribute("fill","#43c4feff");
+    setTimeout(greyTheDots,100);
+  }
+
+}
+
+function set_text(id, x)
+{
+  let elm = document.getElementById(id);
+  if(elm)
+    elm.innerHTML = x;
+}
+
+
+function ble_connection_completed()
+{
+   
+   ble_is_connected = true;
+   dialog_elm = document.getElementById("ble_activity");
+   dialog_elm.close();
+
+   elm = document.getElementById("stage");
+   let s = w_gauge_constructor(0, 20, 120, "°F", "Temperature")
+   s = s + w_temp_text_use_html + "<br/><br/><br/>";
+
+   s = s + w_gauge_constructor(1, 27, 33, "inHg", "Air Pressure")
+   s = s + w_pres_text_use_html;   
+
+   elm.innerHTML = s;
+
+   gauge_set_needle(0,25);
+   set_text("temp", "25.0 °C");
+   gauge_set_needle(1,29);
+   set_text("pres", "29.0 inHg");
+
+}
+
+function ble_connection_failed_or_disconnected()
+{
+   let elm = document.getElementById("live_scan");
+   
+   ble_is_connected = false;
+   elm.showModal();
+   
+}
+
+function ble_connect_phone()
+{
+  let dialog_elm = document.getElementById("live_scan");
+  dialog_elm.close();
+  ble_connect(); 
+  //document.body.requestFullscreen();
+}
+
+function notification_message_received(v)
+
+{
+  let s = "";
+  for(let i=0;i<6;i++)
+    s = s + v.getUint8(i) + " ";
+  //log(s);
+
+
+  let t_raw = v.getUint16(3) << 8 | v.getUint8(5);
+  //log("Traw: " + t_raw)
+  if (t_raw > 2**23 -1)
+    t_raw = t_raw - 2**24;
+
+  let t_raw_sc = t_raw / 3670016;
+  let t_comp = c0/2 + c1 * (t_raw_sc);
+
+  
+  let p_raw = v.getUint32(0) >> 8;
+  //log("P_raw: "+p_raw);
+  if (p_raw > 2**23 -1)
+    p_raw = p_raw - 2**24;
+
+  let p_raw_sc = p_raw / 3670016;
+  let p_comp = c00 + p_raw_sc * (c10 + p_raw_sc * (c20 + p_raw_sc * c30)) 
+              + t_raw_sc * c01 + t_raw_sc * p_raw_sc * (c11 + p_raw_sc * c21);
+  
+
+  log("Pressure: "+(p_comp/100/33.864).toFixed(2)+"inHg");
+  log("Temperature: "+t_comp.toFixed(1)+"°F");
+  log("---");
+  gauge_set_needle(0,(t_comp*9/5 +32));
+  gauge_set_needle(1,p_comp/100/33.864);
+
+  set_text("temp",(t_comp*9/5 +32).toFixed(1)+" °F");
+  set_text("pres",(p_comp/100/33.864).toFixed(2)+" inHg");  
+}
+
+
+</script>
+</body>
+
+</html>
