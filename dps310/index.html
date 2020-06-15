@@ -8,29 +8,42 @@
 <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 
-<body style="margin:auto;text-align:center;max-width:1200px;background-image: url('bluesky.jpg');background-size: cover;">
-
-<div style="width:100%;background-color: white;">
-<img src="2333-logo-small.png" alt="" width="70%" style="padding-top: 20px;padding-bottom: 20px;" />
-</div> 
-<br/>
-<dialog id="ble_activity" style="background-color: black;border-radius: 10px;border: 1px solid black; font-size: 20px;">
-  <div style="color:white;">Please Wait</div><div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-</dialog>
-
-
-<dialog id="live_scan" open style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
-  Scan for Bluetooth LE device<br/>
-  <br/><button onclick="ble_connect_phone();" style="background-color:green;color:white">Scan</button>
-</dialog>
-
-<div id="stage"></div>
-
-<div style="margin:auto;text-align:center;width:100%;position: absolute;bottom:0;background-color: white;">
-<img src="diasemi.png" alt="" width="40%"  style="padding-top: 10px;padding-bottom: 10px;"/>
-</div>
+<body style="margin:auto;text-align:center;max-width:360px;background-image: url('bluesky.jpg');background-size: cover;"
+      onload="set_stage()">
+   
+<div id="view"></div>
 
 <script>
+
+var stage_build = `<div style="background-color: white;width:100%;">
+    <img src="2333-logo-small.png" style="width:70%;padding-top: 20px;padding-bottom: 20px;" />
+  </div> 
+  <br/>
+
+  <dialog id="live_scan" open style="border-radius: 10px;border: 1px solid black; font-size: 30px;">
+    Scan for Bluetooth LE device<br/>
+    <br/><button onclick="ble_connect_phone();" style="background-color:green;color:white">Scan</button>
+  </dialog>
+
+  <dialog id="ble_activity" style="background-color: black;border-radius: 10px;border: 1px solid black; font-size: 20px;">
+    <div style="color:white;">Please Wait</div><div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+  </dialog>
+  
+  <div id="stage"></div>
+
+  <div style="width:100%;margin:auto;text-align:center;position: absolute;bottom:0;background-color: white;">
+    <img src="diasemi.png" width="40%"  style="padding-top: 10px;padding-bottom: 10px;"/>
+  </div>`
+
+
+function set_stage()
+{
+  if(!(/(android)/i.test(navigator.userAgent)))
+    stage_build = `<div id="client_type" class="smartphone"><div class="content">`+stage_build+`</div></div>`;
+
+  document.getElementById("view").innerHTML = stage_build; 
+      
+}
 
 var scales = [];
 var offsets = [];
