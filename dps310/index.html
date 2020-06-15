@@ -39,7 +39,7 @@ var stage_build = `<div style="background-color: white;width:100%;">
 function set_stage()
 {
   if(!(/(android)/i.test(navigator.userAgent)))
-    stage_build = `<div id="client_type" class="smartphone"><div class="content">`+stage_build+`</div></div>`;
+    stage_build = `<br/><br/><br/><div id="client_type" class="smartphone"><div class="content">`+stage_build+`</div></div>`;
 
   document.getElementById("view").innerHTML = stage_build; 
       
