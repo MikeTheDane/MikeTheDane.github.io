@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	
+	<head>
+		
+		<title>BlueLoupe</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<style>
+			.button_sh {
+			  background-color: #4CAF50; /* Green */
+			  border: none;
+			  color: white;
+			  padding: 15px 32px;
+			  text-align: center;
+			  text-decoration: none;
+			  display: inline-block;
+			  font-size: 16px;
+			  margin: 4px 2px;
+			  cursor: pointer;
+			  -webkit-transition-duration: 0.4s; /* Safari */
+			  transition-duration: 0.4s;
+			  border-radius: 10px;
+			}
+
+			.button_shr {
+			  background-color: red; /* Green */
+			  border: none;
+			  color: white;
+			  padding: 15px 32px;
+			  text-align: center;
+			  text-decoration: none;
+			  display: inline-block;
+			  font-size: 16px;
+			  margin: 4px 2px;
+			  cursor: pointer;
+			  -webkit-transition-duration: 0.4s; /* Safari */
+			  transition-duration: 0.4s;
+			  border-radius: 10px;
+			}
+			
+			.button_sh:hover {
+			  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+			}
+
+			.button_shr:hover {
+			  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+			}
+
+			button:disabled, button[disabled]{
+				  cursor: not-allowed;
+				  border: 1px solid #999999;
+				  background-color: #cccccc;
+				  color: #666666;
+			}
+
+			@font-face {
+         	   font-family: 'Galada';
+            	src: url('Galada-Regular.ttf');
+        	}
+        	
+        	#galadafont {
+            	font-family: 'Galada';
+        	}
+
+        	#adv_segement {
+				font-family: Arial, Helvetica, sans-serif;
+			  	border-collapse: collapse;
+			  	width: 100%;
+			  	border-radius: 5px;
+			}
+
+			#adv_segement td, #adv_segement th {
+			  	border: 1px solid #ddd;
+			  	padding: 8px;
+			  	border-radius: 5px;
+			}
+
+			#adv_segement tr:nth-child(even){background-color: #f2f2f2;}
+
+			#adv_segement tr:nth-child(odd){background-color: #e2e2e2;}
+
+			
+
+			#adv_segement th {
+			  	padding-top: 12px;
+			  	padding-bottom: 12px;
+			  	text-align: left;
+			  	background-color: darkgrey;
+			  	color: white;
+			}
+
+		</style>
+
+		<script type="text/javascript" src="company_ids.js"></script>
+		<script type="text/javascript" src="gatt_uuids16bit_all.js"></script>
+
+		<script>
+			// JavaScript goes here
+
+		var port;
+		var devicelist = [];
+		var adv_expanded = "";
+		var adv_last = "";
+
+		if ("serial" in navigator) {
+		  // The Web Serial API is supported.
+		  console.log("Got'ya!");	  
+		}
+		else
+			console.log("nope!");
+
+
+		adv_element = `
+		<div style='border:solid #000000; border-radius: 6px; background: lightblue; padding: 10px;' >
+		<table width='100%'><tr>
+		  <td width='33%'><img src='g847.png' onclick='adv_expand("$bdaddr");'/>&nbsp;&nbsp;
+		  <big><b><span id="$bdaddr" style='font-family: "Courier New"'>$bdaddr</span>
+		  &nbsp;&nbsp;[<span id="addr_type_$bdaddr"></span>]</b></big></td>
+		  <td width='34%' align='center'><big><b><span id="bd_name_$bdaddr"><span style='color:#AFAFAF'>Not Named</span></span></b></big></td>
+		  <td width='33%'style='text-align:center'><small><span id="rssi_$bdaddr"></span>dBm</small><br/>
+		  <div style='background:black;padding:2px;'><div id='rssi_g_$bdaddr' style='width:100%;background:green;height:4px'></div></div></td>
+		</tr></table>
+		<table><tr>
+		<td style='vertical-align: top;'>Adv data:</td><td style='vertical-align: top;'><span id="adv_data_$bdaddr" style='font-family: "Courier New"'>No Data</span></td>
+		</tr><tr>
+		<td style='vertical-align: top;'>Scan response:&nbsp;&nbsp;</td><td style='vertical-align: top;'> <span id="rsp_data_$bdaddr" style='font-family: "Courier New"'>No Data</span></td></tr>
+		</table>
+		<br/>
+		<div id="expand_$bdaddr" style='display:none'>
+		</div><div style='height:5px'></div>
+		<div id="log_field_$bdaddr" style='display:none'><caption>Advertising Log:</caption>
+			<textarea id="log_$bdaddr" style="width: 100%; resize:none;radius:5px;" rows="10" disabled></textarea>
+		</div>
+		`;
+
+		window.onbeforeunload = function(){
+			send('DLG+GAPSCAN 0');
+		};
+
+		function parse_adv_data(data){
+			data = data.substring(data.indexOf("DATA:")+7);
+			if(data.length==0)
+				data = "No data";
+
+			return data;
+		}
+
+		function parse_bd_addr(data){
+			data = data.substring(data.indexOf("ADDR:")+6,data.indexOf("ADDR:")+23);
+			return data.toUpperCase();
+		}
+
+		function parse_addr_type(data){
+		    addr_type = 'Public';
+		    data = data.substring(data.indexOf("ADDR_TYPE: ")+11);
+		    data = data.substring(0,data.indexOf(","));
+			if(data == "00")
+				addr_type = "Random"
+			return addr_type;	
+		}
+
+		function parse_rssi(data){
+			data = data.substring(data.indexOf("RSSI:")+6);
+			data = data.substring(0,data.indexOf(","));
+			return data;	
+		}
+
+		function parse_type(data){
+			data = data.substring(data.indexOf("ADV_TYPE: ")+10);
+			data = data.substring(0,data.indexOf(","));
+			return data;
+		}
+
+		function uintToString(uintArray) {
+		    var encodedString = String.fromCharCode.apply(null, uintArray),
+		        decodedString = decodeURIComponent(escape(encodedString));
+		    return decodedString;
+		}
+
+		function find_bd_name(data){
+			// Convert to array of bytes (space delimited)
+			var bytes = [];
+			var bd_name = [];
+			let d = data.substring(0,data.length-1).split(' ');
+			for(i=0;i<d.length;i++)
+				//bytes[i]=parseInt(d[i], 16);
+				bytes.push(parseInt(d[i], 16));
+			
+			if(bytes.includes(0x08) || bytes.includes(0x09)){
+				let ptr = 0;
+
+				while (ptr<bytes.length){
+					let type = bytes[ptr+1];
+					if (type==0x09 || type==0x08){
+						// BD Name found
+						let start = ptr + 2
+						let end = ptr + 2 + bytes[ptr];
+						bd_name = bytes.slice(start,end-1);
+						break;
+					}
+					ptr += bytes[ptr]+1;
+				}
+			}
+			var buf = new Uint8Array(bd_name);
+			
+			return uintToString(buf);
+		}
+
+		function my_int2hex(x){
+			let s = x.toString(16);
+			if(x < 0x10)
+				s = '0'+s;
+			return s.toUpperCase();
+		}
+
+		function addZero(x,n) {
+			while (x.toString().length < n) {
+		    	x = "0" + x;
+			}
+			return x;
+		}
+
+		function time_stamp() {
+			var d = new Date();
+			var x = document.getElementById("demo");
+			var h = addZero(d.getHours(), 2);
+			var m = addZero(d.getMinutes(), 2);
+			var s = addZero(d.getSeconds(), 2);
+			var ms = addZero(d.getMilliseconds(), 3);
+			return h + ":" + m + ":" + s + ":" + ms;
+		}
+
+		function populate_expanded(bdaddr,log_text){
+			// Convert to array of bytes (space delimited)
+			var bytes = [];
+			var data = document.getElementById('adv_data_'+bdaddr).innerHTML;
+			let d = data.substring(0,data.length-1).split(' ');
+			
+			if(d[0] != "No"){
+				for(i=0;i<d.length;i++)
+					bytes.push(parseInt(d[i], 16));
+			}
+			data = document.getElementById('rsp_data_'+bdaddr).innerHTML;
+			d = data.substring(0,data.length-1).split(' ');
+			
+			if(d[0] != "No"){
+				for(i=0;i<d.length;i++)
+					bytes.push(parseInt(d[i], 16));
+			}
+
+			if(bytes.length > 0){
+
+				let ptr = 0;
+				let row = "";
+				
+				while (ptr<bytes.length){
+						let details = "";
+						let dataseg = "";
+						row = row + '<tr>';
+						let l = bytes[ptr];
+						let type = bytes[ptr+1];
+
+						if(type == 0x01){
+							let flags = bytes[ptr+2];
+							details += "<ul>";
+							if((flags & 1) >0 )
+								details = details + "<li>LE Limited discoverable mode</li>";
+							if((flags & 2) >0 )
+								details = details + "<li>LE General discoverable mode</li>";
+							if((flags & 4) >0 )
+								details = details + "<li>BR/EDR Not supported</li>";
+							if((flags & 8) >0 )
+								details = details + "<li>LE BR/EDR, Controller</li>";
+							if((flags & 16) >0 )
+								details = details + "<li>LE BR/EDR, Host</li>";
+							details = details + "</ul>"
+						}
+
+						if((type == 0x02)||(type == 0x03)){
+							details += "Service Class UUIDs:<ul>";
+							for(let idx=0;idx<l-1;idx = idx+2)
+							{
+								let svc =  bytes[ptr+idx+2]+bytes[ptr+idx+3]*256;
+								if (svc < 0xF000)								
+									details = details + "<li>[0x"+my_int2hex(bytes[ptr+3+idx])+my_int2hex(bytes[ptr+2+idx])+"]: "+gatt_uuids.get(svc)+"</li>";
+								else if (svc<0xFF00)
+									details = details + "<li>Member UUID [0x"+my_int2hex(bytes[ptr+3+idx])+my_int2hex(bytes[ptr+2+idx])+"]: "+gatt_uuids.get(svc)+"</li>";
+								else 
+									details = details + "<li>SDO UUID [0x"+my_int2hex(bytes[ptr+3+idx])+my_int2hex(bytes[ptr+2+idx])+"]: "+gatt_uuids.get(svc)+"</li>";
+							}
+							details = details + "</ul>";
+						}
+
+						if(type == 0x08 || type == 0x09){
+							details = document.getElementById('bd_name_'+bdaddr).innerHTML;
+						}
+
+						if(type == 0x0A){
+							if(bytes[ptr+2] < 128)
+								details = '+'+bytes[ptr+2].toString() + 'dBm ';
+							else
+								details = '-'+(bytes[ptr+2] - 127).toString() + 'dBm ';
+						}
+
+						if(type == 0x16){
+							details += "Service data: ";
+							let svc = bytes[ptr+2]+bytes[ptr+3]*256;
+							details = details + " [0x"+my_int2hex(bytes[ptr+3])+my_int2hex(bytes[ptr+2])+"], "+gatt_uuids.get(svc);
+						}
+
+						if(type==0xFF){
+							let idx = bytes[ptr+2]+bytes[ptr+3]*256;
+							details += "Manufacturer: "+company_ids.get(idx);
+						}
+						
+
+
+						for(i=ptr+2;i<ptr+l+1;i++)
+							dataseg += my_int2hex(bytes[i])+" ";
+
+						row = row + '<td width="120px"><b>'+l.toString()+'</b></td><td><b>0x'+ my_int2hex(type)+':</b> '+adv_types[type]+'</td>';
+						row = row + '<td>'+dataseg+'</td><td style="font-size:12px">'+details+'</td></tr>';
+						ptr += l + 1;
+				}
+
+				let s=`<table id='adv_segement' width='100%' border='1px'><caption>Advertising Data Segments</caption><tr><th>Length [dec]</th><th>Type</th><th>Data [hex]</th><th>Details</th>`+row +`</table>`;
+				
+				document.getElementById('expand_'+bdaddr).innerHTML = s + '<br/>';
+			}
+			else{
+				document.getElementById('expand_'+bdaddr).innerHTML = '<big style="color:red;"><b>No Data to display!</b></big>';	
+			}
+			//if(adv_last != parse_adv_data(log_text) && parse_adv_data(log_text)!="No data"){
+			if(parse_adv_data(log_text)!="No data"){
+				//var dt = new Date();
+				//var n = dt.toLocaleTimeString()+'-'+fix_format(dt.getMilliseconds(),3);
+				document.getElementById('log_'+bdaddr).innerHTML += time_stamp() +', Type:'+parse_type(log_text) +', Data: '+ parse_adv_data(log_text) +'\n';
+				//document.getElementById('log_'+bdaddr).innerHTML += n+', Type:'+parse_type(log_text) +', Data: '+ parse_adv_data(log_text) +'\n';
+				adv_last = parse_adv_data(log_text);
+			}
+		}
+
+		function adv_expand(bdaddr){
+			if(adv_expanded!=""){
+				document.getElementById('expand_'+adv_expanded).style = 'display:none;';
+				document.getElementById('log_field_'+adv_expanded).style = 'display:none;';
+			}
+
+			if(bdaddr==adv_expanded){
+				document.getElementById('expand_'+adv_expanded).style = 'display:none;';
+				document.getElementById('log_field_'+adv_expanded).style = 'display:none;';
+				adv_expanded="";
+			}
+			else{
+				document.getElementById('expand_'+bdaddr).style = 'display:inline;';
+				document.getElementById('log_field_'+bdaddr).style = 'display:inline;';
+				adv_expanded = bdaddr;
+				adv_last = "";
+				populate_expanded(bdaddr,"");
+			}
+		}
+
+
+
+		class LineBreakTransformer {
+			constructor() {
+			  // A container for holding stream data until a new line.
+			  this.chunks = "";
+			}
+
+			transform(chunk, controller) {
+			    // Append new chunks to existing chunks.
+			    this.chunks += chunk;
+			    // For each line breaks in chunks, send the parsed lines out.
+			    const lines = this.chunks.split("\r\n");
+			    this.chunks = lines.pop();
+			    lines.forEach((line) => controller.enqueue(line));
+			}
+
+			flush(controller) {
+			    // When the stream is closed, flush any remaining chunks out.
+			    controller.enqueue(this.chunks);
+			}
+		}
+
+		async function serial_connect(){
+			// Prompt user to select any serial port.
+			
+
+			const filters = [
+				{ usbVendorId: 0x0403, usbProductId: 0x6010 },
+				{ usbVendorId: 0x1366, usbProductId: 0x0105 },
+			];
+			port = await navigator.serial.requestPort({ filters });
+			await port.open({ baudRate: 921600 });
+
+			send('DLG+GAPSCAN 1');
+
+			document.getElementById('stopscan').disabled = false;
+			document.getElementById('comport').disabled = true;
+
+			const textDecoder = new TextDecoderStream();
+			const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+			const reader = textDecoder.readable
+					.pipeThrough(new TransformStream(new LineBreakTransformer()))
+  					.getReader();
+			
+
+			// Listen to data coming from the serial device.
+			while (true) {
+  				const { value, done } = await reader.read();
+  				if (done) {
+    				// Allow the serial port to be closed later.
+    				reader.releaseLock();
+    				
+    				break;
+  				}
+  				
+  				if(value.includes("EVT_ADV")){
+  					let bdaddr = parse_bd_addr(value);
+  					let type = parse_type(value);
+
+  					if(!devicelist.includes(bdaddr)){
+  						// New device detected
+  						s = adv_element.replace(/\$bdaddr/g,bdaddr);
+  						let new_elm = document.createElement("div");
+  						new_elm.innerHTML = s;
+  						let elm = document.getElementById("stage_adv");
+  						elm.appendChild(new_elm);
+  						devicelist.push(parse_bd_addr(value));
+
+  						find_bd_name(parse_adv_data(value));
+  					}
+  					
+  					let elm = document.getElementById("rssi_"+bdaddr);
+  					elm.innerHTML = parse_rssi(value);
+
+  					elm = document.getElementById("rssi_g_"+bdaddr);
+  					let rssi_gauge = 100*(parseInt(parse_rssi(value)) + 120)/120;
+  					elm.setAttribute('style','width:'+rssi_gauge+'%; background:lightgreen;height:4px');
+
+  					elm = document.getElementById("addr_type_"+bdaddr);
+  					elm.innerHTML = parse_addr_type(value);
+
+
+  					if(type == "00" || type== "02" || type=="03"){
+  						// Advertising data
+  						elm = document.getElementById("adv_data_"+bdaddr);
+  						elm.innerHTML = parse_adv_data(value.toUpperCase());
+  					}
+  					else if(type=="04"){
+  						// Scan response data
+  						elm = document.getElementById("rsp_data_"+bdaddr);
+  						elm.innerHTML = parse_adv_data(value.toUpperCase());
+  					}
+  					var bd_name = find_bd_name(parse_adv_data(value));
+  					if(bd_name != ""){
+  						document.getElementById("bd_name_"+bdaddr).innerHTML = bd_name;
+  					}
+  					if(bdaddr == adv_expanded){
+  						populate_expanded(bdaddr,value);
+
+  					}
+
+  				}
+
+			}
+
+
+		}
+
+		async function send(cmd){
+			
+			
+			const textEncoder = new TextEncoderStream();
+			const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+
+			const writer = textEncoder.writable.getWriter();
+
+			await writer.write(cmd+"\r");
+			writer.close();
+		}
+
+		function startScan(){
+			send('DLG+GAPSCAN 1');
+			document.getElementById('stage_adv').innerHTML = "";
+			devicelist=[];
+			document.getElementById('startscan').disabled = true;
+			document.getElementById('stopscan').disabled = false;
+			adv_expanded = "";
+		}
+
+		function stopScan(){
+			send('DLG+GAPSCAN 0');
+			document.getElementById('startscan').disabled = false;
+			document.getElementById('stopscan').disabled = true;
+		}
+
+		var adv_types=[];
+		for(let i=0;i<256;i++)
+			adv_types[i]='<span style="color:red;">Unknown Type!</span>';
+
+		adv_types[0x01]='Flags';
+		adv_types[0x02]='Incomplete List of 16-bit Service Class UUIDs';
+		adv_types[0x03]='Complete List of 16-bit Service Class UUIDs';
+		adv_types[0x04]='Incomplete List of 32-bit Service Class UUIDs';
+		adv_types[0x05]='Complete List of 32-bit Service Class UUIDs';
+		adv_types[0x06]='Incomplete List of 128-bit Service Class UUIDs';
+		adv_types[0x07]='Complete List of 128-bit Service Class UUIDs';
+		adv_types[0x08]='Shortened Local Name';
+		adv_types[0x09]='Complete Local Name';
+		adv_types[0x0A]='Tx Power Level';
+		adv_types[0x0D]='Class of Device';
+		adv_types[0x0E]='Simple Pairing Hash C';
+		adv_types[0x0E]='Simple Pairing Hash C-192';
+		adv_types[0x0F]='Simple Pairing Randomizer R';
+		adv_types[0x0F]='Simple Pairing Randomizer R-192';
+		adv_types[0x10]='Device ID';
+		adv_types[0x10]='Security Manager TK Value';
+		adv_types[0x11]='Security Manager Out of Band Flags';
+		adv_types[0x12]='Slave Connection Interval Range';
+		adv_types[0x14]='List of 16-bit Service Solicitation UUIDs';
+		adv_types[0x15]='List of 128-bit Service Solicitation UUIDs';
+		adv_types[0x16]='Service Data - 16-bit UUID';
+		adv_types[0x17]='Public Target Address';
+		adv_types[0x18]='Random Target Address';
+		adv_types[0x19]='Appearance';
+		adv_types[0x1A]='Advertising Interval';
+		adv_types[0x1B]='LE Bluetooth Device Address';
+		adv_types[0x1C]='LE Role';
+		adv_types[0x1D]='Simple Pairing Hash C-256';
+		adv_types[0x1E]='Simple Pairing Randomizer R-256';
+		adv_types[0x1F]='List of 32-bit Service Solicitation UUIDs';
+		adv_types[0x20]='Service Data - 32-bit UUID';
+		adv_types[0x21]='Service Data - 128-bit UUID';
+		adv_types[0x22]='LE Secure Connections Confirmation Value';
+		adv_types[0x23]='LE Secure Connections Random Value';
+		adv_types[0x24]='URI';
+		adv_types[0x25]='Indoor Positioning';
+		adv_types[0x26]='Transport Discovery Data';
+		adv_types[0x27]='LE Supported Features';
+		adv_types[0x28]='Channel Map Update Indication';
+		adv_types[0x29]='PB-ADV';
+		adv_types[0x2A]='Mesh Message';
+		adv_types[0x2B]='Mesh Beacon';
+		adv_types[0x2C]='BIGInfo';
+		adv_types[0x2D]='Broadcast_Code';
+		adv_types[0x3D]='3D Information Data';
+		adv_types[0xFF]='Manufacturer Specific Data';
+		</script>
+
+	</head>
+
+	<body style='background-color: black;'>
+		<!-- HTML user interface goes here -->
+		<div align='center' style='position: fixed; top: 0; left: 0; z-index: 999;width:100%;border:solid #000000;background-color: black;' >
+			<div id="galadafont" style="color:white;text-align:center;vertical-align: center;font-size:48px;" align="center">BlueLoupe</div>
+			<div align="center">
+				<button id="comport" class="button button_sh" onclick="serial_connect()">
+					Com Port
+				</button>
+				<button id="startscan" disabled class="button button_sh" onclick="startScan();">
+					Start Scan
+				</button>
+				<button id="stopscan" disabled class="button button_shr" onclick="stopScan();">
+					Stop Scan
+				</button>
+			</div>
+
+		</div>
+		<div id='stage_adv' style='padding-top:130px;overflow: hidden;height:100%;'></div>
+	</body>
+
+</html>
+
