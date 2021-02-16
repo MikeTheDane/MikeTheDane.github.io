@@ -394,7 +394,7 @@
 				{ usbVendorId: 0x1366, usbProductId: 0x0105 },
 			];
 			port = await navigator.serial.requestPort({ filters });
-			await port.open({ baudRate: 921600 });
+			await port.open({ baudRate: 460800 });
 
 			send('DLG+GAPSCAN 1');
 
