@@ -15,7 +15,6 @@
   				background-size: cover;
 			}
 		</style>
-
 		
 		<script>
 			// JavaScript goes here
@@ -24,42 +23,11 @@
 		var first_run = false;
 
 		if ("serial" in navigator) {
-		  // The Web Serial API is supported.
-		  console.log("Got'ya!");	  
+			// The Web Serial API is supported.
+			console.log("Got'ya!");	  
 		}
 		else
 			console.log("nope!");
-
-		
-		function uintToString(uintArray) {
-		    var encodedString = String.fromCharCode.apply(null, uintArray),
-		        decodedString = decodeURIComponent(escape(encodedString));
-		    return decodedString;
-		}
-
-		function my_int2hex(x){
-			let s = x.toString(16);
-			if(x < 0x10)
-				s = '0'+s;
-			return s.toUpperCase();
-		}
-
-		function addZero(x,n) {
-			while (x.toString().length < n) {
-		    	x = "0" + x;
-			}
-			return x;
-		}
-
-		function time_stamp() {
-			var d = new Date();
-			var x = document.getElementById("demo");
-			var h = addZero(d.getHours(), 2);
-			var m = addZero(d.getMinutes(), 2);
-			var s = addZero(d.getSeconds(), 2);
-			var ms = addZero(d.getMilliseconds(), 3);
-			return h + ":" + m + ":" + s + ":" + ms;
-		}
 
 
 		class PromptBreakTransformer {
@@ -169,7 +137,7 @@
 		}
 
 		
-		</script>
+	</script>
 
 	</head>
 
