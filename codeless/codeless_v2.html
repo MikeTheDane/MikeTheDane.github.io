@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en-US">
 	
@@ -12,8 +11,9 @@
 
 			var inboundChar;
 			var outboundChar;
+			var device;
 			
-			// Define the codeless UUIDs 
+			// Define the CodeLess UUIDs 
 			var CODELESS_SVC_UUID 	= "866d3b04-e674-40dc-9c05-b7f91bec6e83";
 			var INBOUND_CHAR_UUID 	= "914f8fb9-e8cd-411d-b7d1-14594de45425";
 			var OUTBOUND_CHAR_UUID 	= "3bb535aa-50b2-4fbe-aa09-6b06dc59a404";
@@ -36,6 +36,22 @@
 				log(" <- " + decoder.decode(readInValue).replace('\r','\r <- ').replace('\n','').replace('\0',''));
 			}
 
+			async function onDisconnected()
+			{
+				log("Bluetooth connection terminated!");
+			}
+
+			async function bleDisconnect()
+			{
+				log("Disconnecting");
+				if (device.gatt.connected) {
+				    device.gatt.disconnect();
+				}
+				else {
+				    log('> Bluetooth Device is already disconnected');
+				}
+			}
+
 			// Scan, connect and explore CodeLess BLE device
 			async function ble_connect() {
 				try {
@@ -44,17 +60,13 @@
 					device  = await navigator.bluetooth.requestDevice({
 						filters: [{name: 'CLv2'}],
 						optionalServices: [CODELESS_SVC_UUID]
-					});		
-					// Connect to device and perform attribute discovery
-					log('Connecting to GATT Server...');
+					});	
+					device.addEventListener('gattserverdisconnected', onDisconnected);	
+					// Connect to device GATT and perform attribute discovery
 					server = await device.gatt.connect();
-					log('Exploring CodeLess Service...');
 					const service = await server.getPrimaryService(CODELESS_SVC_UUID);
-					log('  Mapping CodeLess Inbound Command Characteristic...');
 					inboundChar = await service.getCharacteristic(INBOUND_CHAR_UUID);
-					log('  Mapping CodeLess Outbound Command Characteristic...');
 					outboundChar = await service.getCharacteristic(OUTBOUND_CHAR_UUID);
-					log('  Mapping CodeLess Flow Control Characteristic...');
 					const flowcontrolChar = await service.getCharacteristic(CNTRL_CHAR_UUID);
 					// Subscribe to notifications
 					await flowcontrolChar.startNotifications();
@@ -103,11 +115,15 @@
 			Right click to view the source code of this implementation.
 		</p>
 		<button type="button" onclick="ble_connect()">
-			Click me to scan for CodeLess BLE devices.
+			Click me to scan for CodeLess BLE devices
+		</button>
+		<br/>
+		<button type="button" onclick="bleDisconnect()">
+			Click me to disconnect
 		</button>
 		<br/>
 		<br/>Log:<br/>
-		<textarea id="log" rows="25" cols="60" ></textarea>
+		<textarea id="log" rows="20" cols="60" ></textarea>
 		<br/><br/><br/>
 		<button type="button" onclick="sendAT('ATrI')">
 			Send ATrI
