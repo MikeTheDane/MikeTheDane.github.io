@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	
+	<head>
+		
+		<title>Dubrovnik</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<style>
+			body {
+			  	background-image: url('dubrovnik.jpg');
+			  	background-repeat: no-repeat;
+  				background-attachment: fixed;
+  				background-size: cover;
+			}
+		</style>
+
+		
+		<script>
+			// JavaScript goes here
+
+		var port;
+		var first_run = false;
+
+		if ("serial" in navigator) {
+		  // The Web Serial API is supported.
+		  console.log("Got'ya!");	  
+		}
+		else
+			console.log("nope!");
+
+		
+		function uintToString(uintArray) {
+		    var encodedString = String.fromCharCode.apply(null, uintArray),
+		        decodedString = decodeURIComponent(escape(encodedString));
+		    return decodedString;
+		}
+
+		function my_int2hex(x){
+			let s = x.toString(16);
+			if(x < 0x10)
+				s = '0'+s;
+			return s.toUpperCase();
+		}
+
+		function addZero(x,n) {
+			while (x.toString().length < n) {
+		    	x = "0" + x;
+			}
+			return x;
+		}
+
+		function time_stamp() {
+			var d = new Date();
+			var x = document.getElementById("demo");
+			var h = addZero(d.getHours(), 2);
+			var m = addZero(d.getMinutes(), 2);
+			var s = addZero(d.getSeconds(), 2);
+			var ms = addZero(d.getMilliseconds(), 3);
+			return h + ":" + m + ":" + s + ":" + ms;
+		}
+
+
+		class PromptBreakTransformer {
+			constructor() {
+			  // A container for holding stream data until a new line.
+			  this.chunks = "";
+			}
+
+			transform(chunk, controller) {
+			    // Append new chunks to existing chunks.
+			    this.chunks += chunk;
+			    // For each chevron in chunks, send the parsed lines out.
+			    const lines = this.chunks.split(">>> ");
+			    this.chunks = lines.pop();
+			    lines.forEach((line) => controller.enqueue(line));
+			    
+			}
+
+			flush(controller) {
+			    // When the stream is closed, flush any remaining chunks out.
+			    controller.enqueue(this.chunks);
+			}
+		}
+
+		async function serial_connect(){
+			// Prompt user to select any serial port.
+			
+
+			const filters = [
+				{ usbVendorId: 0x0403, usbProductId: 0x6015 },
+			];
+			port = await navigator.serial.requestPort({ filters });
+			await port.open({ baudRate: 115200 });
+
+			document.getElementById('comport').disabled=true;
+			document.getElementById('logcentral').style="display:none";
+
+			send('ver');
+
+			
+			const textDecoder = new TextDecoderStream();
+			const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+			const reader = textDecoder.readable
+					.pipeThrough(new TransformStream(new PromptBreakTransformer()))
+  					.getReader();
+			
+
+			// Listen to data coming from the serial device.
+			while (true) {
+  				const { value, done } = await reader.read();
+  				if (done) {
+    				// Allow the serial port to be closed later.
+    				reader.releaseLock();
+    				
+    				break;
+  				}
+  				
+  				let command = value.split('\n')[0];
+  				let response = value.substring(value.indexOf('\n')+1);
+  				console.log('Command: '+command);
+  				console.log('Response: \n'+response);
+
+  				if(first_run){
+  					document.getElementById('log').innerHTML = '>>> '+value;
+  				}
+
+  				if(command == 'config'){
+  					document.getElementById('stage_config').innerHTML = response.replace(/\n/g,'<br/>').replace(/(us)/g,"&micro;s");
+  					first_run = true;
+  				}
+
+  				else if(command == 'ver'){
+  					document.getElementById('version').innerHTML = response;
+  					if(!first_run){
+  						send('config');
+  						document.getElementById('logcentral').style="display:flex;color:white; justify-content: center;background-color: rgba(0,0,0, .4);height:100%";
+  					}
+  					
+  				}
+  				else if (response.indexOf('**************************')>0){
+  					first_run = false;
+  					send('ver');
+  				}
+
+			}
+
+
+		}
+
+		async function send(cmd){
+			
+			
+			const textEncoder = new TextEncoderStream();
+			const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+
+			const writer = textEncoder.writable.getWriter();
+
+			await writer.write(cmd+"\r");
+			writer.close();
+		}
+
+		// If enter key was pressed by user while editing, send command immediately
+		function wasEnter(elem) {
+			if(event.key === 'Enter') {
+				send(document.getElementById("cmd").value);
+			}
+		}
+
+		
+		</script>
+
+	</head>
+
+	<body style='background-color: black;'>
+		<!-- HTML user interface goes here -->
+		<div align='center' style='position: fixed; top: 0; left: 0; z-index: 999;width:100%;border:solid #000000;background-color: rgba(0,0,0, .4);' >
+			<div id="galadafont" style="color:white;text-align:center;vertical-align: center;font-size:48px;" align="center">Dubrovnik</div>
+			
+				<button id="comport" class="button button_sh" onclick="serial_connect()">
+					Connect
+				</button>
+				
+				<br/><br/>
+				<div id='version' style="color:white;">
+
+				<br/>
+			</div>
+
+		</div>
+
+		<div id='stage_config' style='padding-top:140px;overflow: hidden;height:100%;color:white;background-color: rgba(0,0,0, .4);'></div>
+		<div id='logcentral' style='display:none;'>
+			<div>
+				<br/><br/>
+				<textarea id="log" rows="30" cols="120" style="background-color:lightgrey;border:solid #000000;border-radius: 10px"></textarea><br>
+				<div style='justify-content: center;display:flex;background-color: rgba(0,0,0, .4);border-radius: 10px;'>
+					<span style='color:white;'>Command:&nbsp;&nbsp;</span>
+					<input type="text" id="cmd" onkeydown="wasEnter(this)" value='9f 03'>&nbsp;&nbsp;
+					<button type="button" onclick="send(document.getElementById('cmd').value)">
+						Transmit Command
+					</button>
+				</div>
+
+				<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+			</div>
+		</div>
+	</body>
+
+</html>
+
