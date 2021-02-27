@@ -1,0 +1,187 @@
+
+<html>
+<head>
+<style>
+
+
+:root {
+  --app-bg-color: #f9f9faff;
+  --app-icon-pane-width: 60px;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: var(--app-bg-color);
+}
+
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.box .row.header {
+  flex: 0 1 auto;
+}
+
+.box .row.content{
+  display:flex;
+  flex-direction: row;
+}
+
+.box .row.footer{
+  background-color: var(--app-bg-color);
+}
+
+#ver_menu{
+  text-align: top;
+  background: var(--app-bg-color);
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top:10px;
+  font-size: 22px;
+  min-width: 8em;
+}
+
+#main_content{
+  border: solid 2px lightgrey;
+  padding-left: 10px; 
+  border-radius: 5px;
+  text-align: top;
+  overflow-y: auto;
+  color: black;
+  background-color: white;
+}
+
+#ver_icons{
+  text-align: top;
+  width: var(--app-icon-pane-width);
+  background-color: var(--app-bg-color);
+  text-align:center;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <div class="row header" id="app_header">
+    <p><b>header</b>
+    <br/>
+    <br/>(sized to content)</p> 
+  </div>
+  <div class="row content">
+      <div id="ver_menu">
+        Menu 1<br> 
+        Menu 2<br>
+        Menu 3<br>
+        Menu 4<br>
+        Menu 5<br>
+        Menu 6<br>
+        Menu 7<br>
+      </div>
+
+    <div id="main_content">
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+      <p>Dynamic Content goes here</p>
+
+
+      
+    </div>
+
+    <div id="ver_icons">
+        <img src="g847.png"/><br/><br/>
+        <img src="g847.png"/><br/><br/>
+        <img src="g847.png"/><br/><br/>
+        <img src="g847.png"/><br/><br/>     
+    </div>
+
+  </div>
+  
+  <div class="row footer" id="app_footer">
+     <p><b>Footer</b> (Fit to size)</p>
+     <p><b>Footer</b> (Fit to size)</p>
+  </div>
+
+</div>
+
+<script>
+
+  // Screen calculations:
+
+  var elm = document.getElementById("app_header");
+  var used = elm.offsetHeight;
+  elm = document.getElementById("app_footer");
+  used +=  elm.offsetHeight +4;
+  var txt = "Height including padding and border: " + used + "px<br>";
+  document.getElementById("main_content").style.height = "calc(100vh - "+used+"px)";
+  console.log(txt);
+
+  var icon_pane_width = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--app-icon-pane-width')); 
+  elm = document.getElementById("ver_menu");
+  used =  elm.offsetWidth + icon_pane_width;
+  var txt = "Widt including padding and border: " + used + "px<br>";
+  document.getElementById("main_content").style.width = "calc(100vw - "+used+"px)";
+  console.log(txt);
+
+</script>
+
+
+</body>
+</html>
