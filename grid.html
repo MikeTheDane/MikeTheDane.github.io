@@ -1,67 +1,72 @@
 
 <html>
 <head>
-<style>
 
+    <title>Griddy</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-:root {
-  --app-bg-color: #f9f9faff;
-  --app-icon-pane-width: 60px;
-}
+    <style>
 
-html, body {
-  height: 100%;
-  margin: 0;
-  background-color: var(--app-bg-color);
-}
+        :root {
+          --app-bg-color: #f9f9faff;
+          --app-icon-pane-width: 60px;
+        }
 
-.box {
-  display: flex;
-  flex-flow: column;
-  height: 100%;
-}
+        html, body {
+          height: 100%;
+          margin: 0;
+          background-color: var(--app-bg-color);
+        }
 
-.box .row.header {
-  flex: 0 1 auto;
-}
+        .box {
+          display: flex;
+          flex-flow: column;
+          height: 100%;
+        }
 
-.box .row.content{
-  display:flex;
-  flex-direction: row;
-}
+        .box .row.header {
+          flex: 0 1 auto;
+        }
 
-.box .row.footer{
-  background-color: var(--app-bg-color);
-}
+        .box .row.content{
+          display:flex;
+          flex-direction: row;
+        }
 
-#ver_menu{
-  text-align: top;
-  background: var(--app-bg-color);
-  padding-left: 15px;
-  padding-right: 15px;
-  padding-top:10px;
-  font-size: 22px;
-  min-width: 8em;
-}
+        .box .row.footer{
+          background-color: var(--app-bg-color);
+        }
 
-#main_content{
-  border: solid 2px lightgrey;
-  padding-left: 10px; 
-  border-radius: 5px;
-  text-align: top;
-  overflow-y: auto;
-  color: black;
-  background-color: white;
-}
+        #ver_menu{
+          text-align: top;
+          background: var(--app-bg-color);
+          padding-left: 15px;
+          padding-right: 15px;
+          padding-top:10px;
+          font-size: 22px;
+          min-width: 8em;
+        }
 
-#ver_icons{
-  text-align: top;
-  width: var(--app-icon-pane-width);
-  background-color: var(--app-bg-color);
-  text-align:center;
-}
+        #main_content{
+          border: solid 2px lightgrey;
+          padding-left: 10px; 
+          border-radius: 5px;
+          text-align: top;
+          overflow-y: auto;
+          color: black;
+          background-color: white;
+        }
 
-</style>
+        #ver_icons{
+          text-align: top;
+          width: var(--app-icon-pane-width);
+          background-color: var(--app-bg-color);
+          text-align:center;
+        }
+
+    </style>
+
 </head>
 
 <body>
