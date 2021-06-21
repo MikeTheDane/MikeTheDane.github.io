@@ -1,0 +1,196 @@
+body{
+  margin      : 0;
+  padding     : 1.5em;
+  font-family : Georgia,Utopia,Charter,serif;
+  color: #707070
+}
+
+#card {
+  border-radius: 15px;
+  border: 3px solid #00ACCF;
+  width: 90%;
+  margin: auto;
+  box-sizing: border-box;
+  padding: 20px;
+  background: #F0F0F0;
+  max-width: 1080px;
+  min-width: 500px;
+  box-shadow: 4px 4px 10px grey;
+}
+
+#cardi {
+  border-radius: 15px;
+  border: 3px solid #00ACCF;
+  width: 90%;
+  margin: auto;
+  box-sizing: border-box;
+  padding: 20px;
+  background: #D0D0D0;
+  max-width: 1080px;
+  min-width: 500px;
+  box-shadow: 4px 4px 10px grey;
+}
+
+big {
+  color: #00ACCF;
+  text-shadow: 2px 1px #E0E0E0;
+  font-weight: bold;
+  font-size: 25px;
+  font-family: "Times New Roman", Times, serif;
+}
+
+big::after{
+  content: "  ";
+  white-space: pre;
+}
+
+button {
+  background-color: #00ACCF;
+  border: 2px solid #707070;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 2px 1px #202020;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+input[type="file"] {
+    display: none;
+}
+.custom-file-upload {
+    background-color: #00ACCF;
+  border: 2px solid #707070;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+  text-shadow: 2px 1px #202020;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+hr{
+  border: 2px solid #00ACCF;
+    color: #00ACCF;
+}
+
+h1{
+  text-align: left;
+  color: #00ACCF;
+  text-shadow: 2px 2px #E0E0E0;
+  padding: 0px;
+  font-size: 40px;
+}
+
+a:hover, a:visited, a:link, a:active
+{
+    text-decoration: none;
+    color: #00ACCF;
+    text-shadow: 1px 1px 2px #505050;
+}
+
+textarea{
+  width: 100%;
+  height: 220px;
+  margin: auto;
+  border: 0px;
+  box-sizing: border-box;
+  background: #D0D0D0;
+  resize: none;
+  color: #707070
+}
+
+#my { display: flex; justify-content: center; }
+
+img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 20%;
+}
+
+div.progressbar_outer {
+  width:100%;
+  height: 10px;
+  border: 1px solid #eeeeee;
+}
+
+div.progressbar_bar {
+  width:0%;
+  border: 5px solid #73AD21;
+  background-color: #730020;
+}
+
+
+/* Radio Button */
+.container {
+  display: block;
+  position: relative;
+  padding-left: 23px;
+  margin-bottom: 12px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default radio button */
+.container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Create a custom radio button */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 19px;
+  width: 19px;
+  background-color: #aaa;
+  border-radius: 50%;
+}
+
+/* On mouse-over, add a grey background color */
+.container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the radio button is checked, add a blue background */
+.container input:checked ~ .checkmark {
+  background-color: #2196F3;
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the indicator (dot/circle) when checked */
+.container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.container .checkmark:after {
+  top: 0px;
+  left: 0px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: #2196F3;
+}
