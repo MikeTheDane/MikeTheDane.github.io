@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en-GB">
+
+<head>
+	<title>a|b</title>
+	
+</head>
+<body>
+	
+	<div id="container">
+	</div>
+	
+	<script type="text/javascript">
+		async function loadFileAndPrintToConsole(url) {
+  try {
+    const response = await fetch(url);
+    const data = await response.text();
+    console.log(data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+loadFileAndPrintToConsole('https://mikethedane.com/text.txt');
+	</script>
+	
+</body>
+</html>
