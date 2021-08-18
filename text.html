@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en-GB">
+
+<head>
+	<title>a|b</title>
+	<script src="text.txt" id="my-text" type="text/flat">
+		This is just plane stupid
+		But hey...
+
+
+	</script>
+</head>
+<body>
+	
+	<div id="container">
+	</div>
+	
+	<script type="text/javascript">
+		console.log('*'+document.getElementById('my-text').innerHTML)
+		document.getElementById('container').innerHTML = document.getElementById('my-text').innerHTML;
+
+		fetch('text.txt')
+		  .then(response => response.text())
+		  .then((data) => {
+		    console.log(data)
+		  })
+	</script>
+	
+</body>
+</html>
