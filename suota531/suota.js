@@ -194,12 +194,7 @@
     
       //log(' Getting SPOTA_PATCH_DATA Characteristic...');
       spotar_patch_data = await spotar_service.getCharacteristic(SPOTA_PATCH_DATA);
-    
-      // Initialize SUotA
-      await spotar_mem_dev.writeValue(new Uint8Array(FLASH_CMD)); 
-      await spotar_gpiomap.writeValue(new Uint8Array(GPIO_CMD));
-      await spotar_patch_len.writeValue(Uint8Array.of(BLOCK_SIZE,0x00));
-      
+       
       log('Ready to communicate.');
 
       // Update GUI to show that we are ready to receive a file
@@ -355,6 +350,12 @@
   }
 
   async function upload_image(){
+    
+    // Initialize SUotA
+    await spotar_mem_dev.writeValue(new Uint8Array(FLASH_CMD)); 
+    await spotar_gpiomap.writeValue(new Uint8Array(GPIO_CMD));
+    await spotar_patch_len.writeValue(Uint8Array.of(BLOCK_SIZE,0x00));
+    
     // Upload the image in chunks of 20 bytes
     let chunks_sent = 0;
     let remaining = infile_length - position;
