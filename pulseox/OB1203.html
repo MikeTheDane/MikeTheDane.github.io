@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+	
+	<head>
+		
+		<meta charset="UTF-8">
+		<title>OB1203 Demo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script>
+
+			var dataChar;
+			var device;
+			
+			// Define the CodeLess UUIDs 
+			var POX_SVC_UUID 	="00001822-0000-1000-8000-00805f9b34fb";
+			var DATA_CHAR_UUID 	= "00002a5f-0000-1000-8000-00805f9b34fb";
+			
+			// Display text in log field text area 
+			function log(text)
+			{
+				var textarea = document.getElementById('log');
+				textarea.value += "\n" + text;
+				textarea.scrollTop = textarea.scrollHeight;
+			}
+
+			// Incoming GATT notification was received
+			async function incomingData(event){
+				let v= event.target.value;
+
+				display_spo2 = v.getUint8(1);
+				display_hr = v.getUint8(3);
+
+				log("Reading: SPO2: "+display_spo2+", HR: "+display_hr);
+			}
+
+			async function onDisconnected()
+			{
+				log("Bluetooth connection terminated!");
+			}
+
+			async function bleDisconnect()
+			{
+				log("Disconnecting");
+				if (device.gatt.connected) {
+				    device.gatt.disconnect();
+				}
+				else {
+				    log('> Bluetooth Device is already disconnected');
+				}
+			}
+
+			// Scan, connect and explore CodeLess BLE device
+			async function ble_connect() {
+				try {
+					// Define a scan filter and prepare for interaction with Codeless Service
+					log('Requesting Bluetooth Device...');
+					device  = await navigator.bluetooth.requestDevice({
+						filters: [{name: 'DLG-OB1203-v10'}],
+						optionalServices: [POX_SVC_UUID]
+					});	
+					device.addEventListener('gattserverdisconnected', onDisconnected);	
+					// Connect to device GATT and perform attribute discovery
+					server = await device.gatt.connect();
+					const service = await server.getPrimaryService(POX_SVC_UUID);
+					dataChar = await service.getCharacteristic(DATA_CHAR_UUID);
+					await dataChar.startNotifications();
+					dataChar.addEventListener('characteristicvaluechanged', incomingData);
+					log('Ready to communicate!\n');
+				}
+				catch(error) {
+					log('Failed: ' + error);
+				}
+			}
+					
+
+		</script>
+
+	</head>
+
+	<body>
+
+		<h1>PulseOx:</h1>
+		<button type="button" onclick="ble_connect()">
+			Connect to OB1203
+		</button>
+		<br/>
+		<button type="button" onclick="bleDisconnect()">
+			Disconnect
+		</button>
+		<br/>
+		<br/>Log:<br/>
+		<textarea id="log" rows="20" cols="60" ></textarea>
+		<br/><br/><br/>
+		<br/><br/>
+		
+	</body>
+
+</html>
