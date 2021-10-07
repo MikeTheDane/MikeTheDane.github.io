@@ -33,7 +33,13 @@
 
 			var dataChar;
 			var device;
+
+			var dataLog ="";
 			
+			// v1.0 header (just SPO2 and Heart Rate)
+			var csvHeader ="Time, SPO2 Level [%], Heart Rate [beats/min]\n";
+
+
 			// Define the CodeLess UUIDs 
 			var POX_SVC_UUID 	="00001822-0000-1000-8000-00805f9b34fb";
 			var DATA_CHAR_UUID 	="00002a5f-0000-1000-8000-00805f9b34fb";
@@ -67,13 +73,19 @@
 				
 				myMove();
 
-				spo2.append(new Date().getTime(),display_spo2);
-				hr.append(new Date().getTime(),display_hr);
-				//rr.append(new Date().getTime(),display_rr);
+				var time = new Date()
+
+				var time2 = time.toLocaleTimeString();
+
+				spo2.append(time,display_spo2);
+				hr.append(time,display_hr);
+				//rr.append(time,display_rr);
+
+				dataLog = dataLog + time2 + ', ' + display_spo2 + ', ' + display_hr + '\n';
 
 				dataLength = event.target.value.byteLength;
 				//log("Reading: SPO2: "+display_spo2+", HR: "+display_hr+", RR: "+display_rr);
-				log("Reading: SPO2: "+display_spo2+", HR: "+display_hr);
+				log("Reading ["+time2+"]: SPO2: "+display_spo2+", HR: "+display_hr);
 			}
 
 			async function onDisconnected()
@@ -184,6 +196,23 @@
 			  }
 			}
 
+			function save(filename, data) {
+			    if(document.getElementById('add-header').checked)
+			    	data = csvHeader + data;
+			    const blob = new Blob([data], {type: 'text/csv'});
+			    if(window.navigator.msSaveOrOpenBlob) {
+			        window.navigator.msSaveBlob(blob, filename);
+			    }
+			    else{
+			        const elem = window.document.createElement('a');
+			        elem.href = window.URL.createObjectURL(blob);
+			        elem.download = filename;        
+			        document.body.appendChild(elem);
+			        elem.click();        
+			        document.body.removeChild(elem);
+			    }
+}
+
 		</script>
 
 	</head>
@@ -195,9 +224,19 @@
 			Connect to OB1203
 		</button>
 		<br/>
+		
 		<button type="button" onclick="bleDisconnect()">
 			Disconnect
 		</button>
+		<br/>
+
+		<button type="button" onclick="save('OB1203.csv', dataLog);">
+			Save
+		</button>
+		<label for="add-header">
+   			<input type="checkbox" id="add-header" name="add-header" value="yes">  Add Header to CSV 
+		</label>
+
 		<br/><br/>
 		<div id ="animate"></div>
 		Log:<br/>
@@ -205,8 +244,18 @@
 		<textarea id="log" rows="20" cols="60" ></textarea>
 		<br/><br/>
 		<div id="chart-area" style="display:none;"> 
-		   <canvas id="chart" width="1200" height="300"></canvas><br/><br/>
+		   	<canvas id="chart" width="1200" height="300"></canvas><br/>
+			<svg width="1000" height="30">
+			<circle cx="10" cy="15" r="10" stroke-width="0" fill="red" />
+			<text fill="#000000" font-size="20"  x="25" y="22">SPO2</text>
+
+			<circle cx="110" cy="15" r="10" stroke-width="0" fill="blue" />
+			<text fill="#000000" font-size="20"  x="125" y="22">Heart Rate</text>
+		</svg>
+
+			
 		</div>
+		
 	</body>
 
 </html>
