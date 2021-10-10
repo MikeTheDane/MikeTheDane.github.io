@@ -1,0 +1,247 @@
+<html>
+	<head>
+	
+		<script type="text/javascript" src="templates.js"></script>
+	</head>
+    <body onload="on_html_loaded();" onresize="on_resize();">
+    	<div id="dropfile" style="text-align: center;border: 2px dashed black; background-color: lightgrey;">
+		    	<h1>Drop a SmartBond Services JSON script here</h1><br/><br/><br/><br/>
+		    	<img src="dropbox.svg" style="width:300px;"/><br>   
+		    
+	    </div>
+		
+		<div id="output-pane" style="width: 90%; margin: auto;padding:10px;display: none;">
+			<br/><br/>
+			<div style="background-color: lightgrey;width: 90%; margin: auto;padding:10px;">
+			<button id="download-button" type="button" class="button" onclick="save(outputBleHtml,'index.html');">
+				Download Generated HTML 
+			</button>
+			<button id="download-button" type="button" class="button" onclick="save(outputBleJs,'webble.js');">
+				Download Javascript Only
+			</button>
+			</div>
+			<pre style="background-color: lightgrey;width: 90%; margin: auto;padding:10px;overflow: auto;"><code id="code-here"></code></pre>
+		</div>
+
+
+		<script type="text/javascript">
+			
+			function on_html_loaded(){
+			    // Setup the drag-and-drop listeners.
+			    console.log('HTML Loaded');
+			    var dropZone = document.getElementById('dropfile');
+			    dropZone.addEventListener('dragover', handleDragOver, false);
+			    dropZone.addEventListener('dragleave', handleDragLeave, false);
+			    dropZone.addEventListener('drop', handleFileSelect, false); 
+			    dropZone.style.width = window.innerWidth-20;
+			    dropZone.style.height = window.innerHeight-20;
+			}
+
+			function on_resize()
+			{
+				var dropZone = document.getElementById('dropfile');
+			    dropZone.style.width = window.innerWidth-20;
+			    dropZone.style.height = window.innerHeight-20;	
+			}
+
+			function handleFileSelect(evt) {
+			    // A file or a group of files were selected by user
+			    evt.stopPropagation();
+			    evt.preventDefault();
+			    files = evt.dataTransfer.files; // FileList object.
+			    readBlob();
+    		}
+
+    		function handleDragOver(evt) {
+			    // Show when a file is dragged over the file drop zone
+			    evt.stopPropagation();
+			    evt.preventDefault();
+			    var dropZone = document.getElementById('dropfile');
+			    dropZone.style.backgroundColor = "#FFFFFF";
+			    evt.dataTransfer.dropEffect = 'copy'; 
+			}
+
+			function handleDragLeave(evt) {
+			    // Show when a file is dragged over the file drop zone
+			    var dropZone = document.getElementById('dropfile');
+			    dropZone.style.backgroundColor = "lightgrey";
+			    
+			}
+
+			function readBlob() {
+			    // Select the first file in the group of files selected by the user
+			    var inputfile = files[0];
+			    // Start reading in the file
+			    var reader = new FileReader();
+			    
+			    reader.onloadend = function(evt) {
+			      // When file has been fully loaded:
+			      if (evt.target.readyState == FileReader.DONE) { 
+			        let filename = escape(inputfile.name)
+			        console.log("Update File: "+filename)
+			        let infile = evt.target.result;
+			        console.log(infile);
+			        generateFile(infile);
+			      }
+			    };
+
+			    // Read the selected file as string
+			    reader.readAsText(inputfile);
+			    
+			}
+
+			function save(content, filename) {
+			    const blob = new Blob([content], {type: 'text/plain'});
+			    if(window.navigator.msSaveOrOpenBlob) {
+			        window.navigator.msSaveBlob(blob, filename);
+			    }
+			    else{
+			        const elem = window.document.createElement('a');
+			        elem.href = window.URL.createObjectURL(blob);
+			        elem.download = filename;        
+			        document.body.appendChild(elem);
+			        elem.click();        
+			        document.body.removeChild(elem);
+			    }
+			}
+			
+
+			function formatName(s)
+			{
+				s = s.toUpperCase();
+				s =s.replace(/\x20/g,"_");
+				return s;
+			}
+			
+			function formatUuid(s)
+			{
+				s = s.toLowerCase();
+				return s;
+			}
+
+			var serviceUuids ="";
+			var outputBleJs ="";
+			var outputBleHtml ="";
+			var uuidDefines ="";
+			var globalVars ="";
+			var gatt_exploration ="";
+			var incomingData = "";
+
+			var indentSvc  = "\n";
+			var indentChar = "  ";
+
+			// https://github.com/WebBluetoothCG/registries/blob/master/gatt_blocklist.txt
+			var blockListedSvc = [
+				"0x1812","00001530-1212-efde-1523-785feabcd123","f000ffc0-0451-4000-b000-000000000000",
+				"00060000-0000-1000-8000-00805f9b34fb","0xfffd","0xfff9","0xfde2","0xfe59"
+			]; 
+
+			var blockListedChar = [
+				"0x2a02","0x2a03","0x2a05","0x2a25"
+			];
+
+			
+			function generateFile(services)
+			{
+				document.getElementById("dropfile").style.display = "none";
+				let obj = JSON.parse(services);
+				console.log("Number of services: " + obj.services.length);
+				console.log("Bluetooth Device Name: "+obj.name);
+				for(i=0;i<obj.services.length;i++){
+					if(obj.services[i].name !== undefined )
+						console.log("Service "+i+": " + obj.services[i].name);
+					else{
+						obj.services[i].name = "svc"+i;
+						console.log("Service "+i+": " + obj.services[i].uuid + " >> "+obj.services[i].name);
+					}
+
+
+					obj.services[i].name = formatName(obj.services[i].name);
+					obj.services[i].uuid = formatUuid(obj.services[i].uuid);
+				
+					if(!blockListedSvc.includes(obj.services[i].uuid))
+					{
+						serviceUuids += obj.services[i].name + "_SVC_UUID,";
+
+						if(obj.services[i].uuid.length > 6)
+						{
+							//document.getElementById('uuid-defines').innerHTML += obj.services[i].name +'_SVC_UUID = "' +obj.services[i].uuid +'";<br/>' ;
+							uuidDefines += indentSvc + obj.services[i].name +'_SVC_UUID = "' +obj.services[i].uuid +'";\n';
+						}
+						else
+						{
+							//document.getElementById('uuid-defines').innerHTML += obj.services[i].name +'_SVC_UUID = ' +obj.services[i].uuid +';<br/>' ;
+							uuidDefines += indentSvc + obj.services[i].name +'_SVC_UUID = ' +obj.services[i].uuid +';\n';
+						}
+
+						gatt_exploration += exploration_template_svc.replace("$service_uuid",obj.services[i].name); 
+						
+						console.log("\tNumber of chars: " + obj.services[i].characteristics.length);
+
+						for(x=0;x<obj.services[i].characteristics.length;x++){
+							if(obj.services[i].characteristics[x].name !== undefined )
+								console.log("  char["+x+"]: " + obj.services[i].characteristics[x].name);
+							else{
+								obj.services[i].characteristics[x].name = "CHAR_SVC"+i+"_"+x;
+								console.log("  char["+x+"]: " + obj.services[i].characteristics[x].uuid + " >> "+obj.services[i].characteristics[x].name);
+							}
+
+							obj.services[i].characteristics[x].uuid = formatUuid(obj.services[i].characteristics[x].uuid);
+							obj.services[i].characteristics[x].name = formatName(obj.services[i].characteristics[x].name);
+							if(!blockListedChar.includes(obj.services[i].characteristics[x].uuid))
+							{
+								if(obj.services[i].characteristics[x].uuid.length > 6)
+								{
+									//document.getElementById('uuid-defines').innerHTML += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+obj.services[i].characteristics[x].name +'_CHAR_UUID = "' +obj.services[i].characteristics[x].uuid +'";<br/>';
+									uuidDefines += indentChar + obj.services[i].characteristics[x].name +'_CHAR_UUID = "' +obj.services[i].characteristics[x].uuid +'";\n';
+								}
+								else
+								{
+									//document.getElementById('uuid-defines').innerHTML += "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+obj.services[i].characteristics[x].name +'_CHAR_UUID = ' +obj.services[i].characteristics[x].uuid +';<br/>';
+									uuidDefines += indentChar + obj.services[i].characteristics[x].name +'_CHAR_UUID = ' +obj.services[i].characteristics[x].uuid +';\n';
+								}
+								let charname = "gatt_" + obj.services[i].characteristics[x].name.toLowerCase();
+
+								globalVars += "var "+charname+";\n";
+
+								// Does this char have descriptors? Is one of those descriptors UUID= 0x2902 - if so notifications or indications are permitted
+								let indicate_notify_permitted = false; 
+
+								if(obj.services[i].characteristics[x].descriptors !== undefined)
+								{
+									for(y=0;y<obj.services[i].characteristics[x].descriptors.length;y++)
+										if(obj.services[i].characteristics[x].descriptors[y].uuid == "0x2902")
+											indicate_notify_permitted = true;
+								}
+								if(indicate_notify_permitted)
+								{
+									gatt_exploration += exploration_template_char_ni.replace(/\$charName/g,charname).replace("$char_uuid",obj.services[i].characteristics[x].name);
+
+									incomingData += incoming_data_template.replace("$charName",charname)+"\n";
+								}
+								else
+									gatt_exploration += exploration_template_char.replace(/\$charName/g,charname).replace("$char_uuid",obj.services[i].characteristics[x].name);
+							}
+						}
+						gatt_exploration += "\n";
+					}
+				}	
+
+				console.log("Service UUIDs: "+serviceUuids.substring(0,serviceUuids.length-1));
+				outputBleJs = main_template.replace("$name",obj.name).replace("$serviceUuids",serviceUuids.substring(0,serviceUuids.length-1));
+				//document.getElementById('ble-filter').innerHTML = outputBleJs.replace(/\n/g,"<br/>");
+				outputBleJs = outputBleJs.replace("$uuid_defines",uuidDefines);
+				outputBleJs = outputBleJs.replace("$services&characteristics",gatt_exploration);
+				outputBleJs = outputBleJs.replace("$global_vars",globalVars);
+				outputBleJs = outputBleJs.replace("$incoming_data_cbs",incomingData);
+				
+				outputBleHtml = main_html_template.replace("$javascript",outputBleJs.replace(/\n/g,"\n      "));
+
+				document.getElementById('code-here').innerHTML = outputBleHtml.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+				document.getElementById("output-pane").style.display = "inline";
+			}
+
+		</script>
+	</body>
+	
+</html>
