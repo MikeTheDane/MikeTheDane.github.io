@@ -81,7 +81,7 @@
 			var dataLog ="";
 			
 			// v1.0 header (just SPO2 and Heart Rate)
-			var csvHeader ="Time, SPO2 Level [%], Heart Rate [beats/min]\n";
+			var csvHeader ="Time, SPO2 Level [%], Heart Rate [beats/min], Respiration Rate [r/min]\n";
 
 
 			// Define UUIDs 
@@ -120,7 +120,7 @@
 				{
 					display_spo2 = v.getUint16(1,true);
 					display_hr = v.getUint16(3,true);
-					display_rr = v.getUint8(5,true);
+					display_rr = v.getUint16(5,true);
 
 					if(no_data_yet){
 						// We received data for the first time, so render graph
@@ -131,7 +131,7 @@
 						log("Receiving Data...");
 					}
 					
-					myMove();
+					//myMove();
 
 					var time = new Date()
 
@@ -154,7 +154,9 @@
 						for(let i=7;i<67;i=i+3)
 						{
 							let led_data = v.getUint8(i) + 256 * v.getUint16(i+1,true);
-							led_data_array.append(led_data);
+							led_data_array.push(led_data);
+							//if(i==7)
+							//	console.log("-> "+v.getUint8(i)+","+v.getUint8(i+1)+", "+v.getUint8(i+2));
 						}
 						console.log(led_data_array);
 					}
@@ -215,7 +217,7 @@
 					log("EVK Software Revision: "+decoder.decode(sw_rev) );
 
 					log('Ready to communicate!\n');
-					log('Waiting for valid readings...\n');
+					//log('Waiting for valid readings...\n');
 				}
 				catch(error) {
 					log('Failed: ' + error);
@@ -285,7 +287,7 @@
 			      clearInterval(id);
 			    } else {
 			      pos++; 
-			      elem.style.opacity= 1-pos/100; 
+			      elem.style.opacity= 1-pos/25; 
 			    }
 			  }
 			}
@@ -336,14 +338,15 @@
 				</button>
 				<br/>
 				Bluetooth Status: <span id="ble-status">Not Connected</span>
-				<br/>
-				<div id ="animate"></div>
+				<br/><br/>
 				<!--
+				<div id ="animate"></div>
+			
 				Log:<br/>
 				<textarea id="log" rows="10" cols="60" ></textarea>	
 				-->
 				Bluetooth Log:
-				<div id="ble_log" style="border:  2px solid #f0f0f0 ; height:110px;overflow:auto;display:flex; flex-direction:column-reverse;"><br/></div>
+				<div id="ble_log" style="border:  2px solid #f0f0f0 ; height:117px;overflow:auto;display:flex; flex-direction:column-reverse;"><br/></div>
 			</div>
 
 			<div class="flex-child">
@@ -367,12 +370,15 @@
 		<br/><br/>
 		<div id="chart-area" style="display:none;text-align: left;"> 
 		   	<canvas id="chart" width="1200" height="300"></canvas><br/>
-			<svg width="300" height="30">
+			<svg width="600" height="30">
 			<circle cx="20" cy="15" r="10" stroke-width="0" fill="blue" />
 			<text fill="#000000" font-size="20"  x="40" y="22">SPO2</text>
 
 			<circle cx="120" cy="15" r="10" stroke-width="0" fill="red" />
 			<text fill="#000000" font-size="20"  x="140" y="22">Heart Rate</text>
+
+			<circle cx="255" cy="15" r="10" stroke-width="0" fill="green" />
+			<text fill="#000000" font-size="20"  x="275" y="22">Respiration Rate</text>
 
 		</svg>
 		
