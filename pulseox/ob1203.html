@@ -1,0 +1,488 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+	<style>
+	#animate {
+	  width: 24px;
+	  height: 24px;
+	  border-radius: 12px;
+	  background-color: blue;
+	  opacity: 0;
+	}
+
+	div.smoothie-chart-tooltip {
+	  background: #444;
+	  padding: 1em;
+	  margin-top: 20px;
+	  font-family: consolas;
+	  color: white;
+	  font-size: 16px;
+	  pointer-events: none;
+	  border-radius: 5px;
+	  opacity:  0.8;
+	}
+
+	.button {
+		  background-color: #888888;
+		  border: none;
+		  color: white;
+		  padding: 15px 32px;
+		  text-align: center;
+		  text-decoration: none;
+		  display: inline-block;
+		  font-size: 16px;
+		  margin: 4px 2px;
+		  border-radius: 5px;
+		  cursor: pointer;
+		  -webkit-transition-duration: 0.4s; /* Safari */
+		  transition-duration: 0.4s;
+		  width: 230px;
+	}
+
+	.button:hover {
+	  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+	}
+
+	.flex-container {
+ 	   	display: flex;
+ 	   	background-color: lightgrey;
+ 	   	padding-top :  3px;
+ 	   	padding-bottom :  3px;
+	}
+
+	.flex-child {
+ 	   	text-align: left;
+ 	   	flex: 1;
+ 	   	/*border: 2px solid yellow;*/
+ 	   	background-color: white;
+ 	   	padding:  10px;
+ 	   	/*border-radius: 8px;*/
+	}  
+
+	.flex-child:first-child {
+   		
+   		
+   		margin-right: 3px;
+	} 
+
+
+	</style>
+	<head>
+		
+		<meta charset="UTF-8">
+		<title>OB1203 Demo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="smoothie.js"></script>
+        <script type="text/javascript" src="latest_firmware.js"></script>
+		<script type="text/javascript" src="suota.js"></script>
+		<script>
+
+			var dataChar;
+			var device;
+
+			var dataLog ="";
+			
+			// v1.0 header (just SPO2 and Heart Rate)
+			var csvHeader ="Time, SPO2 Level [%], Heart Rate [beats/min], Respiration Rate [r/min]\n";
+
+
+			// Define UUIDs 
+			var POX_SVC_UUID 	="00001822-0000-1000-8000-00805f9b34fb";
+			var DATA_CHAR_UUID 	="00002a5f-0000-1000-8000-00805f9b34fb";
+			var DISS_SVC_UUID	="0000180a-0000-1000-8000-00805f9b34fb";
+			var SW_CHAR_UUID	="00002a28-0000-1000-8000-00805f9b34fb";
+			
+			// Display text in BLE log field text area 
+			function log(text)
+			{
+				//var textarea = document.getElementById('log');
+				//textarea.value += "\n" + text;
+				//textarea.scrollTop = textarea.scrollHeight;
+				document.getElementById('ble_log').innerHTML = document.getElementById('ble_log').innerHTML + text + '<br/>';
+			}
+
+			// Display text in data log field text area 
+			function datalog(text)
+			{
+				//var textarea = document.getElementById('log');
+				//textarea.value += "\n" + text;
+				//textarea.scrollTop = textarea.scrollHeight;
+				document.getElementById('data_log').innerHTML = document.getElementById('data_log').innerHTML + text + '<br/>';
+			}
+
+			var no_data_yet = true;
+			
+			// Incoming GATT notification was received
+			async function incomingData(event){
+				let v= event.target.value;
+
+				dataLength = event.target.value.byteLength;
+				console.log("Data Length: "+dataLength);
+				if(dataLength > 6 )
+				{
+					display_spo2 = v.getUint16(1,true);
+					display_hr = v.getUint16(3,true);
+					display_rr = v.getUint16(5,true);
+
+					if(no_data_yet){
+						// We received data for the first time, so render graph
+						document.getElementById('chart-area').style = "display:inline;";
+						document.getElementById('app-data').style = "display:inline;";
+						chart.start();
+						raw_chart.start();
+						no_data_yet = false;
+						log("Receiving Data...");
+					}
+					
+					//myMove();
+
+					var time = new Date()
+
+					var time2 = time.toLocaleTimeString();
+
+					spo2.append(time,display_spo2);
+					hr.append(time,display_hr);
+					rr.append(time,display_rr);
+
+					let vitalData = time2 + ', ' + display_spo2 + ', ' + display_hr + ', '+ display_rr;
+
+					//dataLog = dataLog + time2 + ', ' + display_spo2 + ', ' + display_hr + ', '+ display_rr +'\n';
+
+					datalog(time2+" - SPO2: "+display_spo2+", HR: "+display_hr+ ", RR: "+display_rr);
+
+					let led_data_array = [];
+
+					//if(dataLength==67)
+					if(dataLength > 7)
+					{
+						for(let i=7;i<dataLength;i=i+3)
+						{
+							let led_data = v.getUint8(i) + 256 * v.getUint16(i+1,true);
+							led_data_array.push(led_data);
+							
+							if(i % 2 != 0) // Infra Red
+							{
+								ir.append(time,led_data);
+								dataLog =  dataLog + vitalData +', '+led_data; 
+							}
+							else // Red 
+							{
+								red.append(time,led_data);
+								dataLog = dataLog +', '+led_data + '\n'; 
+
+							}
+						}
+						console.log(led_data_array);
+					}
+				}
+			}
+
+			async function onDisconnected()
+			{
+				log("Bluetooth connection terminated!");
+				document.getElementById("connect-button").innerHTML="Connect";
+				document.getElementById('ble-status').innerHTML = "Not Connected";
+				chart.stop();
+				raw_chart.stop();
+			}
+
+			async function bleDisconnect()
+			{
+				log("Disconnecting");
+				if (device.gatt.connected) {
+				    device.gatt.disconnect();
+				}
+				else {
+				    log('> Bluetooth Device is already disconnected');
+				}
+			}
+
+			// Scan, connect and explore BLE device
+			async function ble_connect() {
+				try {
+					document.getElementById('ble-status').innerHTML = "Connecting...";
+					document.getElementById("connect-button").innerHTML="Connecting...";
+					document.getElementById("connect-button").disabled = true;
+					
+					// Define a scan filter and prepare for interaction with PulseOx Service
+					log('Requesting Bluetooth Device...');
+					device  = await navigator.bluetooth.requestDevice({
+						//filters: [{name: 'DLG-OB1203-v10'}],
+						filters: [{namePrefix: 'DLG-OB1203'}],
+						optionalServices: [POX_SVC_UUID, DISS_SVC_UUID]
+					});	
+					device.addEventListener('gattserverdisconnected', onDisconnected);	
+					// Connect to device GATT and perform attribute discovery
+					server = await device.gatt.connect();
+
+					document.getElementById("connect-button").innerHTML="Disconnect";
+					
+					document.getElementById('ble-status').innerHTML = "Connected";
+					document.getElementById("connect-button").disabled = false;
+
+					const service = await server.getPrimaryService(POX_SVC_UUID);
+					dataChar = await service.getCharacteristic(DATA_CHAR_UUID);
+					
+					const dissService =  await server.getPrimaryService(DISS_SVC_UUID);
+					const dissChar = await dissService.getCharacteristic(SW_CHAR_UUID);
+					let sw_rev = await dissChar.readValue();
+					let decoder = new TextDecoder('utf-8');
+					log("EVK Software Revision: "+decoder.decode(sw_rev) );
+					let current_rev = decoder.decode(sw_rev);
+					
+					console.log("Rev: "+current_rev+", Latest Rev: "+latest_firmware_revision);
+
+					if(current_rev < latest_firmware_revision){
+						log('Update firmware to '+latest_firmware_revision+'\n');
+						document.getElementById("software_update_dialog").showModal();
+					}
+					else{
+						await dataChar.startNotifications();
+						dataChar.addEventListener('characteristicvaluechanged', incomingData);
+						log('Ready to communicate!\n');
+					}
+
+				}
+				catch(error) {
+					log('Failed: ' + error);
+					document.getElementById("connect-button").disabled = false;
+					document.getElementById('ble-status').innerHTML = "Not Connected";
+					document.getElementById("connect-button").innerHTML = "Connect";
+				}
+			}
+				
+			// 
+		    var spo2 = new TimeSeries();
+		    var hr = new TimeSeries();
+		    var rr = new TimeSeries();
+		    var ir = new TimeSeries();
+		    var red = new TimeSeries();
+		   
+		     var chart = new SmoothieChart(
+		      		{
+			      		millisPerPixel:20,				      	
+				      	timestampFormatter:SmoothieChart.timeFormatter,
+				      	interpolation:'linear',
+				      	maxValue:200,
+				      	minValue:0,
+				      	tooltip:true,
+				      	labels:{fontSize:15,fillStyle:'#000000',precision:0},
+				      	grid:{borderVisible:false,millisPerLine:2000,verticalSections:21,fillStyle:'#EEEEEE'}
+				      	
+		      		}
+		      	);
+
+		      var raw_chart = new SmoothieChart(
+		      		{
+			      		millisPerPixel:20,				      	
+				      	timestampFormatter:SmoothieChart.timeFormatter,
+				      	interpolation:'linear',
+				      	tooltip:true,
+				      	labels:{fontSize:15,fillStyle:'#000000',precision:0},
+				      	grid:{borderVisible:false,millisPerLine:2000,verticalSections:21,fillStyle:'#EEEEEE'}
+				      	
+		      		}
+		      	);
+
+		    function createTimeline() {
+			      document.getElementById('vitalchart').width = document.getElementById('stage').clientWidth *0.95;	
+			      chart.addTimeSeries(spo2, { 
+			      	strokeStyle: 'rgba(0, 0, 255, 1)',
+			      	lineWidth: 2 
+			      	
+			      });
+			     
+			      chart.addTimeSeries(hr,   {
+			     	strokeStyle: 'rgba(255, 0, 0, 1)',
+			     	lineWidth: 2 
+			     });
+			      
+			      chart.addTimeSeries(rr,   {
+			     	strokeStyle: 'rgba(0, 255, 0, 1)',
+			     	lineWidth: 2 
+			     });
+			     
+			     
+			     chart.streamTo(document.getElementById("vitalchart"), 1000);
+
+			     
+			     document.getElementById('rawchart').width = document.getElementById('stage').clientWidth *0.95;	
+			     
+			      raw_chart.addTimeSeries(ir, { 
+			      	strokeStyle: 'rgba(128, 0, 128, 1)',
+			      	lineWidth: 2 
+			      	
+			      });
+			     
+			      raw_chart.addTimeSeries(red,   {
+			     	strokeStyle: 'rgba(255, 0, 0, 1)',
+			     	lineWidth: 2 
+			     });
+			           
+			     
+			     raw_chart.streamTo(document.getElementById("rawchart"), 1000);
+			     
+		    }	
+
+		    function adjust_width()
+		    {
+		    	document.getElementById('vitalchart').width = document.getElementById('stage').clientWidth *0.95;
+		    	document.getElementById('rawchart').width = document.getElementById('stage').clientWidth *0.95;
+
+		    }
+
+
+		    function myMove() {
+			  let id = null;
+			  const elem = document.getElementById("animate"); 
+			  elem.style.opacity = 1;  
+			  let pos = 0;
+			  clearInterval(id);
+			  id = setInterval(frame, 10);
+			  function frame() {
+			    if (pos == 100) {
+			      clearInterval(id);
+			    } else {
+			      pos++; 
+			      elem.style.opacity= 1-pos/25; 
+			    }
+			  }
+			}
+
+			function save(filename, data) {
+			    if(document.getElementById('add-header').checked)
+			    	data = csvHeader + data;
+			    const blob = new Blob([data], {type: 'text/csv'});
+			    if(window.navigator.msSaveOrOpenBlob) {
+			        window.navigator.msSaveBlob(blob, filename);
+			    }
+			    else{
+			        const elem = window.document.createElement('a');
+			        elem.href = window.URL.createObjectURL(blob);
+			        elem.download = filename;        
+			        document.body.appendChild(elem);
+			        elem.click();        
+			        document.body.removeChild(elem);
+			    }
+			}
+
+			function toggleConnection() {
+				if(typeof device !== 'undefined'){
+					if (device.gatt.connected) 
+						bleDisconnect();
+					else
+						ble_connect();
+				}
+				else
+					ble_connect();
+			}
+
+			async function start_software_update(){
+				try{
+					await dataChar.writeValue(new Uint8Array([0x01]));
+				}
+				catch(error){
+					log('Failed: ' + error);
+				}
+				connect_to_peer();
+
+			}
+		</script>
+
+	</head>
+
+	<body onload="createTimeline();createImage();" style="background-color: lightgrey;text-align: center" onresize="adjust_width();">
+
+		
+		<div id="stage" align='center' style="background-color: white;margin: auto; width: 90%;">
+		<br/><h1 align='center'>Renesas OB1203SD-BT2-EVK</h1>
+		<a 
+			href="https://www.renesas.com/us/en/products/sensor-products/biosensors/ob1203-heart-rate-blood-oxygen-concentration-pulse-oximetry-proximity-light-and-color-sensor" target="_blank">Additional Information</a><br/><br>
+		
+		<div class="flex-container">
+			<div class="flex-child">
+				<button id="connect-button" type="button" class="button" onclick="toggleConnection();">
+					Connect
+				</button>
+				<br/>
+				Bluetooth Status: <span id="ble-status">Not Connected</span>
+				<br/><br/>
+				<!--
+				<div id ="animate"></div>
+			
+				Log:<br/>
+				<textarea id="log" rows="10" cols="60" ></textarea>	
+				-->
+				Bluetooth Log:
+				<div id="ble_log" style="border:  2px solid #f0f0f0 ; height:117px;overflow:auto;display:flex; flex-direction:column-reverse;"><br/></div>
+			</div>
+
+			<div class="flex-child">
+				<div id="app-data" style="display: none;">
+				<button id="save-button" type="button" class="button" onclick="save('OB1203.csv', dataLog);">
+					Save Data to File
+				</button><br/>
+				<label for="add-header">
+					<input type="checkbox" id="add-header" name="add-header" value="yes" checked>  Add Header to CSV
+				</label>
+
+				<br/><br/>
+
+				Data Log:
+				<div id="data_log" style="border:  2px solid #f0f0f0 ; height:115px;overflow:auto;display:flex; flex-direction:column-reverse;"><br/></div>	
+				</div>
+			</div>
+
+
+		</div>
+		<br/><br/>
+		<div id="chart-area" style="display:none;text-align: left;"> 
+		   	<canvas id="vitalchart" width="1200" height="300"></canvas><br/>
+			<svg width="1200" height="30">
+				<circle cx="40" cy="15" r="10" stroke-width="0" fill="blue" />
+				<text fill="#000000" font-size="20"  x="60" y="22">SPO2</text>
+
+				<circle cx="140" cy="15" r="10" stroke-width="0" fill="red" />
+				<text fill="#000000" font-size="20"  x="160" y="22">Heart Rate</text>
+
+				<circle cx="275" cy="15" r="10" stroke-width="0" fill="limegreen" />
+				<text fill="#000000" font-size="20"  x="295" y="22">Respiration Rate</text>
+			</svg>
+
+			<hr/>
+
+			<canvas id="rawchart" width="1200" height="300"></canvas><br/>
+			<svg width="1200" height="30">
+				<circle cx="40" cy="15" r="10" stroke-width="0" fill="red" />
+				<text fill="#000000" font-size="20"  x="60" y="22">Red</text>
+
+				<circle cx="140" cy="15" r="10" stroke-width="0" fill="purple" />
+				<text fill="#000000" font-size="20"  x="160" y="22">Infrared</text>
+
+			</svg>
+				
+		</div>
+		
+		</div>
+
+		<dialog id="software_update_dialog" style="border-radius: 8px;">
+			Hold push button on evaluation kit down while clicking the Upgrade button!<br/>
+			<img src="ob1203kit.png" style="width: 500px;"/><br/>
+			<button type="button" onclick="start_software_update();">Upgrade</button>
+			<br/><br/>
+			
+			<div id="progress" style="display: none;">
+			
+			<div style="width:  100%; border: solid black 1px;border-radius: 4px;">
+				<div id="bar" style="background-color: limegreen;height:  12px;width:0%">
+					
+				</div>
+			</div>
+			<span id="progresstext">Pair with Static SUotA</span>
+			</div>
+			
+			
+		</dialog>
+	</body>
+
+</html>
