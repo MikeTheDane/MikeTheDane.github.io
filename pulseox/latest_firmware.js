@@ -3,7 +3,7 @@
 // File name: v110.bin
 
 
-const latest_firmware_revision = 'v1.2';
+const latest_firmware_revision = 'v1.1';
 
 
 const latest_firmware = [
