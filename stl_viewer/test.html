@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Viewstl Javascript Plugin - Simple Example</title>
+    </head>
+
+    <body>
+        <div id="stl_cont" style="width:1000px;height:1000px;margin:0 auto;background: grey;"></div>
+
+        <script src="stl_viewer.min.js"></script>        
+        <script>
+            var stl_viewer=new StlViewer(document.getElementById("stl_cont"), { models: [ {id:0, filename:"Shamrock.stl"} ] });
+            /*
+            var stl_viewer=new StlViewer
+            (
+                document.getElementById("stl_cont"),
+                {
+                    models:
+                    [
+                        {filename:"Shamrock.stl"}
+                    ]
+                }
+            );
+            */
+        </script>
+        
+    </body>
+</html>
