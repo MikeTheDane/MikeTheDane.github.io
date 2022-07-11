@@ -1,0 +1,175 @@
+<html>
+	<!-- https://www.eclipse.org/paho/files/jsdoc/Paho.MQTT.Client.html  -->
+   <head>
+      <title>DA16200 MQTT Client</title>
+      
+      <link rel="icon" type="image/x-icon" href="favicon.ico">
+	  	<script src="paho-mqtt-min.js"></script>
+	 	
+	  	<style>
+	  		.message_element {
+			    animation: fadein 1s;
+			}
+			@keyframes fadein {
+			   from { opacity: 0; border: solid 1px;}
+  				to { opacity: 1; border: 0px}
+			}
+
+			.blink_me {
+  				animation: blinker 3s linear infinite;
+			}
+
+			@keyframes blinker {
+			  50% {
+			    opacity: 0;
+			  }
+			}
+	  	</style>
+
+
+	 	<script type = "text/javascript" language = "javascript">
+		
+
+			
+			var host="broker.hivemq.com";
+			var port=8000;
+			var reconnectTimeout = 2000;
+			var clientID = "SomeID"+self.crypto.randomUUID();
+			var publishTopic = "DA16200 Client connected";
+			var publishMessage = "Client: '" + clientID + "', has connected and has subscribed to '$subscribetopic'";
+			var subscribeTopic = "DA16200 John Doe";
+			
+			var mqtt;
+			var user_disconnected = false;
+
+			async function parseData(topic, message){
+				let time_received = new Date().toLocaleString();
+				
+				const elm = document.createElement("div");
+				elm.style = "color:darkslategrey;padding:10px;margin:10px;border-radius: 10px;text-align:left;max-width:800px;margin: 5px auto 5px auto;background-image: linear-gradient(to bottom, rgba(248,248,255,0.9), rgba(220,220,220,1));";
+				elm.id = "message_element";
+				elm.className = "message_element";
+				let s = "<span style='color:darkgrey;font-size:0.8em'>Topic: '" + topic + "', Received at "+time_received+"<br/>";
+				s += "Raw Payload: " + message + "</span><br/>";
+				try{
+					let obj = JSON.parse(message);
+					
+					s += "<span style='font-size:1.5em'>Temperature: " + obj.temperature + "&#176;C ("+ (9*(obj.temperature)/5 + 32).toFixed(1) +"&#176;F)<br/>";
+					s += "Humidity: " + obj.humidity + "%<br/>";
+					s += "Button press count: " + obj.buttonpress + "</span><br/>";
+				}
+				catch(err){
+					//
+					console.log("%cMessage content does not conform to required JSON format!","color:red")
+					s += "<span style='font-size:1.5em'>Message content does not conform to required JSON format!</span>"
+				}
+				finally{
+					elm.innerHTML = s;
+					
+					let last = document.getElementById(elm.id);
+					if(last !== null)
+						document.body.insertBefore(elm, last);
+					else
+						document.body.appendChild(elm);
+				}
+			}
+
+			function onMessageArrived(msg){
+				console.log("Message received:");
+				console.log("\t%cTopic: %s","color:green",  msg.destinationName);
+				console.log("\t%cPayload: %s", "color:green", msg.payloadString);
+				parseData(msg.destinationName, msg.payloadString);
+			}
+
+			function disconnect(){
+				user_disconnected = true;
+				mqtt.disconnect();
+			}
+			
+		 	function onConnectSuccess() {
+		  		console.log("Connected to broker: " + host +":"+ port);
+				document.title = "🌐 DA16200 MQTT Client";
+				document.getElementById("connection_status").innerHTML = 
+					"<span id='connection_indicator'>🌐</span> Connected to broker <button onClick='disconnect();'>Disconnect</button>"
+				
+				subscribeTopic = document.getElementById("topic").value;
+				console.log("Subscribing to topic: " + subscribeTopic);
+				mqtt.subscribe(subscribeTopic);
+				document.getElementById("topic").disabled = true;
+				document.getElementById("connectbutton").disabled = true;	
+				console.log("Publishing message: '" + publishMessage.replace('$subscribetopic',subscribeTopic) + "' with topic: "+publishTopic);
+				message = new Paho.MQTT.Message(publishMessage.replace('$subscribetopic',subscribeTopic));
+				message.destinationName = publishTopic;
+				mqtt.send(message);
+				document.getElementById("connection_indicator").classList.add('blink_me');
+		  	}
+
+		  	function onConnectFailure(err_msg){
+		  		console.log("Failed connecting to broker: " + host +":"+ port);
+		  		document.getElementById("connection_status").innerHTML = "Failed to connect, retrying..."
+		  		setTimeout(MQTTconnect, reconnectTimeout);
+			}
+
+			function onConnectionLost(){
+				document.title = "  DA16200 MQTT Client";
+				if(!user_disconnected){
+					console.log("%cConnection to broker %s:%s was lost","color:red", host, port);
+					console.log("Attempting to reconnect...");
+					document.getElementById("connection_status").innerHTML = "Connection lost, retrying..."
+					setTimeout(MQTTconnect, reconnectTimeout);
+				}
+				else{
+					console.log("User disconnected from broker");
+					user_disconnected = false;	
+					document.getElementById("connection_status").innerHTML = "Change subscription topic and click 'Connect'!";
+					document.getElementById("topic").disabled = false;
+					document.getElementById("connectbutton").disabled = false;
+					
+				}
+			}
+
+		  	function MQTTconnect() {
+		  		document.getElementById("connection_status").innerHTML = "Connecting..."
+				console.log("Connecting to "+ host +":"+ port + "...");
+				mqtt = new Paho.MQTT.Client(host, port, clientID);
+				var options = {
+					useSSL: false,
+					timeout: 3,
+					onSuccess: onConnectSuccess,
+					onFailure: onConnectFailure,
+				};
+				mqtt.onConnectionLost = onConnectionLost;
+				mqtt.onMessageArrived = onMessageArrived;
+				mqtt.connect(options);
+			}
+		 
+		</script>
+   
+   </head>
+
+ 	<body style="background: linear-gradient(darkslategrey, black);color:whitesmoke;text-align:center">
+ 		<hr/>
+	   <h1>Renesas DA16200 Demo MQTT Client</h1>
+	   <h2 id="connection_status" style="height: 40px;vertical-align:middle;">Change subscription topic and click 'Connect'!</h2>
+	   <span style="font-size: 1.5em">
+	   <label for="topic">Subscribe to topic: </label>
+	   <input type="text" id="topic" value="DA16200 John Doe">
+	   <button id="connectbutton" onclick="MQTTconnect();">Connect</button>
+		</span>
+		<span style="font-size: 1.5em">
+		   <br/><br/>This demo utilizes the 
+		   <a href="https://hivemq.com/public-mqtt-broker" target="_blank" style="color:whitesmoke">HiveMQ Public MQTT broker</a>
+		    and the <a href="https://www.eclipse.org/paho/files/jsdoc/Paho.MQTT.Client.html" target="_blank"style="color:whitesmoke">Paho MQTT JavaScript Client</a> from Eclipse<br/>
+	 	</span>
+
+	   
+
+
+	   <hr/>
+	   
+	 	<script>
+	 		
+	 	</script>
+   </body>	
+
+</html>
