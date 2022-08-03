@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<title>AT Command Spy</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" type="image/x-icon" href="MTD_favicon.ico">
+		<script src="https://kit.fontawesome.com/d99fd0b2eb.js" crossorigin="anonymous"></script>
+		<style>
+
+			.topbox{
+				background-color: #72787e; 
+				color:  lightgray; 
+				padding :5px;
+				border-radius: 4px;
+				-webkit-box-shadow: inset 0 0 6px     rgba(0,0,0,0.5);
+				text-shadow: 0px 1px 0px rgba(255,255,255,.3), 0px -1px 0px rgba(0,0,0,.7);
+			}
+			::-webkit-scrollbar {
+			    width: 12px;
+			}
+
+			::-webkit-scrollbar-track {
+			    -webkit-box-shadow: inset 0 0 6px     rgba(0,0,0,0.3); 
+			    border-radius: 10px;
+			}
+
+			::-webkit-scrollbar-thumb {
+			    border-radius: 10px;
+			    -webkit-box-shadow: inset 0 0 6px     rgba(0,0,0,0.5); 
+			    background: #72787e;
+			}
+
+			body{
+				background-color: #303841;
+			}
+
+			span{
+				font-family: 'Courier New', monospace;
+				font-size: 14px;
+			}
+
+			button{
+                font-size:22px;
+                color:white;
+                margin:4px 2px;
+                background-color:#0075ff;
+                border-radius:8px;
+                border-width: 0px;
+            }
+
+            h1{
+            	text-align: center;
+            	font-family:'Century Gothic', 'HelveticaNeueLT Pro 45 Lt', sans-serif;
+            }
+
+            .stage{
+            	overflow-y: scroll;
+            	background-color: #303841; 
+            	margin-top: 5px;font-family:'Courier New';
+            }
+
+            .tooltip {
+			  	position: relative;
+			  	display: inline-block;  	
+			}
+
+			.tooltip .tooltiptext {
+				visibility: hidden;
+				width: 120px;
+				background-color: black;
+				color: #fff;
+				text-align: center;
+				border-radius: 6px;
+				padding: 5px 0;
+				top: 100%;
+				left: 50%;
+				margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+				/* Position the tooltip */
+				position: absolute;
+				z-index: 1;
+			}
+
+			.tooltip:hover .tooltiptext {
+			 	visibility: visible;
+			}
+			
+		</style>
+
+		<script>
+			var linebreakChars = "\r\n";
+			var clrScreenEsc = '[2J[H';
+			var clrScreen = ['ATZ'];
+			var perspective='a';
+
+			async function first(s,value){
+				value=value.replace(/\n/g,"<LF>");
+				if(value!="" || !document.getElementById('filter').checked){
+					const stage = document.getElementById("stage");
+					if(clrScreen.includes(value) || value.includes(clrScreenEsc)){
+						stage.innerHTML = "";
+					}
+					const line = document.createElement("span");
+					if(s==perspective){
+						//console.log("%c=> %s","color:magenta",value);
+						const container = document.createElement("text");
+						const content = document.createElement("text");
+						content.style="color: #c06066; white-space: nowrap;font-weight: bold;margin-left:50px;";
+						content.innerText = '=> ' + value +"\n";
+						container.innerHTML = "";
+						stage.appendChild(container);
+						stage.appendChild(content);
+						container.scrollIntoView();
+					}
+					else{
+						setTimeout(function(){
+							//console.log("%c\t\t<= %s","color:green",value)
+							const container = document.createElement("text");
+							const content = document.createElement("text");
+							content.style="color: #99c794; white-space: nowrap;font-weight: bold;margin-left:100px;";
+							content.innerText = '<= ' + value+"\n";
+							container.innerHTML = "";
+							stage.appendChild(container);
+							stage.appendChild(container);
+							stage.appendChild(content);
+							container.scrollIntoView();
+						},20);
+					}
+				}
+			}
+
+			class LineBreakTransformer {
+				constructor() {
+				  this.chunks = "";
+				}
+
+				transform(chunk, controller) {
+				    this.chunks += chunk;
+				    const lines = this.chunks.split(linebreakChars);
+				    this.chunks = lines.pop();
+				    lines.forEach((line) => controller.enqueue(line));
+				}
+
+				flush(controller) {
+				    controller.enqueue(this.chunks);
+				}
+			}
+
+			async function serial_connect_a(){			
+  				const filters = [
+					{ usbVendorId: 0x0403, usbProductId: 0x6001 },
+					{ usbVendorId: 0x1366, usbProductId: 0x0105 },
+					{ usbVendorId: 0x0403, usbProductId: 0x6010 },
+				];
+				try{
+				port_a = await navigator.serial.requestPort({ filters });
+				} catch(error){
+					console.log("User failed to select a serial port");
+				}
+				try{
+					await port_a.open({ baudRate: 115200 });
+					//console.log(await port_a.getInfo());
+					const signals = await port_a.getSignals();
+					//console.log("Clear To Send: "+signals.clearToSend);
+					if(signals.clearToSend)
+						swapPerspective();
+				}catch (error) {
+					console.log("Serial port failed to open.");
+					console.error(error);	
+				}
+				serial_connect_b();
+				while(true){
+					const textDecoder = new TextDecoderStream();
+					const readableStreamClosed = port_a.readable.pipeTo(textDecoder.writable);
+					const reader_a = textDecoder.readable
+							.pipeThrough(new TransformStream(new LineBreakTransformer()))
+	  						.getReader();						
+					while (true) {
+	  					try{
+		  					try{
+			  					const { value, done } = await reader_a.read();
+			  					first('a',value);
+			  					if (done) {
+			  						// Allow the serial port to be closed later.
+			    					reader_a.releaseLock();		
+			    					break;
+			  					}
+		  					}
+		  					catch(err) {
+							  	break;
+							}
+						}
+						catch(err) {
+							break;
+						}
+					}
+		  		}
+			}
+
+			async function serial_connect_b(){			
+  				success = true;
+				const filters = [
+					{ usbVendorId: 0x0403, usbProductId: 0x6001 },
+					{ usbVendorId: 0x1366, usbProductId: 0x0105 },
+					{ usbVendorId: 0x0403, usbProductId: 0x6010 },
+				];
+				try{
+					port_b = await navigator.serial.requestPort({ filters });
+				} catch(error){
+					console.log("User failed to select a serial port");
+					success = false;
+				}
+				if (success){
+					try{
+						await port_b.open({ baudRate: 115200 });
+						document.getElementById('initial').close();
+						sizer();
+					}catch (error) {
+	  					console.log("Serial port failed to open.");
+	  					console.error(error);	
+					}
+					// Listen to data coming from the serial device.
+					while (true) {
+						const textDecoder = new TextDecoderStream();
+						const readableStreamClosed = port_b.readable.pipeTo(textDecoder.writable);
+					
+						const reader_b = textDecoder.readable
+							.pipeThrough(new TransformStream(new LineBreakTransformer()))
+	  						.getReader();
+						while (true) {
+		  					try{
+			  					try{
+				  					const { value, done } = await reader_b.read();
+				  					first('b',value);
+				  					if (done) {
+				    					// Allow the serial port to be closed later.
+				    					reader.releaseLock();
+				    					break;
+				  					}
+			  					}
+			  					catch(err) {
+								  	break;
+								}
+							}
+							catch(err) {
+							  	break;
+							}
+			  			}
+		  			}
+		  		}	
+			}
+
+			function swapPerspective(){
+				if (perspective=='a')
+					perspective='b';
+				else
+					perspective='a';
+			}
+
+			function clear_screen(){
+				document.getElementById('stage').innerHTML ="";
+			}
+
+			function sizer(){
+				const win_height = window.innerHeight;
+				let top_height = document.getElementById("top").clientHeight;
+				document.getElementById("stage").height = (win_height - top_height - 25) + "px";
+				document.getElementById("stage").style.maxHeight =  (win_height - top_height - 25) + "px";
+				document.getElementById("stage").style.minHeight =  (win_height - top_height - 25) + "px";
+				//console.log("Window : " + win_height );
+				//console.log("Top: " + top_height );
+				//console.log("Stage height: " + (win_height - top_height - 25) + "px");
+			}
+
+			function userKeyPress(evt){
+				if (evt.charCode == 32)
+					clear_screen();
+			}
+
+			function initialize(){
+				sizer();
+				document.getElementById('initial').showModal();
+				document.addEventListener("keypress", userKeyPress);
+			}
+
+			// Check to see what ports are available when the page loads.
+			/*
+			document.addEventListener('DOMContentLoaded', async () => {
+				  let ports = await navigator.serial.getPorts();
+				  console.log(ports);
+				  for(let i=0;i<ports.length;i++)
+				  	  console.log(ports[i].getInfo());
+				  //port_a = ports[0].open({ baudRate: 115200 });
+				  // Populate the UI with options for the user to select or
+				  // automatically connect to devices.
+			});
+			*/
+
+		</script>
+	</head>
+	<body onload="initialize();" onresize="sizer();">
+		
+		<dialog id="initial" style="border-radius: 10px;text-align: center;margin: auto;">
+			<img src="ATspy.png" height="200px"/><br/><br/>
+			Select two COM ports!<br/>
+			<button onclick="serial_connect_a();">Connect</button>
+			<br/>
+			<label for="filter">Filter out empty lines:</label> 
+			<input type="checkbox" id="filter" checked/>
+		</dialog>
+
+		<div id="top" class="topbox">
+				<h1>AT Command Spy</h1>
+		</div>		
+			<div style="position:absolute; top:30px; right:40px;">
+				<div class="tooltip" style="color:lightgray">
+					<i class="fa fa-ban fa-3x" onclick="clear_screen();"></i>&nbsp;&nbsp;
+					<span class="tooltiptext">Clear Screen</span>
+				</div>
+				<div  class="tooltip" style="color:lightgray">
+					<i class="fa fa-gear fa-3x"></i>
+					<span class="tooltiptext">Settings</span>
+				</div>
+			</div>
+		
+		<div id="stage" class="stage"><div>
+		
+	</body>
+</html>
