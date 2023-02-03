@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+  
+<head>
+    <title>SmartBond&trade; HCI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<script>
+
+var state = "IDLE";
+var port;
+var baud_rate;
+var writer;
+
+var cursor = 0;
+var length = 256;
+var response = [];
+
+window.onresize = function(event) {
+   fix_height();
+};
+
+async function log(text="")
+{
+    let stage = document.getElementById("stage");
+    if(text==""){
+        var myParagraph = document.createElement("p");
+        myParagraph.innerHTML = "";
+        stage.appendChild(myParagraph);
+    }
+    else{
+        var myDiv = document.createElement("div");
+        myDiv.innerHTML = "<span style='font-size:1.2em; font-family: 'Lucida Console', 'Courier New', monospace;'>"+text+"<span>";
+        stage.appendChild(myDiv);
+    }
+    stage.scrollTop = stage.scrollHeight;
+}
+
+function clear_stage(){
+    let stage = document.getElementById("stage");
+    stage.innerHTML="";
+}
+
+function ogf(opcode){
+    // OGF is the first 6bit of the opcode
+    let ogf = (opcode >> 10) & 0b111111;
+    return "0x" + ogf.toString(16).padStart(2,0).toUpperCase();
+}
+
+function ocf(opcode){
+    // OCF is the last 10bits of the opcode
+    let ocf = opcode & 0b1111111111;
+    return "0x" + ocf.toString(16).padStart(4,0).toUpperCase();
+}
+
+async function write(cmd){
+    try{
+        if (port && port.state != "closed"){
+            let opcode = cmd[1] + cmd[2] *256;
+            log("&nbsp;<&nbsp; HCI Command: &nbsp;ogf&nbsp; "+ ogf(opcode) +",&nbsp; ocf&nbsp; "+ ocf(opcode)  +",&nbsp; plen "+cmd[3]);
+            if(cmd[3] > 0)
+                log(array_hex_string("&nbsp;&nbsp;&nbsp;&nbsp;",cmd.slice(-cmd[3])));
+            log();
+            writer = port.writable.getWriter();
+            await writer.write(cmd);
+            writer.close();
+        }
+        else{
+            console.log("No COM port open");
+            alert("No COM port open");
+        }
+
+    }
+    catch(err){
+        console.log(err);
+    }   
+} 
+
+async function serial_connect(){
+	// Prompt user to select any serial port.	
+    if (port && port.state != "closed")
+    {
+        console.log("Port was open");
+        port.close();
+    }
+	
+    port = await navigator.serial.requestPort();
+
+    try{
+        await port.open({ baudRate: baud_rate, flowControl: "hardware" });
+        log("Serial port opened @ "+baud_rate);
+        log();
+        receiver();
+    }
+    catch(err){
+        log("Failed to open port (port may already be open)");
+    }
+}
+
+async function receiver(){
+    if(port && port.state != "closed"){
+        while(!(state=='SUCCESS')){
+            const reader = port.readable.getReader(); 
+            try{  
+                while (!(state=='SUCCESS')) {
+                    const { value, done } = await reader.read();
+                  	if (done) {
+                   	   	// Allow the serial port to be closed later.	
+                    	reader.releaseLock();
+                        break;           				
+                	}
+                    for(let i=0;i<value.length;i++){
+                        let b = value[i];
+                        response.push(b);
+                        if(cursor == 2){
+                            length = b;
+                            console.log("Data Length: " + b)
+                        }
+                        else if(cursor == 6){
+                            if(b==0x00)
+                                console.log("Status: OK (0x00)");
+                            else
+                                console.log("Status: Err (0x"+b.toString(16).padStart(2, 0)+")");
+                        }
+                        cursor++;
+                    }
+                    if (cursor >= length + 3){
+                        while (response.length>3){                   
+                            let opcode = response[4] + response[5] *256;
+                            log("&nbsp;>&nbsp; HCI Event:&nbsp; ogf&nbsp; "+ogf(opcode)+",&nbsp; ocf&nbsp; "+ocf(opcode)+",&nbsp; plen "+response[2]);
+                            //log(array_hex_string("&nbsp;&nbsp;&nbsp;&nbsp;",response.slice(0,length+3)));
+                            if(length > 0)
+                                log(array_hex_string("&nbsp;&nbsp;&nbsp;&nbsp;",response.slice(-length)));
+                            log();
+                            response = response.slice(length + 3);
+                            console.log(response);
+                            cursor = 0;
+                            length = 256;
+                        }
+                        
+                    }
+
+                }
+            }
+            catch(err){
+               console.log(err);
+            }        				
+        }
+    }
+    else{
+        console.log("No COM port open");
+        alert("No COM port open");
+    }
+}
+
+async function baud_changed(){
+    baud_rate = document.getElementById('baud').value;
+    console.log("Baud: "+baud_rate);
+    if (port && port.state != "closed")
+    {
+        console.log("Port was open");
+        await port.close();
+    }
+    if(port){
+        await port.open({ baudRate: baud_rate });
+        log("Serial port opened @ "+baud_rate);
+    }
+}
+
+async function read_local_version(){
+    let cmd = new Uint8Array([0x01,0x01,0x10,0x00]); 
+    write(cmd);  
+}
+
+async function read_bd_addr(){
+  write(new Uint8Array([0x01,0x09,0x10,0x00]));  
+}
+
+async function reset(){
+  write(new Uint8Array([0x01,0x03,0x0C,0x00]));  
+}
+
+function array_hex_string(p,x){
+    s = p;
+    for(let i=0;i<x.length;i++){
+        s += "&nbsp;&nbsp;"+ ( x[i].toString(16).padStart(2, 0)).toUpperCase();
+    }
+    return s;
+}
+
+function fix_height(){
+    let top_element_height = document.getElementById("top").offsetHeight;
+    let stage = document.getElementById("stage");
+    let h = window.innerHeight - top_element_height - 50;
+    stage.style.height =  h + "px";
+
+    console.log("Top h: " + top_element_height);
+    console.log("Win h: " + window.innerHeight);
+    console.log("Stage h: " + stage.style.height);
+}
+
+function  preset_baud(){
+    baud_rate = 115200;
+    document.getElementById("baud").value = baud_rate;
+    console.log("Setting startup baud rate to "+baud_rate);
+    fix_height();
+}
+
+</script>
+
+
+<body onload="preset_baud();" style="color: lightgrey; background-color: #2A2A2A;">
+    <div id="top">
+        <h1>SmartBond&trade; HCI Command Test</h1><hr/> 
+        <span style='font-size: 1.2em'>
+            This Web Serial application uses HCI to a DA145xx HCI target via UART (HW Flowcontrol is enabled).<br/>
+            Select a baud rate and click 'Open COM port'.
+        </span>
+        <hr/>
+
+        <label for="baud">Baud rate:</label>
+        <select name="baud" id="baud" onchange="baud_changed();">
+          <option value="57600">57,600</option>
+          <option value="115200">115,200</option>
+          <option value="230400">230,400</option>
+          <option value="460800">460,800</option>
+          <option value="921600">921,600</option>
+        </select>
+    	
+        <button id="comport" class="button button_sh" onclick="serial_connect()">
+              Open COM port
+        </button><br/><hr/>
+        Commands:<br/>
+        <button id="read_local" class="button button_sh" onclick="read_local_version()">
+              Read Local version
+        </button><br/>
+        
+        <button id="comport" class="button button_sh" onclick="read_bd_addr()">
+              Read Local BD Addr
+        </button><br/>
+
+        <button id="comport" class="button button_sh" onclick="reset()">
+              Reset
+        </button><br/>
+        
+        <hr/>
+        <button id="clear" class="button button_sh" onclick="clear_stage()">
+              Clear Screen
+        </button><br/><br/>
+    </div>
+    <div id="stage" style="overflow-x:hidden; overflow-y:visible;direction:ltr;"></div>
+
+
+</body>
+
+</html>
