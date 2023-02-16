@@ -1,253 +1,224 @@
-
 <!DOCTYPE html>
 <html lang="en-US">
   
-  <head>
-    
-    <title>SmartBond&trade; Bootloader</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>    
+        <title>SmartBond&trade; Bootloader</title>
+        <link rel="icon" type="image/x-icon" href="MTD_favicon.ico">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
 
-  </head>
+    <script>
 
-<script>
+        var binfile;
+        var state;
+        var size_msb;
+        var size_lsb;
+        var port;
+        var baud_rate;
+        var writer;
 
-var binfile;
-var state = 'IDLE';
-var size_msb;
-var size_lsb;
-var port;
-var baud_rate;
-var writer;
+        var file_size;
+        var checksum;
 
-var file_size;
-var checksum;
+        var rx_array = [];
+        var two_wire = true;
+        var pos = 0;
 
+        function log(text)
+        {
+            var myDiv = document.createElement("div");
+            myDiv.innerHTML = "<span style='font-size:1.2em; font-family: 'Lucida Console', 'Courier New', monospace;'>" + text + "<span>";
+            document.body.appendChild(myDiv);
+        }
 
-var rx_array =[];
-var two_wire = true;
-var pos=0;
+        function readFile(input){
+            let file = input.files[0];
+            let reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = function() {
+                console.log(reader.result);
+                binfile = new Uint8Array(reader.result);
+                log('Loading file: ' + file.name);
+                file_size = binfile.length;
+                size_msb = (Math.floor(file_size / 256))
+                size_lsb = (file_size % 256)
+                log("File size: " + file_size.toLocaleString('en-US') + " octets")
+                checksum = 0;
+                for(i = 0; i < file_size; i++)
+                    checksum = checksum ^ binfile[i];
+                log("Calculated checksum: 0x" + checksum.toString(16).padStart(2,0).toUpperCase());
+            };
+            reader.onerror = function() {
+                console.log(reader.error);
+            };
+        }
 
-function log(text)
-{
-    var myDiv = document.createElement("div");
-    myDiv.innerHTML = "<span style='font-size:1.2em; font-family: 'Lucida Console', 'Courier New', monospace;'>"+text+"<span>";
-    document.body.appendChild(myDiv);
-}
+        async function write(cmd){
+            writer = port.writable.getWriter();
+            await writer.write(cmd);
+            writer.close();
+        } 
 
-function readFile(input){
-	let file = input.files[0];
-	let reader = new FileReader();
-
-	reader.readAsArrayBuffer(file);
-
-	reader.onload = function() {
-	    console.log(reader.result);
-
-    	binfile = new Uint8Array(reader.result);
-
-    	log('Loading file: '+file.name);
-    	file_size = binfile.length;
-    	size_msb = (Math.floor(file_size / 256))
-    	size_lsb = (file_size % 256)
-    	log("File size: "+file_size+ " octets")
-    	checksum = 0;
-
-	    for(i=0;i<file_size;i++)
-    		checksum = checksum ^ binfile[i];
-    	log("Calculated checksum: 0x"+checksum.toString(16).padStart(2,0).toUpperCase());
-	};
-
-	reader.onerror = function() {
-		console.log(reader.error);
-  	};
-}
-
-
-async function write(cmd){
-    writer = port.writable.getWriter();
-    await writer.write(cmd);
-    writer.close();
-} 
-
-async function serial_connect(){
-	// Prompt user to select any serial port.	
-    if (port && port.state != "closed")
-    {
-        console.log("Port was open");
-        port.close();
-    }
-	const filters = [
-		{ usbVendorId: 0x0403, usbProductId: 0x6010 },
-		{ usbVendorId: 0x1366, usbProductId: 0x0105 },
-	];
-	port = await navigator.serial.requestPort({ filters });
-
-    try{
-        await port.open({ baudRate: baud_rate, "bufferSize": 32768 /*32Kbyte*/ });
-        log("Serial port opened @ "+baud_rate);
-    }
-    catch(err){
-        log("Failed to open port (port may already be open)");
-    }
-
-}
-
-async function bootload(){
-    if(port && port.state != "closed" && binfile){
-        log("&nbsp;");
-        state = 'IDLE';
-        rx_array=[];
-        two_wire = true;
-        pos = 0;
-        log("Reset target to start uploading!");
-        // Restart if a UART Break condition is detected (or any other error)
-        while(!(state=='SUCCESS')){
-            const reader = port.readable.getReader(); 
-
-            try{        
-                while (!(state=='SUCCESS')) {
-                    const { value, done } = await reader.read();
-                  	if (done) {
-                   	   	// Allow the serial port to be closed later.	
-                    	reader.releaseLock();
-                        break;           				
-                	}
-                    
-                    rx_array = rx_array.concat(Array.from(value));
-                    //console.log(rx_array);
-
-                    if (two_wire)
-                        pos = 0;     
-                
-                    if(state=='IDLE'){
-                    	if(rx_array[0]==0x02){ 
-                            log("Reset Detected, sending size");
-                            write(new Uint8Array([0x01,size_lsb,size_msb]));  
-                            state='SIZE_WAS_SENT';
-                        }
-                        rx_array = [];
-                    }
-                    else if(state=='SIZE_WAS_SENT'){                          
-                        if(two_wire && rx_array[0]==0x01){
-                            log("Singlewire UART detected")
-                            pos = 3; // Acknowledge will be fourth byte received for single wire UART
-                            two_wire = false;
-                        }
-                        
-                        if(rx_array.length > pos){
-                            if(rx_array[pos] == 0x06){                    
-                                log("Uploading image...");
-                                rx_array = [];
-                                await write(binfile);
-                                state = 'UPLOAD_WAS_SENT'
-                                if(!two_wire){
-                                    pos = file_size; // Checksum expected to arrive right after the last byte of the firmware has been sent
-                                    console.log("Expecting checksum at: " + pos)
-                                }
-                            }
-                            else{
-                                state='IDLE';
-                                rx_array = [];
-                            }
-                        }   
-                    }
-
-                    else if(state=='UPLOAD_WAS_SENT'){
-                        //console.log("L: "+rx_array.length);
-                        if(rx_array.length > pos){
-
-                            console.log("Pos: "+pos);
-                            log("Checksum received: 0x"+rx_array[pos].toString(16).padStart(2,0).toUpperCase());  
-                              
-                            if(checksum == rx_array[pos]){
-        	                    write(new Uint8Array([0x06]));
-                                state = 'SUCCESS';
-                                log("Upload successfully completed!\n");
-                                const { value, done } = await reader.read();
-                                reader.releaseLock(); 
-                            }
-                            else{
-            	                write(new Uint8Array([0x15]));
-                                log("Upload failed, retrying...");
-                                state = 'IDLE';
-                            }
-                        }
-                    }
-                    
-                }
+        async function serial_connect(){
+            // Prompt user to select any serial port.	
+            if (port && port.state != "closed")
+            {
+                console.log("Port was open");
+                port.close();
+            }
+            const filters = []; 
+            port = await navigator.serial.requestPort({ filters });
+            try{
+                await port.open({ baudRate: baud_rate, "bufferSize": 131072 /*128Kbyte*/ });
+                log("Serial port opened @ " + Number(baud_rate).toLocaleString('en-US') + " bauds");
             }
             catch(err){
-               console.log(err);
-               state = 'IDLE';
+                log("Failed to open port (port may already be open)");
             }
-          				
         }
-    }
-    else{
-        console.log("No COM port open and/or no binary file selected");
-        alert("No COM port open and/or no binary file selected");
-    }
-}
-  
 
-async function send(cmd){
-	
-	const textEncoder = new TextEncoderStream();
-	const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
-	const writer = textEncoder.writable.getWriter();
-	await writer.write(cmd+"\r");
-	writer.close();
-}
+        async function bootload(){
+            if(port && port.state != "closed" && binfile){
+                log("&nbsp;");
+                state = 'IDLE';
+                rx_array=[];
+                two_wire = true;
+                pos = 0;
+                log("Reset target to start uploading!");
+                // Restart if a UART Break condition is detected (or any other error)
+                while(!(state == 'SUCCESS')){
+                    const reader = port.readable.getReader(); 
+                    try{        
+                        while (!(state == 'SUCCESS')) {
+                            const { value, done } = await reader.read();
+                            if (done) {
+                                // Allow the serial port to be closed later.	
+                                reader.releaseLock();
+                                break;           				
+                            }                   
+                            rx_array = rx_array.concat(Array.from(value));
+                            //console.log(rx_array);
+                            if (two_wire)
+                                pos = 0;     
+                            if(state =='IDLE'){
+                                if(rx_array[0] == 0x02){ 
+                                    log("Reset Detected, sending size");
+                                    write(new Uint8Array([0x01, size_lsb, size_msb]));  
+                                    state = 'SIZE_WAS_SENT';
+                                }
+                                rx_array = [];
+                            }
+                            else if(state =='SIZE_WAS_SENT'){                          
+                                if(two_wire && rx_array[0] == 0x01){
+                                    log("Singlewire UART detected")
+                                    pos = 3; // Acknowledge will be fourth byte received for single wire UART
+                                    two_wire = false;
+                                }
+                                if(rx_array.length > pos){
+                                    if(rx_array[pos] == 0x06){                    
+                                        log("Uploading image...");
+                                        rx_array = [];
+                                        await write(binfile);
+                                        state = 'UPLOAD_WAS_SENT'
+                                        if(!two_wire){
+                                            pos = file_size; // Checksum expected to arrive right after the last byte of the firmware has been sent
+                                            console.log("Expecting checksum at: " + pos)
+                                        }
+                                    }
+                                    else{
+                                        state = 'IDLE';
+                                        rx_array = [];
+                                    }
+                                }   
+                            }
+                            else if(state == 'UPLOAD_WAS_SENT'){
+                                //console.log("L: " + rx_array.length);
+                                if(rx_array.length > pos){
+                                    console.log("Pos: " + pos);
+                                    log("Checksum received: 0x" + rx_array[pos].toString(16).padStart(2,0).toUpperCase());  
+                                    if(checksum == rx_array[pos]){
+                                        write(new Uint8Array([0x06]));
+                                        state = 'SUCCESS';
+                                        log("Upload successfully completed!\n");
+                                        const { value, done } = await reader.read();
+                                        reader.releaseLock(); 
+                                    }
+                                    else{
+                                        write(new Uint8Array([0x15]));
+                                        log("Upload failed, retrying...");
+                                        state = 'IDLE';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch(err){
+                    console.log(err);
+                    state = 'IDLE';
+                    }	
+                }
+            }
+            else{
+                console.log("No COM port open and/or no binary file selected");
+                alert("No COM port open and/or no binary file selected");
+            }
+        }
+        
+        async function send(cmd){	
+            const textEncoder = new TextEncoderStream();
+            const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+            const writer = textEncoder.writable.getWriter();
+            await writer.write(cmd + "\r");
+            writer.close();
+        }
 
-async function baud_changed(){
-    baud_rate = document.getElementById('baud').value;
-    console.log("Baud: "+baud_rate);
-    if (port && port.state != "closed")
-    {
-        console.log("Port was open");
-        await port.close();
-    }
-    if(port){
-        await port.open({ baudRate: baud_rate });
-        log("Serial port opened @ "+baud_rate);
-    }
-}
+        async function baud_changed(){
+            baud_rate = document.getElementById('baud').value;
+            console.log("Baud: " + baud_rate);
+            if (port && port.state != "closed")
+            {
+                console.log("Port was open");
+                await port.close();
+            }
+            if(port){
+                await port.open({ baudRate: baud_rate, "bufferSize": 131072 /*128Kbyte*/ });
+                log("Serial port opened @ " + Number(baud_rate).toLocaleString('en-US') + " bauds");
+            }
+        }
 
-function  preset_baud(){
-    baud_rate = 115200;
-    document.getElementById("baud").value = baud_rate;
-    console.log("Setting startup baud rate to "+baud_rate);
-}
+        function  preset_baud(){
+            baud_rate = 115200;
+            document.getElementById("baud").value = baud_rate;
+            console.log("Setting startup baud rate to " + baud_rate);
+        }
 
-</script>
-
+    </script>
 
 <body onload="preset_baud();" style="color: lightgrey; background-color: #2A2A2A;">
     <h1>SmartBond&trade; Bootloader</h1><hr/> 
+    
     <span style='font-size: 1.2em'>
         This Web Serial application uploads firmware to a SmartBond&trade; DA145xx target via UART.<br/>
-        Select a baud rate, a serial port, and a binary file before you click the "Start Uploading" button.
-    </span>
-    <hr/>
+        Select a baud rate, a serial port, and a binary file before you click the "Start Uploading" button.<br/>
+        The application automatically supports both single-wire and two-wire UART.
+    </span><hr/>
 
     <label for="baud">Baud rate:</label>
     <select name="baud" id="baud" onchange="baud_changed();">
-      <option value="57600">57,600</option>
-      <option value="115200">115,200</option>
-      <option value="230400">230,400</option>
-    </select><br/><br/>
+        <option value="57600" >57,600</option>
+        <option value="115200">115,200</option>
+        <option value="230400">230,400</option>
+        <option value="460800">460,800</option>
+        <option value="576000">576,000</option>
+        <option value="921600">921,600</option>
+    </select>
 	
-    <button id="comport" class="button button_sh" onclick="serial_connect()">
-          Open Com Port
-    </button><br/><br/>
+    <button id="comport" class="button button_sh" onclick="serial_connect()">  Open Com Port</button><br/><br/>
 
+    <input type="file" id="file_load" accept=".bin" style='width: 50%;'  onchange="readFile(this);"/><br/><br/>
 
-    <input type="file" id="file_load" accept=".bin" style='width: 50%;'  onchange="readFile(this);"/>
-	<br/><br/>
-    <button id="comport" class="button button_sh" onclick="bootload()">
-          Start Uploading
-    </button><br/><hr/>
+    <button id="comport" class="button button_sh" onclick="bootload()">  Start Uploading</button><br/><hr/>
 </body>
 
 </html>
