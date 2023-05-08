@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="UTF-8">      
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tree List</title>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <script type="text/javascript" src="tree_class.js"></script>
+    </head>
+
+    <body>    
+        <h1>Tree View Demo</h1>
+        
+        <!-- Description -->
+        <p>
+            This implementation demonstrates the TreeView Class.<br/>
+            A user defined object can be registered with each branch.<br/>  
+            The list of branches can be accessed as mytree.list[idx]. 
+        </p>
+
+        <!-- Expand or collapse entire tree -->
+        <button type="button" onclick="mytree.expandTree();">Expand All</button>
+        <button type="button" onclick="mytree.collapseTree();">Collapse All</button><br/><br/>
+
+        <!-- Append and remove examples -->
+        <button type="button" onclick="appendRoot();">Append Root</button>
+        <button type="button" onclick="appendNode();">Append Node</button>
+        <button type="button" onclick="mytree.removeSelectedBranch();">Delete</button>
+        <br/><br/>
+      
+        <!-- Slected branch will be displayed here-->
+        <div id="selected" style="height: 18px;"></div>
+
+        <!-- Info will be displayed here-->
+        <div id="info" style="height: 18px;"></div><hr/>
+
+        <!-- Tree is displayed here -->
+        <div id="tree-view"></div>
+        
+
+        <script>
+    
+            // Demo implementation
+            // ===================
+
+            // Insert a child at the seleceted index
+            function appendNode(){
+                let result = mytree.appendChildAtSelection("Awesome","roota",{x:"Smile"});
+            }
+
+            // Append a root branch (set UID to empty string to make it a root branch)
+            function appendRoot(){
+                let result = mytree.append("","Appended branch","root",{x:"Smile Root"});
+            }
+     
+            // Populate the tree 
+
+            function populate_tree(){
+                
+                // Use append to append a new branch (uid, label, branch type, user object)
+                // If uid="" then the branch is a root branch
+                let uid = mytree.append("","This","root",{x:"hello there"});
+                
+                // Use append to append a new child branch (parent uid, label, branch type, user object)
+                let uid1 = mytree.append(uid,"That","roota",{x:"hello world"});
+                
+                mytree.append(uid1,"Other","roota",{x:"hello cruel world"});
+                
+                let uid2 = mytree.append(uid1,"Alternative","roota",{x:"hello damn cruel world", y:"something"});
+                
+                mytree.append(uid,"What","roota");
+                mytree.append(uid2,"Working","roota",{x:"its working dude"});
+                
+                mytree.append("","Last","root",{x:"hello there, friend"});
+                
+                //mytree.expandTree();
+
+            }
+
+            // User selected a branch either by single click or double click
+            function onSelected(uid, userObj, IsDblClick){
+                document.getElementById("selected").innerHTML = "Selected: " 
+                    + mytree.getLabel(uid)+ ", "+ uid + ", " +  userObj.x;
+                if(IsDblClick)
+                    console.log(" --- Double Click!");             
+                // Change the label of the selected branch
+                // mytree.setLabel(uid,"That is better"); 
+                // Change the user object
+                // mytree.setUserObj(uid,{x:"Something new"});   
+            }
+
+            // User hovered mouse over or away from branch
+            function onHover(uid, userObj, IsHoverOver){
+                if(IsHoverOver == true)
+                    document.getElementById("info").innerHTML = "Hover: " 
+                        + mytree.getLabel(uid)+ ", " + uid + ", " +  userObj.x;
+                else 
+                    document.getElementById("info").innerHTML = "";
+            }
+
+            // Instantiate a tree
+
+            // Note that the first argument MUST be the exact name of the class instance ("mytree" in this case)
+            mytree = new TreeView("mytree","tree-view", onSelected, onHover);
+
+            // Modify the branch selected color
+            //mytree.selectedColor = "pink";
+
+            // Modify the branch hover-over color
+            //mytree.hoverOverColor = "yellow";
+
+            // Populate the tree
+            populate_tree();
+
+        </script>
+
+    </body>
+</html>
