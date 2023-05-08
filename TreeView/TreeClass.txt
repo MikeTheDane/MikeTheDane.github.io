@@ -1,0 +1,75 @@
++++++++++++++++++++++++++++++++++++
+Tree Class:
++++++++++++++++++++++++++++++++++++
+
+constructor(instance_name, tree_div_id [, branch_selected_cb [, branch_hover_cb]])
+	Creates a new instance of the tree class.
+	
+		instance_name: 	Must be a string matching the instance variable name. 
+						Example: xxxxx = new TreeView("xxxxx","tree-view", onSelectedCb, onHoverCb);
+		
+        tree_div_id: The id of the HTML div where the tree will be displayed
+		
+        branch_selected_cb: Optional. A callback when a branch has been selected by the user
+							The callback will carry the following arguments:
+								uid: the uid of the selected branch
+								userObj: Any user object registered with the branch
+								isDblClick: True if the user double-clicked the branch. False if only a single click
+		
+        branch_hover_cb: Optional. A callback when the user mouse hovers over or away from a branch
+							The callback will carry the following arguments:
+								uid: the uid of the selected branch
+								userObj: Any user object registered with the branch
+								isHoverOver: True if the user hovered over the branch. False if the user hovered away from the branch
+
+selectedBranch():
+	Returns the index of the selected branch or 'undefined' if no branch is selected
+
+findBranchIdx(uid):
+	Returns the index of the branch matching the uid or ''undefined'' in no match was found
+	
+setUserObj(uid, object)
+	Sets the user object of the branch matching the uid or 'undefined' if no match was found
+
+getUserObj(uid)
+	Returns the user object of the branch matching the uid or 'undefined' if no match was found
+	
+setLabel(uid, label)
+	Sets the label of the branch matching the uid or 'undefined' if no match was found
+
+getUserObj(uid)
+	Returns the label of the branch matching the uid or 'undefined' if no match was found
+	
+append(uid, label, type [, userObj])
+	Appends a branch to the tree. Returns the uid of the newly created branch.
+		
+        uid: The uid of the parent branch. If uid="" then the branch is appended as a root branch
+		
+        label: Text that will be displayed to the user
+		
+        type: Type of branch. This defines which icon will be displayed to the left of the branch label
+		
+        userObj: Optional. User object to be registered with the branch
+
+appendChildAtSelection(label, type [, userObj [, expand]])
+	Appends a child branch to the branch matching the uid. Returns the uid of the newly created branch.
+		
+        label: Text that will be displayed to the user
+		
+        type: Type of branch. This defines which icon will be displayed to the left of the branch label
+		
+        userObj: Optional. User object to be registered with the branch
+		
+        expand: Optional. Defaults to true. When set to false, the parent of the newly created branch will not be expanded.
+
+removeSelectedBranch()
+	Removes the selected branch and all its children.
+	
+expandTree()
+	Expands all branches of the entire tree.
+	
+collapseTree()
+	Collapses all branches of the entire tree.
+	
+drawTree()
+	Redraws the entire tree.
