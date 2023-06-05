@@ -1,0 +1,21 @@
+Tool for easy design of SVGs
+
+lines
+Circles/ellipses
+paths(?)
+Rectangles (Squares)
+Text (font size/ font type)
+
+Fill color
+Stroke color
+Stroke width
+
+Miters
+Butts
+
+Features:
+    fixed 100 x 100 grid (ViewBox)
+    Output without bells and whistles
+    Single color (easy to change by JavaScript or CSS)
+    Height and width as replaceable strings
+    

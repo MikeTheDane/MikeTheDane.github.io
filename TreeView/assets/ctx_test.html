@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        div.ctx-container{
+            color:darkgrey;
+            background-color: rgb(0,0,0,1); 
+            border-radius: 10px; 
+            width: 200px; 
+            font-size: 1em;
+            display: none;
+            position: absolute;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            border: solid 1px grey;
+            font-family: Verdana, sans-serif;
+        }
+
+        div.ctx-group{
+            border-bottom: solid 1px grey;
+            padding-top: 5px; 
+            padding-bottom: 5px;
+        }
+
+        /* No horizontal line under the last group */
+        div.ctx-group:last-child{
+            border-bottom: 0px;
+        }
+
+        div.ctx-item{
+            color: #f2f4f9;
+            background-color:rgb(0,0,0,1);
+            padding-left: 25px;
+            border-radius: 5px;  
+        }
+        
+        div.ctx-item-enabled:hover{
+            background-color: #12395f;
+            cursor: pointer;
+        }
+
+        div.ctx-item-disabled{
+            color:rgb(146, 137, 137);
+            cursor: default;
+        }
+
+    </style>
+
+</head>
+<body>
+    <div id="the-stage" style="border: 3px solid black; height:200px"></div>
+    <div id="the-menu" class="ctx-container">
+        <!-- Group div -->
+        <div class="ctx-group">
+            <!-- Item div-->
+            <div class="ctx-item ctx-item-enabled" id="ctx0">Test 1</div>
+            <div class="ctx-item ctx-item-enabled" id="ctx1">Test 2</div>           
+        </div>
+
+        <!-- Group div -->
+        <div class="ctx-group">
+            <!-- Item div-->
+            <div class="ctx-item ctx-item-enabled" id="ctx2">Testing 1</div>
+            <div class="ctx-item ctx-item-enabled" id="ctx3">Testing 2</div>
+            <div class="ctx-item ctx-item-enabled" id="ctx4">Testing 3</div>           
+        </div>
+    
+        <!-- Last Group div should have no bottom border -->
+        <div class="ctx-group">
+            <!-- Item div. First one is disabled -->
+            <div class="ctx-item ctx-item-disabled" id="ctx5">Hello</div>
+            <div class="ctx-item ctx-item-enabled" id="ctx6">World</div>           
+        </div>
+    
+    </div>
+
+    <script>
+        let stage = document.getElementById("the-stage");
+        stage.addEventListener('contextmenu',function(ev) {
+                        ev.preventDefault();
+                        let ctx = document.getElementById("the-menu")
+                        ctx.style.top = (5+ev.pageY)+"px";
+                        ctx.style.left = (5+ev.pageX)+"px";
+                        ctx.style.display="block";
+                        return false;
+                    }, false);
+
+       window.onclick = function (event) {
+            var elm = document.getElementById('the-menu');
+
+            if (event.target.contains(elm) && event.target !== elm) {
+                //console.log('You clicked outside the box!');
+                elm.style.display = "none";  
+            } 
+            else {
+                //console.log('You clicked inside the box!');
+                console.log(event.target.id);
+                if(event.target.id.startsWith("ctx")){
+                    elm.style.display = "none"; 
+                }
+                // Call callback
+            }
+        }
+    </script>
+</body>
+</html>

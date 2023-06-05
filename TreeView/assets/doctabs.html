@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document tabs</title>
+
+    <style>
+        body{
+            background-color:#323233;
+            color:#cacbcc;
+        }
+
+        #main-container{
+            background-color: #1e1e1e;
+            margin-left: 80px;
+            width: 800px;
+            height: 1000px;
+            /* border: 1px solid darkgrey; */
+        }
+
+        .tabs-container{
+            background-color: #252526 !important;       
+        }
+
+        .tabs{
+            background-color:#2d2d2d;
+            color:#cacbcc;
+            font-size: 1.2em;
+            padding: 0.8em;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            margin-right: 4px;
+            margin-top: 4px;
+            border-radius: 8px 8px 0px 0px;
+            /* border-right: 4px solid #252526 !important; */
+            /* clip-path: polygon(5% 0%, 95% 0%, 100% 95%, 0% 100%); */
+        }
+
+        .tabs-selected{
+            background-color: #1e1e1e;
+            /* clip-path: polygon(5% 0%, 95% 0%, 100% 100%, 0% 100%); */
+        }
+
+
+    </style>
+</head>
+<body>
+    
+
+<div id = "main-container">
+    
+</div>
+
+<script>
+
+    var list = [];
+
+    var uidIdx = 0; 
+
+    var selectedCallback = null;
+
+    function findIdxByUid(uid){
+    
+        for(let i=0; i < list.length; i++){
+            if(list[i].uid == uid)
+                return i;
+        }
+        return -1;
+    }
+    
+    function findSelectedTab(){
+        for(let idx=0; idx < list.length; idx++){
+            if(list[idx].selected == true)
+                return idx;
+        }
+        return -1;
+    }
+
+    function selectTab(uid){
+        // Unselect all items
+        for(let idx=0; idx < list.length; idx++)
+            list[idx].selected = false;
+        
+        list[findIdxByUid(uid)].selected = true;
+        drawTabs();      
+        selectedCallback(uid);
+    }
+
+    function insertTab(label, userObj = undefined){
+        let uid = uidIdx;
+        list.push({uid:uid, label:label, selected:false, saved:true});
+        drawTabs();
+        uidIdx++; 
+        return uid;      
+    }
+
+    function insertTabAtSelection(label, userObj = undefined){
+        let selectedIdx = findSelectedTab();
+        let uid = uidIdx;
+        item = {uid:uid, label:label, selected:false, saved:true}
+        list.splice(selectedIdx + 1,0,item);
+        uidIdx++;
+        selectTab(uid);
+        return uid;
+    }
+
+    function removeTab(uid){
+        let idx = findIdxByUid(uid);
+        list.splice(idx,1);
+        drawTabs();
+    }
+
+    // Constructor
+    function initTabs(callback){
+        // Generate a new tabs-container DIV
+        let container = document.createElement('div');
+        container.setAttribute("class","tabs-container");
+        container.setAttribute("id","tabs-container");
+        
+        // The main content container id is provided by the user as part of the class constructor
+        let elm = document.getElementById("main-container");
+        
+        elm.appendChild(container);
+
+        let content_container = document.createElement('div');
+        content_container.setAttribute("class","content-container");
+
+        content_container.innerHTML="here goes the content";
+        elm.appendChild(content_container);
+
+
+        selectedCallback = callback;
+    }
+
+    function drawTabs(){
+        let container = document.getElementById("tabs-container");
+        container.innerHTML = "";
+        for(let idx=0; idx < list.length; idx++){
+            let item = document.createElement('a')
+            item.setAttribute("id", list[idx].uid);
+            if(list[idx].selected == true)
+                item.setAttribute("class","tabs tabs-selected");
+            else
+                item.setAttribute("class","tabs");
+            item.innerHTML = list[idx].label;
+           
+            item.onclick = function (event) {
+                selectTab(list[idx].uid);
+            }        
+            container.appendChild(item);
+        }
+    }
+
+    function UserSelectedCallback(uid){
+        console.log("Selection by user: "+uid);
+    }
+
+    // Insert some tabs
+    initTabs(UserSelectedCallback);
+    insertTab("This one",{});
+    let idx1 = insertTab("This two",{});
+    let idx = insertTab("This three",{});
+    let idx2 = insertTab("This four",{});
+    selectTab(idx2);
+    removeTab(idx1);
+    insertTabAtSelection("This is entirely new!", {});
+</script>
+
+</body>
+</html>

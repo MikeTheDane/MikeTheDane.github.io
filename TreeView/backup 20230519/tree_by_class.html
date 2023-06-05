@@ -7,7 +7,6 @@
         <title>Tree List</title>
         <link rel="icon" type="image/x-icon" href="favicon.ico">
         <script type="text/javascript" src="tree_class.js"></script>
-        <script type="text/javascript" src="context_menu_class.js"></script>
 
         <style>
 
@@ -43,7 +42,7 @@
         <hr/>
         <!-- Description -->
         <p>
-            This implementation demonstrates the TreeView Class and the ContextMenu Class.<br/>
+            This implementation demonstrates the TreeView Class.<br/>
             A user defined object can be registered with each branch.<br/>  
             The complete list of branches can be accessed as mytree.list[idx]. 
         </p>
@@ -67,7 +66,6 @@
 
         <!-- Tree is displayed here -->
         <div id="tree-view"></div>
-        
         
         <script>
             
@@ -140,49 +138,24 @@
                 }
             }
 
-            // Example call back function when user selected an item in the context menu
-            function doit(userObj){
-                console.log("User selected a menu item with object: "+userObj);
-            }
-
             // This function is called when the user right clicks on a branch
-            // The following parameters are provided:
-            //      The uid of the branch the user right-clicked on
-            //      The user object registered with the branch
-            //      The X and Y coordinates of the mouse when the right click event occured
             function onRightClick(uid, userObj, x, y){
                 console.log("RightClick: "+uid+", x:"+x+", y:"+y);
-                
-                // Clear the menu items and remove the context menu if it is currently displayed
-                myctx.clearMenu();
-
-                //appendItem(label=undefined, enabled=true, callback=undefined, keybdShortKey=undefined, icon=undefined)
-                myctx.appendItem("Hejsa 1", true, doit);
-                myctx.appendItem("Hejsa 2", false, doit);
-                myctx.appendItem("Hejsa 3", true, doit);
-                // Insert a group separator (label = undefined => group separator is inserted)
-                myctx.appendItem();
-                myctx.appendItem("Hejsa 4", true, doit);
-                myctx.appendItem("Hejsa 5", true, doit);
-
-                // Display the menu and provide a user object (uid is used in this example)
-                myctx.displayMenu(x,y,uid);
             }
             
-            // Instantiate a tree view
-            mytree = new TreeView("tree-view", "My PROJECT", onSelected, onHover, onRightClick);
-            
-            // Instantiate a context menu (a.k.a. right-click menu)
-            myctx = new ContextMenu();
+            // Instantiate a tree
 
-            // Alternatively, you could instantiate the TreeView without callbacks if your implementation is not using them
+            // Note that the first argument MUST be the exact name of the class instance ("mytree" in this case)
+            mytree = new TreeView("mytree","tree-view", "My PROJECT", onSelected, onHover, onRightClick);
+            
+            // Alternatively, you could instantiate the TreeView without callbacks is your implementation is not using them
             //mytree = new TreeView("mytree","tree-view");
 
             // Use color scheme similar to default VS Code editor
             mytree.setDarkMode();
 
             // You can set the title of the tree-view at any point
-            //mytree.title = "PROJECT NAME";
+            mytree.title = "PROJECT NAME";
             
             // Supress the hover and selection bar
             //mytree.showHoverBar = false;

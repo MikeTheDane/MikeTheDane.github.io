@@ -1,0 +1,24 @@
+Show documents inside a user provided container
+
+Saving document:
+    Indicate whether a doument has been saved or not
+    Support CTRL-S to save a document
+
+Tab:
+    Close document (pop-up icon 'X' on tab)
+    Highlight document if it contains errors
+    Variable width
+    Control overflow (Show '+' button to the very right)
+    Context menu when right clicking on tab
+    Icon on tab
+
+Dark mode:
+    As VS Code defaults
+
+Error count at bottom of display
+
+
+
+
+
+

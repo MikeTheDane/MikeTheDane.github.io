@@ -1,0 +1,12 @@
+Form Template:
+
+Standard input
+    Groups
+    input types 
+    validation filters 
+    default values
+
+Special inputs
+    Context specific callback controls (like UUID Randomization)
+
+Style sheet

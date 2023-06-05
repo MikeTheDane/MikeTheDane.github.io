@@ -1,0 +1,34 @@
+Context menu (right click)
+
+Supports:
+    Groups
+    Icon / No Icon
+    Short cut / no shortcut
+    Label
+    Callback function (will return user object registered with menu item)
+    Change cursor to pointer on hover-over
+    
+    highlight framing of selected branch(?)
+    
+
+User constructor
+    Provide element id as argument? - Not sure if useful!
+    Deferred:
+        Horizontal or vertical (?)
+            Horizonatal via buttons(?) = VS Code style
+            Horizontal with info on hover-over
+    Get color and background color from container element - Not useful!
+    Define bar color (vertical menu only)
+
+User Register a context menu:
+    register a group separator (no arguments required) Return uid
+    register an item (label[hover-info], callback=undefined, keybdShortKey=undefined, icon=undefined, enabled/disabled=enabled)
+
+User Display the context menu:
+    Provide X and Y as arguments along with a user object (the user object will be returned in the callback)
+    
+Remove context menu
+    when user presses ESC - leave this to the main document
+    when user clicks outside the context menu
+    when a callback is called 
+

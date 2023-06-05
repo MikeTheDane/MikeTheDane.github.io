@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+    <head>
+        <meta charset="UTF-8">      
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tree List</title>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <script type="text/javascript" src="tree_class.js"></script>
+
+        <style>
+
+            #tree-view{
+                height:500px;
+                width: 50%;
+                
+                color: #cacbcc;
+                background-color: #252526; 
+                
+                font-size: 1em; 
+                font-family: Verdana, sans-serif;
+                /* Make the tree-view scrollable */ 
+                overflow-y:auto;
+            }
+
+            .tree-info{
+                height: 1em;
+            }
+
+            #show-info{
+                display:none;
+                padding-left: 10px;
+                padding-right:10px;
+                position : fixed;
+                background-color:white;
+                color:black;
+                border: solid black 1px;
+                /*font-family: 'Courier New', Courier, monospace;*/
+                font-family: Verdana, sans-serif;
+                font-size: 14px;
+            }
+
+        </style>
+
+    </head>
+
+    <body>    
+        
+        <h1>Tree View Demo</h1>
+        <hr/>
+        <!-- Description -->
+        <p>
+            This implementation demonstrates the TreeView Class.<br/>
+            A user defined object can be registered with each branch.<br/>  
+            The complete list of branches can be accessed as mytree.list[idx]. 
+        </p>
+        <hr/>
+
+        <!-- Append and remove examples -->
+        <button type="button" onclick="appendRoot();">Append Root</button>
+        <button type="button" onclick="appendNode();">Append Node @ selection</button>
+        <button type="button" onclick="mytree.removeSelectedBranch();">Delete</button>
+        <br/><br/>
+      
+        <div id="test">
+
+            <!-- Selected branch will be displayed here-->
+            <div id="selected" class="tree-info">Selected: None</div>
+
+            <!-- Hover over/away branch will be displayed here-->
+            <div id="hover" class="tree-info">Hover: None</div><hr/>
+
+            <!-- Expand or collapse entire tree -->
+            <button type="button" onclick="mytree.expandTree();">Expand All</button>
+            <button type="button" onclick="mytree.collapseTree();">Collapse All</button><br/><hr/>
+
+            <!-- Tree is displayed here -->
+            <div id="tree-view"></div>
+
+            <!-- Show user object information here when user hovers over a branch -->
+            <div id="show-info"></div>
+            
+        </div>
+
+        <script>
+            
+            // Demo implementation
+            // ===================
+
+            // Insert a child at the seleceted index
+            function appendNode(){
+                let result = mytree.appendChildAtSelection("Awesome","roota",{msg:"Smile"});
+            }
+
+            // Append a root branch (set UID to empty string to make it a root branch)
+            function appendRoot(){
+                let result = mytree.append("","Appended branch","root",{msg:"Smile Root"});
+            }
+     
+            // Populate the tree 
+            function populate_tree(){
+                
+                // Use append to append a new branch (uid, label, branch type, user object)
+                // If uid="" then the branch is a root branch
+                let uid = mytree.append("","This","root",{msg:"C:\\home\\text.txt"});
+                
+                // Use append to append a new child branch (parent uid, label, branch type, user object)
+                let uid1 = mytree.append(uid,"That","roota",{msg:"hello world"});
+                
+                mytree.append(uid1,"Other","roota",{msg:"hello cruel world"});
+                
+                let uid2 = mytree.append(uid1,"Alternative","roota",{msg:"hello damn cruel world", y:"something"});
+                
+                // Append a child without a message
+                mytree.append(uid,"What","roota");
+                
+                mytree.append(uid2,"Working","roota",{msg:"its working dude"});
+                
+                mytree.append("","Last","root",{msg:"hello there, friend"});
+                
+                // Expand the entire tree as soon as it has been populated
+                //mytree.expandTree();
+
+            }
+
+            // User selected a branch either by single click or double click
+            function onSelected(uid, userObj, IsDblClick){
+                document.getElementById("selected").innerHTML = "Selected: "
+                    + uid + ", " + mytree.getLabel(uid) + ", " + uid + ", " +  userObj.msg;
+                
+                if(IsDblClick)
+                    console.log(" --- Double Click!"); 
+                                
+                // Change the label of the selected branch
+                //mytree.setLabel(uid,"That is better"); 
+                
+                // Change the user object
+                //mytree.setUserObj(uid,{x:"Something new"});  
+                
+            }
+
+            // User hovered mouse over or away from branch
+            function onHover(uid, userObj, IsHoverOver){
+                
+                let elm = document.getElementById("show-info");
+                if(IsHoverOver == true){
+                    document.getElementById("hover").innerHTML = "Hover: " 
+                        + uid + ", " + mytree.getLabel(uid) + ", " + uid + ", " +  userObj.msg;
+                    let pos = document.getElementById(uid).getBoundingClientRect();
+                    
+                    // Show a pop-up near the current branch (only if msg is defined)
+                    if(userObj.msg !== undefined){
+                        elm.innerHTML= userObj.msg;
+                        elm.style.top= (pos.y+25).toString()+"px";
+                        elm.style.left = (pos.x + 100).toString()+"px";
+                        elm.style.display = "inline";
+                    }
+                }
+                else{ 
+                    // Remove any active popup
+                    document.getElementById("hover").innerHTML = "Hover: None";
+                    elm.style.display = "none";
+                }
+            }
+
+            // Instantiate a tree
+
+            // Note that the first argument MUST be the exact name of the class instance ("mytree" in this case)
+            mytree = new TreeView("mytree","tree-view", onSelected, onHover);
+
+            // Set the indent multiplier. 0 is no indent, 1 is one character width (default) etc. 
+            mytree.indentMultiplier = 0.8;
+            
+            // Modify the color of the expand/collapse icon
+            mytree.expandIconColor = "#cacbcc";
+
+            // Modify the branch selected color
+            mytree.selectedColor = "#37373d";
+
+            // Modify the branch selected text color
+            mytree.selectedTextColor = "#cacbcc";
+
+            // Modify the branch hover-over color
+            mytree.hoverOverColor = "#2a2d2e";
+
+            mytree.hoverOverTextColor = "#cacbcc";
+
+            // Modify the icon colors
+            //mytree.iconColor = "blue";
+
+            // Modify the expand/collapse icon color
+            //mytree.expandColor = "darkgrey";
+
+            // Populate the tree
+            populate_tree();
+
+        </script>
+
+    </body>
+</html>

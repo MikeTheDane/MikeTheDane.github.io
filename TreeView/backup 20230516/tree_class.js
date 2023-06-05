@@ -1,54 +1,8 @@
 
-/** 
- * TreeView Class.  
- * @class
- * */
+
 class TreeView{
-
-    /**
-     * Branch Selected Callback.
-     * @callback branch_selected_cb
-     * @description This Callback is triggered when the user selects a branch either by clicking or by double clicking on it.
-     *  The callback takes 3 parameters.
-     * @param {string} - The uid of the branch that was selected
-     * @param {object} - The user object associated with the selected branch
-     * @param {boolean} - True if user double clicked on branch, false if single clicked  
-     */
-
-    /**
-     * Branch Hover Callback.
-     * @callback branch_hover_cb
-     * @description This Callback is triggerd when the user hovers over or away from a branch. 
-     *  This callback takes 3 parameters
-     * @param {string} - The uid of the branch that the hover pertains to
-     * @param {object} - The user object associated with the pertaining branch
-     * @param {boolean} - True if user hovers over a branch, false if user hovers away from a branch  
-     */
-
-    /**
-     * Branch Right-click Callback.
-     * @callback branch_rightclick_cb
-     * @description This Callback is triggerd when the user right-clicks on a branch. Can be used to render a context specific list of options. 
-     *  This callback takes 4 parameters
-     * @param {string} - The uid of the branch that the right-click pertains to
-     * @param {object} - The user object associated with the pertaining branch
-     * @param {number} - X coordinate of the mouse position at the time (Left of screen is at 0)
-     * @param {number} - Y coordinate of the mouse position at the time (top of screen is at 0)
-     */
-
-    /**
-     * 
-     * The TreView class facilitates construction of a tree view list
-     *  Each branch in the tree can be associated with a user object
-     *  
-     * @param {string} tree_div_id - The dom element ID where the tree will be displayed
-     * @param {string} title  - The displayed title of the tree (set to empty string if no title desired)
-     * @param {branch_selected_cb} branch_selected_cb - An optional callback function to be called when user selects a branch
-     * @param {branch_hover_cb} branch_hover_cb  - An optional callback function to be called when the user hovers over or away from a branch
-     * @param {branch_rightclick_cb} branch_rightclick_cb - An optional callback function to be called when the user right-clicks on a branch
-     * 
-     */
-    constructor(tree_div_id, title, branch_selected_cb = null, branch_hover_cb = null, branch_rightclick_cb = null){  
+    constructor(instance_name, tree_div_id, title, branch_selected_cb = null, branch_hover_cb = null, branch_rightclick_cb = null){  
+        this.instance_name = instance_name;
         this.tree_div_id = tree_div_id;
         this.title = title;
         this.branch_selected_cb = branch_selected_cb;
@@ -101,6 +55,7 @@ class TreeView{
         // Branch Type icons
         this.iconSvgs = [];
 
+
         let document_icon = '<svg height="$fontSize" width="$fontSize" viewBox="0 96 960 960"><path style="fill:$icon-fill-color;" d="m388 976-20-126q-19-7-40-19t-37-25l-118 54-93-164 108-79q-2-9-2.5-20.5T185 576q0-9 .5-20.5T188 535L80 456l93-164 118 54q16-13 37-25t40-18l20-127h184l20 126q19 7 40.5 18.5T669 346l118-54 93 164-108 77q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l108 78-93 164-118-54q-16 13-36.5 25.5T592 850l-20 126H388Zm92-270q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Zm0-60q-29 0-49.5-20.5T410 576q0-29 20.5-49.5T480 506q29 0 49.5 20.5T550 576q0 29-20.5 49.5T480 646Zm0-70Zm-44 340h88l14-112q33-8 62.5-25t53.5-41l106 46 40-72-94-69q4-17 6.5-33.5T715 576q0-17-2-33.5t-7-33.5l94-69-40-72-106 46q-23-26-52-43.5T538 348l-14-112h-88l-14 112q-34 7-63.5 24T306 414l-106-46-40 72 94 69q-4 17-6.5 33.5T245 576q0 17 2.5 33.5T254 643l-94 69 40 72 106-46q24 24 53.5 41t62.5 25l14 112Z"/></svg>';
         
         let folder_icon = 
@@ -114,9 +69,7 @@ class TreeView{
         
     }
 
-    /** Returns the index of the selected branch or 'undefined' if no branch is selected 
-        * @returns {number} The index of the selected branch 
-        */
+    // Returns the selected branch or 'undefined' if no branch is selected
     selectedBranch(){
         // Return -1 if no branch is currently selected
         for (let i=0; i < this.list.length; i++)
@@ -125,12 +78,7 @@ class TreeView{
         return undefined;
     }
 
-
-    /**
-     * Returns the branch matching the uid or 'undefined' if no branch is selected
-     * @param {string} uid - The unique ID of the requested branch
-     * @returns {number} The index of the branch with the matching UID
-     */
+    // Returns the branch matching the uid or 'undefined' if no branch is selected
     findBranchIdx(uid){
         for(let i=0; i < this.list.length; i++)
             if(this.list[i].uid == uid)
@@ -138,13 +86,7 @@ class TreeView{
         return undefined;
     }
 
-    
-    /**
-     * Sets the user object for the branch matching the uid. Returns 'undefined' if uid wasn't found 
-     * @param {string} uid - Unique ID of the branch 
-     * @param {Object} object - The user object to be tied to the branch
-     * @returns {Number} Returns a 0 if the branch was found, returns 'undefined' if not found 
-     */
+    // Sets the user object for the branch matching the uid. Returns 'undefined' if uid wasn't found
     setUserObj(uid, object){
         let index = this.findBranchIdx(uid);
         if(index === undefined)
@@ -153,12 +95,7 @@ class TreeView{
         return 0;
     }
 
-   
-    /**
-     * Returns the user object for the branch matching the uid. Returns 'undefined' if uid wasn't found
-     * @param {string} uid - The unique ID of the requested branch 
-     * @returns {number} Returns the index of the matching UID, returns 'undefined' if no matching branch was found 
-     */
+    // Returns the user object for the branch matching the uid. Returns 'undefined' if uid wasn't found
     getUserObj(uid){
         let index = this.findBranchIdx(uid);
         if(index === undefined)
@@ -166,13 +103,7 @@ class TreeView{
         return this.list[index].user;
     }
 
-    
-    /**
-     * Sets the label of the the branch matching the uid. Returns 'undefined' if uid wasn't found 
-     * @param {string} uid - Unique ID of the requested branch 
-     * @param {string} label - The label to be displayed for the branch 
-     * @returns {number} Returns 0 if successful, returns 'undefined' if no matching branch was found
-     */
+    // Sets the label of the the branch matching the uid. Returns 'undefined' if uid wasn't found
     setLabel(uid, label){
         let index = this.findBranchIdx(uid);
         if(index === undefined)
@@ -182,11 +113,7 @@ class TreeView{
         return 0;
     }
 
-    /**
-     * Returns the label of the branch matching the uid. Returns 'undefined' if the branch wasn't found 
-     * @param {*} uid - The unique ID of the requested branch
-     * @returns {string} Returns the label of the requested brach. Returns 'undefined' if no matching branch was found
-     */
+    // Returns the label of the branch matching the uid. Returns 'undefined' if the branch wasn't found
     getLabel(uid){
         let index = this.findBranchIdx(uid);
         if(index === undefined)
@@ -194,13 +121,7 @@ class TreeView{
         return this.list[index].label;
     }
 
-    
-    /**
-     * Sets the info pop-up text of the the branch matching the uid. Returns 'undefined' if uid wasn't found
-     * @param {string} uid - The unique ID of the requested branch
-     * @param {string} info - The info text to be displayed on hover-over
-     * @returns {number} Returns 0 if successful, returns 'undefined' if no matching branch was found
-     */
+    // Sets the info pop-up text of the the branch matching the uid. Returns 'undefined' if uid wasn't found
     setInfo(uid, info){
         let index = this.findBranchIdx(uid);
         if(index === undefined)
@@ -210,12 +131,7 @@ class TreeView{
         return 0;
     }
 
-    
-    /**
-     * Returns the info pop-up text of the branch matching the uid. Returns 'undefined' if the branch wasn't found 
-     * @param {string} uid - The unique ID of the requested branch
-     * @returns {string} The info text that will be displayed on hover-over or 'undefined' if no match was found
-     */
+    // Returns the info pop-up text of the branch matching the uid. Returns 'undefined' if the branch wasn't found
     getInfo(uid){
         let index = this.findBranchIdx(uid);
         if(index === undefined)
@@ -223,10 +139,7 @@ class TreeView{
         return this.list[index].info;
     }
 
-    
-    /**
-     * Sets color scheme for dark mode to emulate VS code default color scheme  
-     */
+    // Set color scheme for dark mode to emulate VS code default color scheme 
     setDarkMode(){
         this.expandIconColor = "#cacbcc";
         this.selectedColor = "#37373d";
@@ -240,17 +153,7 @@ class TreeView{
         this.textColor = "#cacbcc";
     }
 
-    
-    /**
-     * Appends a branch to the tree. Appends a root node if uid wasn't found or uid equals empty string 
-     * @param {string} uid - The branch is appended to the tree as a child of the branch matching this uid.
-     *  If the UID is not found, the new branch will be appended as a root branch 
-     * @param {string} label - The displayed label for the new branch 
-     * @param {number} type - The type of branch (dictates the icon used)
-     * @param {string} info - The hover-over info that will be displayed
-     * @param {Object} userObj - Any object that the user wishes to bind with the branch
-     * @returns {string} uid - The unique ID of the created branch
-     */
+    // Appends a branch to tree. Appends a root node if uid wasn't found or uid equals empty string
     append(uid, label, type, info = undefined, userObj = {}){
         let idx = this.branch_idx;
         let new_uid = this.tree_div_id + "-" + idx.toString();
@@ -287,16 +190,7 @@ class TreeView{
         return new_uid;
     }
 
-    
-    /**
-     * Appends a child node branch to the tree at the current selection. Returns 'undefined' if no branch is selected or uid wasn't found 
-     * @param {string} label - Text that will be displayed
-     * @param {number} type - Type of branch (dictates the icon used)
-     * @param {string} info - Info text displayed when user mouse hovers over branch
-     * @param {object} userObj - Any abjoct that the user wants to bind to the branch
-     * @param {boolean} expand - Specifies whether selected branch should be expanded to show the new branch
-     * @returns {string} Unique ID of the created branch, or 'undefined' if no brnach is currently selected
-     */
+    // Appends a child node branch to the tree. Returns 'undefined' if no branch is selected or uid wasn't found
     appendChildAtSelection(label, type, info = undefined, userObj = {}, expand = true){
         let selected = this.selectedBranch();
         // Insert child branch only if a branch is currently selected by the user
@@ -309,34 +203,7 @@ class TreeView{
         return new_uid;          
     }
 
-    /**
-     * 
-     * @param {string} uid - The uniqe ID of the branch to be removed 
-     * @returns {number} Returns 0 if successful. Returns 'undefined' if no matching branch was found
-     */
-    removeBranch(uid){
-        let selected = this.findBranchIdx(uid);
-        // Remove branch only if the branch exists
-        if(selected === undefined)
-            return undefined;
-        // Remove selected branch and all of its children
-        let remove_count = 1;
-        for(let i = selected+1; i<this.list.length; i++){
-            if(this.list[i].level > this.list[selected].level)
-                remove_count++;
-            else
-                break;
-        }
-        this.list.splice(selected,remove_count);
-        this.drawTree();
-        return 0;  
-    }
-
-    
-    /**
-     * Removes the currently selected branch 
-     * @returns {number} Returns 0 if successful. Returns 'undefined' if no branch is currently selected
-     */ 
+    // Removes a branch matching the uid. Returns 'undefined' if no branch is selected 
     removeSelectedBranch(){
         let selected = this.selectedBranch();
         // Remove branch only if a branch is currently selected by the user
@@ -355,10 +222,7 @@ class TreeView{
         return 0;
     }
 
-    
-    /**
-     * Expands the entire tree 
-     */
+    // Expands the entire tree
     expandTree(){
         for(var i=0; i < this.list.length; i++){
             this.list[i].expanded = true;
@@ -366,12 +230,11 @@ class TreeView{
         this.drawTree();
     }
 
-    /**
-     * Collapses the entire tree
-     */
+    // Collapses the entire tree
     collapseTree(){
-        for(var i=0; i < this.list.length; i++)
+        for(var i=0; i < this.list.length; i++){
             this.list[i].expanded = false;
+        }
         this.drawTree();
     }
 
@@ -392,6 +255,7 @@ class TreeView{
 
     // A branch has been selected
     branchClick(elm, dblClick = false){
+        console.log("@");
         
         // Set all branches to not selected
         for (let i=0; i < this.list.length; i++)
@@ -414,16 +278,13 @@ class TreeView{
         this.branchClick(elm, true);
     }
 
-    // User right clicked on a branch
-    branchRightClick(event,elm){
+    branchRightClick(elm){
+        console.log("right on")
         let branchIdx = this.findBranchIdx(elm.getAttribute("id"));
-        // Hide any displayed info pop-up
-        let info_elm = document.getElementById(this.tree_div_id+"-info"); 
-        info_elm.style.display = "none";
-        // Call user to inform that a right-click was detected. Provides branch uid and user object as well as mouse position
         if (this.branch_rightclick_cb != null)
-            this.branch_rightclick_cb(this.list[branchIdx].uid,this.list[branchIdx].user,event.pageX,event.pageY);
+            this.branch_rightclick_cb(this.list[branchIdx].uid,this.list[branchIdx].user);
     }
+
 
     // User mouse hovered over a branch
     branchMouseOver(elm){
@@ -453,10 +314,8 @@ class TreeView{
 
             // Populate the info pop-up box
             info_elm.innerHTML= info_text;
-            
             info_elm.style.top= (pos.y + this.fontSizeNumber).toString()+"px";
             info_elm.style.left = (hor_pos).toString()+"px";
-
             info_elm.innerHTML = info_text;
 
             // Delay the actual displaying of the info pop-up
@@ -493,19 +352,11 @@ class TreeView{
     }
 
     
-    /**
-     * Draw or re-draw the tree 
-     */
+
+    // Draw or re-draw the tree
     drawTree(){
         // Clear tree before redrawing
         document.getElementById(this.tree_div_id).innerHTML = "";
-
-        // Find the instance name
-        for (var instance in window){
-            if (window[instance] === this){
-                this.instance_name = instance;
-            }          
-        }
 
         // Insert the title 
         if(this.title !== undefined && this.title != ""){
@@ -543,6 +394,8 @@ class TreeView{
             
             let branch = this.list[i];
             let this_level = branch.level;
+
+            let instance = this.instance_name;
 
             // Set applicable expansion icon of parent if this branch is a child                
             if(previous_level < this_level){
@@ -598,22 +451,28 @@ class TreeView{
                     if (this.branch_selected_cb != null){
                         div.setAttribute('onclick', this.instance_name+".branchClick(this);");
                         div.setAttribute('ondblclick',this.instance_name+".branchDblClick(this);");
-                    }   
-                } 
-                
-                // Register a right-click handler
-                if (this.branch_rightclick_cb != null){
-                    div.setAttribute('oncontextmenu',this.instance_name+".branchRightClick(event, this);")
-                    // Prevent the default right-click action
-                    div.addEventListener('contextmenu', function(ev) {
-                        ev.preventDefault();
-                        return false;
-                    }, false);
+                    }    
+                    if (this.branch_rightclick_cb != null){
+                        div.setAttribute('oncontextmenu',this.instance_name+".branchRightClick(this);")
+                    
+                        div.addEventListener('contextmenu', function(ev) {
+                            ev.preventDefault();
+                            return false;
+                        }, false);
+                    }
+                    
+                        /*
+                    if(this.rightClickSupport == true){
+                        div.addEventListener('contextmenu', function(ev) {
+                            ev.preventDefault();
+                            treeViewRightClick(branch,instance);
+                            return false;
+                        }, false);
+                    }
+                    */
                 }
-                
                 div.setAttribute('id', branch.uid);
-                div.style.cursor = "pointer";
-
+                
                 // Calculate branch indent based on branch level and font size used      
                 div.style.paddingLeft = this.indentMultiplier*(branch.level)*(this.fontSizeNumber).toString() +"px";
                                     
@@ -622,7 +481,10 @@ class TreeView{
                     div.setAttribute('onmouseover',this.instance_name+".branchMouseOver(this);");
                     div.setAttribute('onmouseleave',this.instance_name+".branchMouseLeave(this);");
                 }
-                
+
+                // Prevent text selection when double-clicking on branch
+                //div.addEventListener('mousedown', function(e){ e.preventDefault(); }, false);
+
                 // Append the branch to the tree
                 document.getElementById(this.tree_div_id).appendChild(div);
 
@@ -639,8 +501,9 @@ class TreeView{
             }
             
             // Maintain the expansion list
-            if(branch.expanded == true && expansion_list.slice(-1)=="show")
+            if(branch.expanded == true && expansion_list.slice(-1)=="show"){
                 expansion_list.push("show");
+            }
             else
                 expansion_list.push("hide");                  
         }

@@ -169,8 +169,10 @@
                 myctx.displayMenu(x,y,uid);
             }
             
-            // Instantiate a tree view
-            mytree = new TreeView("tree-view", "My PROJECT", onSelected, onHover, onRightClick);
+            // Instantiate a tree
+
+            // Note that the first argument MUST be the exact name of the class instance ("mytree" in this case)
+            mytree = new TreeView("mytree","tree-view", "My PROJECT", onSelected, onHover, onRightClick);
             
             // Instantiate a context menu (a.k.a. right-click menu)
             myctx = new ContextMenu();
@@ -182,7 +184,7 @@
             mytree.setDarkMode();
 
             // You can set the title of the tree-view at any point
-            //mytree.title = "PROJECT NAME";
+            mytree.title = "PROJECT NAME";
             
             // Supress the hover and selection bar
             //mytree.showHoverBar = false;
