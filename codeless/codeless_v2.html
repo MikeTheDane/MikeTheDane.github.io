@@ -58,7 +58,7 @@
 					// Define a scan filter and prepare for interaction with Codeless Service
 					log('Requesting Bluetooth Device...');
 					device  = await navigator.bluetooth.requestDevice({
-						filters: [{name: 'CLv2'}],
+						filters: [{namePrefix: 'CLv2'}],
 						optionalServices: [CODELESS_SVC_UUID]
 					});	
 					device.addEventListener('gattserverdisconnected', onDisconnected);	
