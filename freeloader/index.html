@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        button{
+            color:red
+        }
+    </style>
+    <script type="text/javascript">
+        
+        function branch(){
+            const queryString = window.location.search
+            console.log("..." + queryString)
+            if(queryString != '?cfg' && localStorage.getItem('myscript'))
+                serveit()
+        }
+
+        function serveit(){
+
+            // Get the feed from local storage
+            feed = localStorage.getItem('myscript');
+
+            const feed_obj = JSON.parse(feed)
+            
+            document.write(feed_obj.body)
+            
+            var style = document.createElement('style');
+            style.innerText = feed_obj.style;
+            // Append the `<style>` element to the `<head>` section of HTML document
+            document.head.appendChild(style);
+
+            var script = document.createElement('script');
+            script.innerText = feed_obj.script;
+            // Append the `<script>` element to the `<head>` section of HTML document
+            document.head.appendChild(script);
+        }
+
+        
+
+	</script>
+</head>
+<body onload="branch()">
+    
+    <br/>
+    <button onclick="serveit()">Serve</button>
+
+    <input id="upload" type="file"accept=".json" />
+
+    <script>
+        document.querySelector('#upload').addEventListener('input', function() {
+            const file = this.files[0]
+  
+            let fr = new FileReader()
+            
+            fr.readAsText(file)
+            
+            fr.onload = () => {
+                console.log(fr.result)
+                localStorage.setItem('myscript',fr.result)
+            }
+            fr.onerror = () => {
+                console.log(fr.error)
+            }
+        })
+
+    </script>
+</body>
+</html>
