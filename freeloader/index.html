@@ -25,14 +25,18 @@
             document.write(feed_obj.body)
             
             var style = document.createElement('style');
-            style.innerText = feed_obj.style;
+            style.innerHTML = feed_obj.style;
             // Append the `<style>` element to the `<head>` section of HTML document
             document.head.appendChild(style);
 
             var script = document.createElement('script');
-            script.innerText = feed_obj.script;
+            script.innerHTML = feed_obj.script;
             // Append the `<script>` element to the `<head>` section of HTML document
             document.head.appendChild(script);
+
+            console.log(feed_obj.onload);
+            if(feed_obj.onload != '<none>')
+                eval(feed_obj.onload);
         }
 
         
@@ -42,7 +46,7 @@
 <body onload="branch()">
     
     <br/>
-    <button onclick="serveit()">Serve</button>
+    <button onclick="serveit();">Serve</button>
 
     <input id="upload" type="file"accept=".json" />
 
