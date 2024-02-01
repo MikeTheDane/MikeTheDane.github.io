@@ -44,6 +44,8 @@
         var tx2 = chip_sets.device[0].tx;
         var rx2 = chip_sets.device[0].rx;
         var m = 15;
+        var r1_gain = 0;
+        var r2_gain = 0;
 
         // Find device RF parameters based on device name
         function device_by_name(name){
@@ -55,17 +57,28 @@
         }
 
         // Calculate range in both direction
-        function calculate_range(t1, r1, t2, r2, m){
+        function calculate_range(g1, g2, t1, r1, t2, r2, m){
+            
+            let pl12 = t1 + g1 + g2 - r2 - m;
+            let pl21 = t2 + g2 + g1 - r1 - m;
+            console.log(pl12);
+            console.log(pl21); 
+            d12 = Math.pow(10,(pl12 + (g1 + g2))/40);
+            d21 = Math.pow(10,(pl21 + (g1 + g2))/40);
+            /*
             let lb12 = t1 - r2 - 3;
             let lb21 = t2 - r1 - 3;
             d12 = Math.pow(10,(lb12-m)/20) * (300/2400) / (4*Math.PI);
             d21 = Math.pow(10,(lb21-m)/20) * (300/2400) / (4*Math.PI);
+            */
+            console.log(d12);
+            console.log(d21);
             return([d12,d21]);
         }
 
         // Calculate and display the result
         function display_calc(){
-            d = calculate_range(tx1, rx1, tx2, rx2, m);
+            d = calculate_range(r1_gain, r2_gain, tx1, rx1, tx2, rx2, m);
             d12 = d[0];
             d21 = d[1];
             result_elm = document.getElementById("result");
@@ -100,6 +113,18 @@
 
             let soc_2 = document.getElementById('device_selection_2');
             soc2 = soc_2.options[soc_2.selectedIndex].text;
+
+            if(elmId == "r1_gain"){
+                r1_gain = Number(document.getElementById(elmId).value);
+                if(r1_gain == 0)
+                    document.getElementById(elmId).style.color = "black";
+                else
+                    document.getElementById(elmId).style.color = "red";
+            }
+
+            if(elmId == "r2_gain"){
+                r2_gain = Number(document.getElementById(elmId).value);
+            }
 
             if(elmId == "tx1"){
                 tx1 = Number(document.getElementById(elmId).value);
@@ -220,18 +245,22 @@
     This web application estimates the RF range between two SmartBond&#8482; Bluetooth LE radios.<br/>
     A red arrow will indicate the direction of the least estimated range when asymmetric.<br/>
     The M parameter is the sum of required margin and any attenuating blocker between the two radios.<br/>
-    Receiver sensitivity and RF output power must be provided in [dBm].<br/> 
-    3dBm is subtracted from each link budget to account for none-ideal antenna matching/implementation.<br/>
-    Antenna gains are set to 0dBm. Adjust the M parameter to account for any gain in your implementation.<br/>
     Note: This application assumes LE1M PHY.<br/> 
     
     <hr/>
     <label for="device_selection_1">Radio #1:</label>
     <select id="device_selection_1" onchange = "radio_changed(1);"></select>
+    &nbsp;&nbsp;&nbsp;
+    <label for="r1_gain">Antenna Gain:</label>
+    <input id="r1_gain" type="number" value="0" min="-20" max="20" step="0.1" onchange="recalculate('r1_gain');"/>&nbsp;[dBi]
+
     <br/>
     
     <label for="device_selection_2">Radio #2:</label>
     <select id="device_selection_2" onchange = "radio_changed(2);"></select>
+    &nbsp;&nbsp;&nbsp;
+    <label for="r2_gain">Antenna Gain:</label>
+    <input id="r2_gain" type="number" value="0" min="-20" max="20" step="0.1" onchange="recalculate('r2_gain');"/>&nbsp;[dBi]
 
     <br/>
     <br/>
@@ -376,9 +405,15 @@
             <label for="m">M:</label>
             <input id="m" type="number" value="15" min="0" max="90" onchange="recalculate('m');"/>
         </div>  
-        <div style="position:relative;top: -100px; left: 213px">
+        <div style="position:relative;top: -100px; left: 35px">
+           [dBm]
+        </div>
+        <div style="position:relative;top: -118px; left: 220px">
+            [dB]
+         </div>
+         <div style="position:relative;top: -137px; left: 390px">
             [dBm]
-        </div>      
+         </div>      
     </div>
     <div id="result" style="position:relative;top: -100px; left: 0px">
     </div>
