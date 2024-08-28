@@ -87,21 +87,21 @@
                 document.getElementById("arrow12").style.fill = "black";
                 document.getElementById("path2").style.stroke = "black";
                 document.getElementById("arrow21").style.fill = "black";
-                result_elm.innerHTML = "<h2><b>Estimated Range: "+ d12.toFixed(1) +"m (symmetric)</b></h2>";           
+                result_elm.innerHTML = "<h2><b>Estimated Range: "+ d12.toFixed() +"m (symmetric)</b></h2>";           
             }
             else if(d12 > d21){
                 document.getElementById("path1").style.stroke = "black";
                 document.getElementById("arrow12").style.fill = "black";
                 document.getElementById("path2").style.stroke = "red";
                 document.getElementById("arrow21").style.fill = "red";
-                result_elm.innerHTML = "<h2><b>Estimated Range: "+ d21.toFixed(1) +"m (asymmetric)</b></h2>";
+                result_elm.innerHTML = "<h2><b>Estimated Range: "+ d21.toFixed() +"m (asymmetric)</b></h2>";
             }
             else{
                 document.getElementById("path1").style.stroke = "red";
                 document.getElementById("arrow12").style.fill = "red";
                 document.getElementById("path2").style.stroke = "black";
                 document.getElementById("arrow21").style.fill = "black";
-                result_elm.innerHTML = "<h2><b>Estimated Range: "+ d12.toFixed(1) +"m (asymmetric)</b></h2>";
+                result_elm.innerHTML = "<h2><b>Estimated Range: "+ d12.toFixed() +"m (asymmetric)</b></h2>";
             }
         }
 
