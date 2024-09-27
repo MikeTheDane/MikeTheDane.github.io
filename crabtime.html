@@ -119,6 +119,7 @@
             }
 
             function reset1(){
+		document.documentElement.requestFullscreen();
                 countdown_timer1 = target_time;
                 local_target1 = target_time;
                 pie_elm1.innerHTML = humanize(target_time);
@@ -141,6 +142,7 @@
             }
 
             function reset2(){
+		document.documentElement.requestFullscreen();
                 countdown_timer2 = target_time;
                 local_target2 = target_time;
                 pie_elm2.innerHTML = humanize(target_time);
