@@ -34,22 +34,38 @@
                 transform: translateX(-50%) translateY(-50%);
             }
 
+            input {
+                padding: 10px 5px;
+                text-align: center; 
+                line-height: 28px;
+                font-size: 30px;
+            }
+
         </style>
 
 		<script>
 
-			var target_time = 30; // 10 Minutes
+			var target_time = 600; // 10 Minutes
             
             var countdown_timer1;
-            var tick_timer1;
+            var tick_timer1 = null;
             var pie_elm11;
+            var local_target1;
 
             var countdown_timer2;
-            var tick_timer2;
+            var tick_timer2 =null;
             var pie_elm12;
+            var local_target2;
 
 
             function initialize(){
+                if(localStorage.getItem("soak_time") != null){
+                    console.log("Soak Time Retrieved: "+ localStorage.getItem("soak_time"));
+                    target_time = localStorage.getItem("soak_time");
+                }
+                else{
+                    localStorage.setItem("soak_time", target_time); 
+                }
                 pie_elm1 = document.getElementById("pie1");
                 pie_elm1.innerHTML = humanize(target_time);
                 pie_elm2 = document.getElementById("pie2");
@@ -65,14 +81,38 @@
                 return s;
             }
 
+            function config(){
+                dlg_elm = document.getElementById("config");
+                document.getElementById("soak_time").value = Math.floor(target_time/60);
+                dlg_elm.showModal()
+            }
+
+            function config_complete(){
+                dlg_elm = document.getElementById("config");
+                target_time = 60 * document.getElementById("soak_time").value;
+                dlg_elm.close();
+                localStorage.setItem("soak_time", target_time);
+                if(tick_timer1 == null)
+                    pie_elm1.innerHTML = humanize(target_time);
+                if(tick_timer2 == null)
+                    pie_elm2.innerHTML = humanize(target_time);
+            }
+
+            function clear_my_interval(intv){
+
+                if(intv != null)
+                    clearInterval(intv);
+                intv = null;
+            }
+
             function tick1(){
                 countdown_timer1--;
                 pie_elm1.innerHTML = humanize(countdown_timer1);
-                let angle = (target_time - countdown_timer1)/target_time * 360;
+                let angle = (local_target1 - countdown_timer1)/local_target1 * 360;
                 pie_elm1.style.setProperty("background-image","conic-gradient(white " + angle + "deg, lightgrey 0)");
                 if(countdown_timer1<=0){
                     window.navigator.vibrate([200, 100, 200]);
-                    clearInterval(tick_timer1);
+                    clear_my_interval(tick_timer1);
                     pie_elm1.style.setProperty("background-image","conic-gradient(white 360deg, lightgrey 0)");
                     pie_elm1.innerHTML = '<img src="dungie.png"/>';
                 }
@@ -80,20 +120,21 @@
 
             function reset1(){
                 countdown_timer1 = target_time;
+                local_target1 = target_time;
                 pie_elm1.innerHTML = humanize(target_time);
-                pie_elm1.style.setProperty("background-image","conic-gradient(red 0deg, lightgrey 0)");
-                clearInterval(tick_timer1);
+                pie_elm1.style.setProperty("background-image","conic-gradient(bisque 360deg, lightgrey 0)");
+                clear_my_interval(tick_timer1);
                 tick_timer1 = setInterval(tick1, 1000);
             }
 
             function tick2(){
                 countdown_timer2--;
                 pie_elm2.innerHTML = humanize(countdown_timer2);
-                let angle = (target_time - countdown_timer2)/target_time * 360;
+                let angle = (local_target2 - countdown_timer2)/local_target2 * 360;
                 pie_elm2.style.setProperty("background-image","conic-gradient(white " + angle + "deg, lightgrey 0)");
                 if(countdown_timer2 <= 0){
                     window.navigator.vibrate([200, 100, 200])
-                    clearInterval(tick_timer2);
+                    clear_my_interval(tick_timer2);
                     pie_elm2.style.setProperty("background-image","conic-gradient(white 360deg, lightgrey 0)");
                     pie_elm2.innerHTML = '<img src="dungie.png"/>';
                 }
@@ -101,9 +142,10 @@
 
             function reset2(){
                 countdown_timer2 = target_time;
+                local_target2 = target_time;
                 pie_elm2.innerHTML = humanize(target_time);
-                pie_elm2.style.setProperty("background-image","conic-gradient(red 0deg, lightgrey 0)");
-                clearInterval(tick_timer2);
+                pie_elm2.style.setProperty("background-image","conic-gradient(bisque 360deg, lightgrey 0)");
+                clear_my_interval(tick_timer2);
                 tick_timer2 = setInterval(tick2, 1000);
             }
 
@@ -114,7 +156,11 @@
 	<body onload="initialize();" style="background-color:black;">
 
         <div style="text-align: center">
-		    <h1 style="color: white;">CrabTime</h1><hr/>
+		    <h1 style="color: white; background-color: darkgray;">
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CrabTimer &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <img src="settingsicon.png" style="height: 20px; width: 20px" onclick="config()"/>
+            </h1>
+            <hr/>
         </div>
 
         <div style="text-align: center">
@@ -123,17 +169,27 @@
 
         <div onclick="reset1();" id="pie1" class="piechart">
         </div>
+        <br/>
         <hr/>
 
         <div style="text-align: center">
 		    <h2 style="color: white;">Rod #2</h2>
         </div>
+        
 
 
         <div onclick="reset2();" id="pie2" class="piechart"></div>
-        
-        </div>
+        <br/>
         <hr/>
+
+
+        <dialog id="config" style="font-size: 30px; text-align: center; border-radius: 10px;">
+            Soak time [minutes]<br/><br/>
+            <input type="number" id="soak_time" name="soak_time" min="1" max="30" value="10"><br/><br/>
+            <div onclick="config_complete();" style="border: 1px solid black; border-radius: 4px; background-color: lightgreen;">Save</div>
+        </dialog>
+
+        
 
 	</body>
 
