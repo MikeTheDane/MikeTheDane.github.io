@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	
+	<head>
+		
+		<meta charset="UTF-8">
+		<title>Device Picker</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            .blescanspinner {
+              float: left;
+              border: 3px solid #f3f3f3;
+              border-radius: 50%;
+              border-top: 3px solid #3498db;
+              width: 14px;
+              height: 14px;
+              -webkit-animation: spin 1s linear infinite; /* Safari */
+              animation: blescanspinner 1s linear infinite;
+            }
+            
+            /* Safari */
+            @-webkit-keyframes blescanspinner {
+              0% { -webkit-transform: rotate(0deg); }
+              100% { -webkit-transform: rotate(360deg); }
+            }
+            
+            @keyframes blescanspinner {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+        </style>
+		
+        <script>
+        // Create a dialog with a scrollable list of bluetooth devices
+        function doit(){
+            var dialog_template = 
+            `
+                    <small>This application wants to pair</small><br/> 
+                    
+                    <div style ="height:250px; margin-top:5px;margin-bottom:5px">
+                        <div style="width:100%;text-align:center; padding-top:120px">
+                            <small>No compatible devices found.</small>
+                        </div>
+                    </div>
+                    
+                    <div class="blescanspinner"></div><div style="float:left;padding-left:10px;">Scanning...</div>
+                    <button id="cancelbtn" style="float:right;">Cancel</button>
+                    <button id="pairbtn" style="float:right;margin-right: 10px;" disabled>Pair</button>
+            `;
+
+            var dlg = document.createElement('dialog');
+            dlg.innerHTML = dialog_template;
+            dlg.style = "width: 250px; margin-top: 5px; margin-left: 5px; padding-top: 3px; padding-left: 5px; border-radius: 10px; border: 1px solid darkgrey;box-shadow:1px 2px rgba(0,0,0,0.3);"
+            dlg.setAttribute("id","myDialog");
+
+            document.body.appendChild(dlg);
+            
+        }
+       
+        function go(){
+            doit();
+            document.getElementById("myDialog").showModal();
+        }
+
+        </script>
+    </head>
+    
+    <body onload="go();">
+        <h1>hej</h1>
+    </body>
+
+</html>
