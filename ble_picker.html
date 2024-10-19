@@ -28,6 +28,7 @@
               0% { transform: rotate(0deg); }
               100% { transform: rotate(360deg); }
             }
+            
         </style>
 		
         <script>
@@ -37,7 +38,7 @@
             `
                     <small>This application wants to pair</small><br/> 
                     
-                    <div id="blescanlist" style ="height:350px; margin-top:5px;margin-bottom:5px;overflow-y: auto;overflow-x:hidden">
+                    <div id="blescanlist" style ="height:350px; margin-top:5px;margin-bottom:15px;overflow-y: auto;overflow-x:hidden">
                         <div style="width:100%;text-align:center; padding-top:160px">
                             <small>No compatible devices found.</small>
                         </div>
@@ -60,7 +61,7 @@
         function go(){
             doit();
             document.getElementById("myDialog").showModal();
-            for(i=0; i<20; i++){
+            for(i=0; i<3; i++){
                 newdevice("","",-90 + i);
             }
         }
@@ -75,13 +76,27 @@
             s = 
             `
                     <table width="100%">
-                        <tr><td>Crabby McCrab</td><td align="right">RSSI</td></tr>
-                        <tr><td style="font-size:8px;">C0:FF:EE:C0:FF:EE</td><td style="font-size:8px;text-align:right;">-90 dB</small></td></tr>
+                        <tr><td>Crabby McCrab</td><td align="right">$rssigraph</td></tr>
+                        <tr><td style="font-size:8px;padding-top:0px;">C0:FF:EE:C0:FF:EE</td><td style="font-size:8px;text-align:right;padding-top:0px;">rssi dB</small></td></tr>
                     </table>
             `;
+           
+            signalstrength = signalstrength_template;
+            for(let i=1;i<5;i++){
+                f = "$" + i.toString();
+                 if(rssi >= (-105+20*i))
+                     signalstrength = signalstrength.replace(f,"#008000");
+                 else
+                     signalstrength = signalstrength.replace(f,"#cccccc");
+
+            }
+
+            s = s.replace("$rssigraph",signalstrength);
+        
+
             s = s.replace("rssi",rssi.toString());
             var device = document.createElement('div');
-            device.style = "width:100%; border:1px solid lightgrey; border-radius:4px;margin-bottom:2px;background-color: rgb(0,0,0,0.05)"
+            device.style = "width:95%; border:1px solid lightgrey; border-radius:4px;margin-bottom:2px;background-color: rgb(0,0,0,0.05);padding-right:10px;"
             device.innerHTML = s;
             scanlistDiv.appendChild(device);
 
@@ -91,11 +106,22 @@
 
         isListEmpty = true;
 
+        signalstrength_template =
+        `   <svg width="20" height="20" viewBox="0 0 20 28">
+                <rect style="fill:#008000; stroke:none; stroke-width:1" ry="1" width="3" height= "4"  x="2" y="20" />    
+                <rect style="fill:$1"; stroke:none; stroke-width:1" ry="1" width="3" height= "8"  x="6" y="16" />
+                <rect style="fill:$2"; stroke:none; stroke-width:1" ry="1" width="3" height="12" x="10" y="12" />
+                <rect style="fill:$3"; stroke:none; stroke-width:1" ry="1" width="3" height="16" x="14" y= "8"  />
+                <rect style="fill:$4"; stroke:none; stroke-width:1" ry="1" width="3" height="20" x="18" y= "4"  />
+            </svg>
+        `;
+
         </script>
     </head>
     
     <body onload="go();">
-        <h1>hej</h1>
+        <h1>hej</h1><br>
+
     </body>
 
 </html>
