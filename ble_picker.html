@@ -42,104 +42,132 @@
                 isListEmpty = true;
             }
 
-        // Create a dialog with a scrollable list of bluetooth devices
-        function doit(){
-            var dialog_template = 
-            `
-                    <small>This application wants to pair</small><br/> 
-                    
-                    <div id="blescanlist" style ="height:350px; margin-top:5px;margin-bottom:15px;overflow-y: auto;overflow-x:hidden;">
-                        <div style="width:100%;text-align:center; padding-top:160px">
-                            <small>No compatible devices found.</small>
+            // Create a dialog with a scrollable list of bluetooth devices
+            function doit(){
+                var dialog_template = 
+                `
+                        <small>This application wants to pair</small><br/> 
+                        
+                        <div id="blescanlist" style ="height:350px; margin-top:5px;margin-bottom:15px;overflow-y: auto;overflow-x:hidden;">
+                            <div style="width:100%;text-align:center; padding-top:160px">
+                                <small>No compatible devices found.</small>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div id="blescanspinner"><div class="blescanspinner"></div><div style="float:left;padding-left:10px;">Scanning...</div></div>
-                    <button id="rescanbtn" style="display:none;" onclick="reStartBleScan();">Re-scan</button>
-                    <button id="cancelbtn" style="float:right;">Cancel</button>
-                    <button id="pairbtn" style="float:right;margin-right: 10px;" disabled>Pair</button>
-            `;
+                        
+                        <div id="blescanspinner"><div class="blescanspinner"></div><div style="float:left;padding-left:10px;">Scanning...</div></div>
+                        <button id="rescanbtn" style="display:none;" onclick="reStartBleScan();">Re-scan</button>
+                        <button id="cancelbtn" style="float:right;" onclick="closeDialog(false)">Cancel</button>
+                        <button id="pairbtn" style="float:right;margin-right: 10px;" onclick="closeDialog(true)" disabled>Pair</button>
+                `;
 
-            var dlg = document.createElement('dialog');
-            dlg.innerHTML = dialog_template;
-            dlg.style = "width: 300px; margin-top: 5px; margin-left: 5px; padding-top: 3px; padding-left: 5px; border-radius: 10px; border: 1px solid darkgrey;box-shadow:1px 2px rgba(0,0,0,0.3);"
-            dlg.setAttribute("id","myDialog");
+                var dlg = document.createElement('dialog');
+                dlg.innerHTML = dialog_template;
+                dlg.style = "width: 300px; margin-top: 5px; margin-left: 5px; padding-top: 3px; padding-left: 5px; border-radius: 10px; border: 1px solid darkgrey;box-shadow:1px 2px rgba(0,0,0,0.3);"
+                dlg.setAttribute("id","myDialog");
 
-            document.body.appendChild(dlg);
-            
-        }
-       
-        function go(){
-            doit();
-            document.getElementById("myDialog").showModal();
-            for(i=0; i<30; i++){
-                newdevice("Crabby McCrabface","11:22:33:44:55:66",-90 + i*4);
+                document.body.appendChild(dlg);
+                
             }
-        }
-
-        function newdevice(name,address,rssi){
-            scanlistDiv = document.getElementById("blescanlist");
-            if(isListEmpty){
-                scanlistDiv.innerHTML = "";
-                isListEmpty = false;
-            }
-            
-            s = 
-            `
-                    <table width="100%">
-                        <tr><td>$bdname</td><td align="right">$rssigraph</td></tr>
-                        <tr><td style="font-size:8px;padding-top:0px;">$bdaddress</td><td style="font-size:8px;text-align:right;padding-top:0px;">$rssi dB</small></td></tr>
-                    </table>
-            `;
-           
-            signalstrength = signalstrength_template;
-            for(let i=1;i<5;i++){
-                f = "$" + i.toString();
-                 if(rssi >= (-105+20*i))
-                     signalstrength = signalstrength.replace(f,"#008000");
-                 else
-                     signalstrength = signalstrength.replace(f,"#cccccc");
-            }
-
-            s = s.replace("$rssigraph",signalstrength);
         
-            s = s.replace("$rssi",rssi.toString());
-            var device = document.createElement('div');
+            function go(){
+                doit();
+                document.getElementById("myDialog").showModal();
+                for(i=10; i<30; i++){
+                    newdevice("Crabby McCrabface","11:22:33:44:55:"+i.toString(),-90 + i*4);
+                }
+            }
 
-            s = s.replace("$bdaddress",address);
-            s = s.replace("$bdname",name);
+            function closeDialog(success){
+                if(success){
+                    console.log("User wants to pair with: " + selectedDevice);
+                    document.getElementById("displayer").innerHTML = selectedDevice;
+                }
+                else{
+                    console.log("User pressed cancel")
+                    document.getElementById("displayer").innerHTML = "No device selected";
+                }
+                document.getElementById("myDialog").close();
+            }
 
-            device.style = "width:95%; border:1px solid lightgrey; border-radius:4px;margin-bottom:2px;background-color: rgb(0,0,0,0.05);padding-right:10px;"
-            device.innerHTML = s;
-            scanlistDiv.appendChild(device);
+            function bledeviceclick(address){
+                selectedDevice = address;
+                let parentElement = document.getElementById("blescanlist");
+                for (const child of parentElement.children) {
+                    child.style.backgroundColor = "rgb(0,0,0,0.05)";
+                }
+                console.log("User highlighted: "+address);
+                let s = "bleDeviceId"+address.split(":").join("");
+                document.getElementById(s).style.backgroundColor = "lightblue";
+                document.getElementById("pairbtn").disabled = false;
+            }
 
-            document.getElementById("pairbtn").disabled = false;
+            function newdevice(name,address,rssi){
+                scanlistDiv = document.getElementById("blescanlist");
+                if(isListEmpty){
+                    scanlistDiv.innerHTML = "";
+                    selectedDevice = "";
+                    isListEmpty = false;
+                }
+                
+                s = 
+                `
+                        <table width="100%">
+                            <tr><td>$bdname</td><td align="right">$rssigraph</td></tr>
+                            <tr><td style="font-size:8px;padding-top:0px;">$bdaddress</td><td style="font-size:8px;text-align:right;padding-top:0px;">$rssi dB</small></td></tr>
+                        </table>
+                `;
             
-        }
+                signalstrength = signalstrength_template;
+                for(let i=1;i<5;i++){
+                    f = "$" + i.toString();
+                    if(rssi >= (-105+20*i))
+                        signalstrength = signalstrength.replace(f,"#008000");
+                    else
+                        signalstrength = signalstrength.replace(f,"#cccccc");
+                }
 
-        function scantimeout(){
-             document.getElementById("blescanspinner").style.display = "none";
-             document.getElementById("rescanbtn").style.display = "inline";
-        }
+                s = s.replace("$rssigraph",signalstrength);
+            
+                s = s.replace("$rssi",rssi.toString());
+                var device = document.createElement('div');
 
-        isListEmpty = true;
+                s = s.replace("$bdaddress",address);
+                s = s.replace("$bdname",name);
 
-        signalstrength_template =
-        `   <svg width="20" height="20" viewBox="0 0 20 28">
-                <rect style="fill:#008000; stroke:none; stroke-width:1" ry="1" width="3" height= "4"  x="2" y="20" />    
-                <rect style="fill:$1"; stroke:none; stroke-width:1" ry="1" width="3" height= "8"  x="6" y="16" />
-                <rect style="fill:$2"; stroke:none; stroke-width:1" ry="1" width="3" height="12" x="10" y="12" />
-                <rect style="fill:$3"; stroke:none; stroke-width:1" ry="1" width="3" height="16" x="14" y= "8"  />
-                <rect style="fill:$4"; stroke:none; stroke-width:1" ry="1" width="3" height="20" x="18" y= "4"  />
-            </svg>
-        `;
+                device.id = "bleDeviceId"+address.split(":").join("");
+                device.style = "width:95%; border:1px solid lightgrey; border-radius:4px;margin-bottom:2px;background-color: rgb(0,0,0,0.05);padding-right:10px;"
+                device.innerHTML = s;
+                device.onclick  = function() {bledeviceclick(address)};
+                scanlistDiv.appendChild(device);
+
+                
+                
+            }
+
+            function scantimeout(){
+                document.getElementById("blescanspinner").style.display = "none";
+                document.getElementById("rescanbtn").style.display = "inline";
+            }
+
+            isListEmpty = true;
+            selectedDevice = "";
+
+            signalstrength_template =
+            `   <svg width="20" height="20" viewBox="0 0 20 28">
+                    <rect style="fill:#008000; stroke:none; stroke-width:1" ry="1" width="3" height= "4"  x="2" y="20" />    
+                    <rect style="fill:$1"; stroke:none; stroke-width:1" ry="1" width="3" height= "8"  x="6" y="16" />
+                    <rect style="fill:$2"; stroke:none; stroke-width:1" ry="1" width="3" height="12" x="10" y="12" />
+                    <rect style="fill:$3"; stroke:none; stroke-width:1" ry="1" width="3" height="16" x="14" y= "8"  />
+                    <rect style="fill:$4"; stroke:none; stroke-width:1" ry="1" width="3" height="20" x="18" y= "4"  />
+                </svg>
+            `;
 
         </script>
     </head>
     
     <body onload="go();">
         <h1>hej</h1><br>
-
+        <p id="displayer"></p>
     </body>
 
 </html>
