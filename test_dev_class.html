@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+	
+	<head>		
+		<meta charset="UTF-8">
+		<title>Bluetooth Device Picker</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="bluetoothdevicepicker.js"></script>
+		
+        <script>
+
+            // The registered call back function must handle up to 3 different causes
+            function my_callback(cause){
+
+                if(cause == myDevicePicker.USER_CANCELLED){
+                    console.log("User cancelled the operation");
+                }
+                if(cause == myDevicePicker.USER_SELECTED){
+                    console.log("User elected to pair with: " + myDevicePicker.selectedDevice);
+                }
+                if(cause == myDevicePicker.USER_RESCAN){
+                    console.log("User is requesting a scan restart");
+                }
+            }
+
+            // Called after the document has been loaded and rendered
+            function onloaded(){
+                // Instantiate a class instance and register a callback
+                myDevicePicker = new BluetoothDevicePicker(my_callback);
+            }
+
+            // Opens the device picker dialog and injects some sample devices
+            function openPickerDialog(count){
+                // Open the selector dialog
+                myDevicePicker.openSelectorDialog();
+                // Inject some devices (BdName, BdAddress, RSSI [dB])
+                for(let i=10; i<count+10; i++){
+                    myDevicePicker.deviceUpdate("My BLE Device","11:22:33:44:55:"+i.toString(), -20 - Math.floor(Math.random() * 75));
+                }
+                // Update the RSSI of an already existing device (BdAddress, RSSI [dB])
+                if(count>0)
+                    myDevicePicker.deviceUpdate("My BLE Device","11:22:33:44:55:10", -10);
+            }
+
+		</script>
+
+	</head>
+
+	<body onload="onloaded();">
+
+		<h1>Bluetooth Device Picker</h1><hr/><br/>
+        This implementation demonstrates how to use the <b>BluetoothDevicePicker</b> class.<br/>
+        The UI is almost identical to that of the device picker used with Web Bluetooth.<br/>
+        The device picker will pop up as a modal dialog disabling all other controls on the page while open.<br/>
+        A specific device will only be listed once (based on Bluetooth Device Address).<br/> 
+        Only the RSSI will be changed if an update is made on an already listed device.<br/>  
+        <br/><hr/>
+
+        Click to open the device picker:
+        <button onclick="openPickerDialog(0);">Open without devices</button>
+        <button onclick="openPickerDialog(3);">Open with 3 devices</button>
+        <button onclick="openPickerDialog(30);">Open with 30 devices</button>
+
+	</body>
+
+</html>
