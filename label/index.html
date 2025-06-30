@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://www.mikethedane.com/da145xx_bootloader.html -->
+<html lang="en-US"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">    
+        <title>SmartBond™ Bootloader</title>
+        <link rel="icon" type="image/x-icon" href="https://www.mikethedane.com/MTD_favicon.ico">
+        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+
+        var binfile;
+        
+        var size_msb;
+        var size_lsb;
+        var port;
+        var baud_rate;
+        var writer;
+
+        var file_size;
+        var checksum;
+
+        var rx_array = [];
+        var two_wire = true;
+        var pos = 0;
+
+        adv_element = `
+		<div style='border:solid #000000; border-radius: 6px; background: blue; padding: 10px;text-align: center;' id="$bdaddr">
+          <big>$bdaddr</big><hr/>
+            <table width='100%'><tr>
+		  
+                <td width='33%' style="text-align: center;">Temp: <span id="$bdaddr_temp">$temp</span>&#176;C</td>
+                <td width='34%' style="text-align: center;">Max: $max&#176;C</td>
+                <td width='33%' style="text-align: center;">Min: $min&#176;C</td>
+		    </tr></table><hr/>
+             <table width='100%'><tr>
+            <td width="50%" style="text-align: center;"><span id="$bdaddr_time">$time</span></td>
+            <td width="50%" style="text-align: center;"><span id="$bdaddr_rssi">$rssi</span>dBm</td>
+            </tr></table>
+		</div>
+		`;
+
+        function log(text)
+        {
+            var myDiv = document.createElement("div");
+            myDiv.innerHTML = "<span style='font-size:1.2em; font-family: 'Lucida Console', 'Courier New', monospace;'>" + text + "<span>";
+            document.body.appendChild(myDiv);
+        }
+
+        class LineBreakTransformer {
+			constructor() {
+			  // A container for holding stream data until a new line.
+			  this.chunks = "";
+			}
+
+			transform(chunk, controller) {
+			    // Append new chunks to existing chunks.
+			    this.chunks += chunk;
+			    // For each line breaks in chunks, send the parsed lines out.
+			    const lines = this.chunks.split("\n\r");
+			    this.chunks = lines.pop();
+			    lines.forEach((line) => controller.enqueue(line));
+			}
+
+			flush(controller) {
+			    // When the stream is closed, flush any remaining chunks out.
+			    controller.enqueue(this.chunks);
+			}
+		}
+
+        async function start_scanner(){
+            if(port && port.state != "closed"){
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                const reader = textDecoder.readable
+					.pipeThrough(new TransformStream(new LineBreakTransformer()))
+  					.getReader();
+                // Listen to data coming from the serial device.
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        // Allow the serial port to be closed later.
+                        reader.releaseLock();
+                        
+                        break;
+                    }
+                    
+                    console.log(value);
+                    let data = value.split(" ");
+                    console.log(data[0]);
+                    console.log(data[1]);
+                    console.log(data[2]);
+                    update_element(data[0], "21", data[2].replace("-0","-"));
+                }
+            }
+            else{
+                console.log("No COM port open");
+                alert("No COM port open");
+            }
+        }
+        
+        async function serial_connect(){
+            // Prompt user to select any serial port.	
+            if (port && port.state != "closed")
+            {
+                console.log("Port was open");
+                port.close();
+            }
+            const filters = []; 
+            port = await navigator.serial.requestPort({ filters });
+            try{
+                await port.open({ baudRate: baud_rate, "bufferSize": 131072 /*128Kbyte*/ });
+                console.log("Serial port opened @ " + Number(baud_rate).toLocaleString('en-US') + " bauds");
+                document.getElementById("comport").style.display = "none";
+                start_scanner();
+            }
+            catch(err){
+                console.log("Failed to open port (port may already be open)");
+            }
+        
+            
+  				
+
+			
+
+		}
+
+        function update_element(bdaddr,temp,rssi){
+            
+            let time = new Date().toLocaleString();
+
+            if(document.getElementById(bdaddr) == null){
+                
+                s = adv_element.replace(/\$bdaddr/g,bdaddr);
+                s = s.replace("$min", (Math.floor(Math.random() * 3) + 17).toString());
+                s = s.replace("$max", (Math.floor(Math.random() * 3) + 26).toString());
+                s = s.replace("$temp",temp);
+                s = s.replace("$time",time);
+                s = s.replace("$rssi",rssi);
+
+                let new_elm = document.createElement("div");
+                new_elm.innerHTML = s;
+                let elm = document.getElementById("stage_adv");
+                elm.appendChild(new_elm);
+                new_elm = document.createElement("div");
+                new_elm.innerHTML= "<div><br/></div>";
+                elm.appendChild(new_elm);
+            }
+            else{
+                let elm = document.getElementById(bdaddr+"_time");
+                elm.innerHTML = time;
+                elm = document.getElementById(bdaddr+"_rssi");
+                elm.innerHTML = rssi;
+                elm = document.getElementById(bdaddr+"_temp");
+                elm.innerHTML = (Math.floor(Math.random() * 3) + 22).toString();
+            }
+        }
+        
+        function  preset_baud(){
+            baud_rate = 115200;
+            
+            console.log("Setting startup baud rate to " + baud_rate);
+            
+            
+        }
+
+    </script></head>
+
+    
+
+<body onload="preset_baud();" style="color: lightgrey; background-color: #2A2A2A;">
+    <h1>Bluetooth Smart Label (US207)</h1><hr> 
+       
+     <div id="stage_adv" style="padding: 10px;"></div>
+	
+    <button id="comport" class="button button_sh" onclick="serial_connect()">  Open Com Port</button><br><br>
+
+   
+
+</body></html>
