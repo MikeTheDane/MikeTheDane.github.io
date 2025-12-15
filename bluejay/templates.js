@@ -45,9 +45,9 @@ async function gatt_read_txt(characteristic){
 
 async function gatt_write_txt(characteristic, text, with_response){
     if(with_response)
-        await characteristic.writeWithResponse((new TextDecoder('utf-8')).encode(text));
+        await characteristic.writeValueWithResponse((new TextDecoder('utf-8')).encode(text));
     else
-        await characteristic.writeWithoutResponse((new TextDecoder('utf-8')).encode(text));
+        await characteristic.writeValueWithoutResponse((new TextDecoder('utf-8')).encode(text));
 }
 
 async function onBleDisconnected(){
