@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Hide everything by default for desktop */
+        body { font-family: sans-serif; margin: 0; display: none; }
+
+        /* Mobile-only styles (screens 600px or smaller) */
+        @media only screen and (max-width: 600px) {
+            body { 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                justify-content: center; 
+                height: 100vh;
+                background-color: #f4f4f9;
+            }
+
+            .content { text-align: center; padding: 20px; }
+
+            /* Floating Send Button */
+            .send-btn {
+    position: fixed;
+    top: 20px;     /* Changed from bottom to top */
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <h1>Welcome</h1>
+        <p>This page is only visible on mobile devices.</p>
+    </div>
+
+    <!-- The Floating Send Button -->
+    <button class="send-btn" onclick="alert('Message Sent!')">
+        📩
+    </button>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
+    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>lorum<br/>
+
+</body>
+</html>
