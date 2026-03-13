@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Open Leads Scanner</title>
     <link rel="icon" type="image/x-icon" href="/icon.ico">
-   
     <style>
         /* Hide everything by default for desktop */
         body { font-family: sans-serif; margin: 0; display: none; }
@@ -25,8 +24,8 @@
             /* Floating Send Button */
             .send-btn {
                 position: fixed;
-                top: 20px;     /* Changed from bottom to top */
-                right: 20px;
+                top: 10px;     /* Changed from bottom to top */
+                right: 15px;
                 width: 60px;
                 height: 60px;
                 /* background-color: #007bff; */
@@ -54,11 +53,11 @@
             margin: auto;
             padding: 1rem;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-            width: 100%;
+            width: 90%;
             border-radius: 0.5rem;
             }
             .star {
-            font-size: 8vh;
+            font-size: 7vh;
             cursor: pointer;
             }
             .one {
@@ -71,14 +70,14 @@
             color: rgb(0, 0, 255);
             }
             .four {
-            color: rgb(0, 0, 255);
+            color: rgb(200, 0, 255);
             }
             .five {
             color: rgb(24, 159, 14);
             }
 
         textarea {
-            width: 100%;       
+            width: 88%;       
             box-sizing: border-box; 
             padding: 10px;
             resize: vertical;  
@@ -86,8 +85,8 @@
         } 
         
         input[type="checkbox"] {
-            width: 30px; 
-            height: 30px;
+            width: 25px; 
+            height: 25px;
             margin: 5px; 
             border-radius: 5px;
         }
@@ -95,10 +94,11 @@
     <script>
 
         var debug = true;
-
+        var mode;
         var id = '';
         var landingPage = 'https://renesas.com';
         var thisPage = 'http://localhost/qrtest.html';
+        var exhibitorRegistrationId = '00000000'
 
         // To access the stars
         let stars = 
@@ -149,12 +149,13 @@
             if(urlParams != undefined){
                 console.log("Id is " + urlParams.get('id'));
                 if(urlParams.has('id')){
-                    if(urlParams.get('id') != '00000000'){
+                    if(urlParams.get('id') != exhibitorRegistrationId){
                         if(localStorage.getItem('nickname') == undefined){
                             // *** Participant scanned participant badge
                             console.log("Unregistered scan of a visitor");
                             // Redirect to event landing page
                             location.replace(landingPage);
+                            mode = 0;
                         }
                         else{
                             // *** Exhibitor scanned a user badge
@@ -165,6 +166,7 @@
 
                             document.getElementById('leadForm').style.display = "inline";
                             document.getElementById('header').style.display = "inline";
+                            mode = 1;
                         }
                     }
                     else{
@@ -177,6 +179,7 @@
                             document.getElementById('registrationForm').style.display = "inline";
                             console.log("New exhibitor registration");
                             document.getElementById('header').style.display = "inline";
+                            mode = 2;
                         }
                         else{
                             // *** Exhibitor re-registration (modification)
@@ -186,6 +189,9 @@
                             document.getElementById('registrationForm').style.display = "inline";
                             console.log("Exhibitor registration modification");
                             document.getElementById('header').style.display = "inline";
+                            document.getElementById("nickname").value = localStorage.getItem("nickname");
+                            document.getElementById("company").value = localStorage.getItem("company");
+                            mode = 3;
                         }
                     }
                 }
@@ -201,6 +207,16 @@
                 }
             }
         }
+
+        function submitData(){
+            if(mode==2 || mode==3){
+                let nickname = document.getElementById("nickname").value;
+                localStorage.setItem("nickname",nickname);
+                let company = document.getElementById("company").value;
+                localStorage.setItem("company",company);
+            }
+
+        }
         
     </script>
 </head>
@@ -210,7 +226,7 @@
         <button class="send-btn" onclick="submitData()">
                 📩
         </button>
-        <h1 class="banner">Lead Scanner</h1>
+        <h1 class="banner">Lead Scan</h1>
         <h3 class="banner">2026 Renesas Bay Area Tech Day</h3>
     </div>
 
@@ -257,52 +273,26 @@
             <!-- <br /> -->
             <textarea rows="4" placeholder="Type your notes here"></textarea>
         </div>
-    </div>  
+    </div>
 
     <div id="registrationForm" style="display:none">
-        Exhibitor Registration form
         <br/><br/>
         <form action="/submit-page" method="post">
 
-            <!-- Group 1: Choose interests -->
-            <fieldset>
-                <legend>Renesas Power</legend>
-                <div>
-                    <label for="nickname">Your Name (or nickname)</label>
-                    <input type="text" id="nickname" name="nickname" value=""> *
-                    
+           
+                <div class="card">
+                    <h2>Name or Nickname:</h2>
+                    <input type="text" style="font-size: 1.6rem;width: 100%; border-radius: 6px;" id="nickname" name="nickname" value="">             
                 </div>
-                <div>
-                    <input type="checkbox" id="coding" name="interest[]" value="coding">
-                    <label for="coding">Coding</label>
+                <div class="card">
+                    <h2>Company Name:</h2>
+                    <select id="company" style="font-size: 1.6rem; width: 100%; border-radius: 6px;" >
+                        <option value="Renesas">Renesas</option>
+                        <option value="IOSEA">IOSEA</option>
+                        <option value="Open_AI">Open AI</option>
+                        <option value="Starbucks">Starbucks</option>
+                    </select>
                 </div>
-                <div>
-                    <input type="checkbox" id="music" name="interest[]" value="music">
-                    <label for="music">Music</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="reading" name="interest[]" value="reading">
-                    <label for="reading">Reading</label>
-                </div>
-            </fieldset>
-            <br/>
-            <!-- Group 2: Select preferred timeframes -->
-            <fieldset>
-                <legend>Select preferred timeframes</legend>
-                <div>
-                    <input type="checkbox" id="24hours" name="timeframe[]" value="last24">
-                    <label for="24hours">Last 24 Hours</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="3days" name="timeframe[]" value="last3Days">
-                    <label for="3days">Last 3 days</label>
-                </div>
-                <div>
-                    <input type="checkbox" id="7days" name="timeframe[]" value="last7Days">
-                    <label for="7days">Last 7 days</label>
-                </div>
-            </fieldset>
-            <br/>
             
         </form>
 
