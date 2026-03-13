@@ -2,17 +2,20 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Leads Scanner</title>
+    <link rel="icon" type="image/x-icon" href="/icon.ico">
+    <script src="demos.js"></script>
     <style>
         /* Hide everything by default for desktop */
         body { font-family: sans-serif; margin: 0; display: none; }
 
-        /* Mobile-only styles (screens 600px or smaller) */
-        @media only screen and (max-width: 600px) {
+        /* Mobile-only styles (screens 1200px or smaller) */
+        @media only screen and (max-width: 1200px) {
             body { 
                 display: flex; 
                 flex-direction: column; 
-                align-items: center; 
-                justify-content: center; 
+                /* align-items: center; 
+                justify-content: center;  */
                 height: 100vh;
                 background-color: #f4f4f9;
             }
@@ -21,41 +24,297 @@
 
             /* Floating Send Button */
             .send-btn {
-    position: fixed;
-    top: 20px;     /* Changed from bottom to top */
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 24px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
+                position: fixed;
+                top: 20px;     /* Changed from bottom to top */
+                right: 20px;
+                width: 60px;
+                height: 60px;
+                /* background-color: #007bff; */
+                background-color: lightblue;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                font-size: 24px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            }
+        }
+
+        .banner {
+            text-align: center;
+        }
+
+        .card {
+            max-width: 30rem;
+            background: #fff;
+            margin: auto;
+            padding: 1rem;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            border-radius: 0.5rem;
+            }
+            .star {
+            font-size: 8vh;
+            cursor: pointer;
+            }
+            .one {
+            color: rgb(255, 0, 0);
+            }
+            .two {
+            color: rgb(255, 106, 0);
+            }
+            .three {
+            color: rgb(0, 0, 255);
+            }
+            .four {
+            color: rgb(0, 0, 255);
+            }
+            .five {
+            color: rgb(24, 159, 14);
+            }
+
+        textarea {
+            width: 100%;       
+            box-sizing: border-box; 
+            padding: 10px;
+            resize: vertical;  
+            font-size: 1.6rem;
+        } 
+        
+        input[type="checkbox"] {
+            width: 30px; 
+            height: 30px;
+            margin: 5px; 
+            border-radius: 5px;
         }
     </style>
-</head>
-<body>
+    <script>
 
-    <div class="content">
-        <h1>Welcome</h1>
-        <p>This page is only visible on mobile devices.</p>
+        var debug = true;
+
+        var id = '';
+        var landingPage = 'https://renesas.com';
+        var thisPage = 'http://localhost/qrtest.html';
+
+        // To access the stars
+        let stars = 
+            document.getElementsByClassName("star");
+        let output = 
+            document.getElementById("output");
+
+        // Funtion to update rating
+        function gfg(n) {
+            remove();
+            for (let i = 0; i < n; i++) {
+                if (n == 1) cls = "one";
+                else if (n == 2) cls = "two";
+                else if (n == 3) cls = "three";
+                else if (n == 4) cls = "four";
+                else if (n == 5) cls = "five";
+                stars[i].className = "star " + cls;
+            }
+            document.getElementById("output").innerText = "Rating is: " + n + "/5";
+        }
+        // To remove the pre-applied styling
+        function remove() {
+            let i = 0;
+            while (i < 5) {
+                stars[i].className = "star";
+                i++;
+            }
+        }
+
+        function debugView(){
+            
+            // Log out all vendors and demos
+            document.getElementById("debug").style.display = "inline";
+            //console.log(demoJson);
+            const demoObj = JSON.parse(demoJson);
+            for(i=0;i<demoObj.demos.length;i++){
+                console.log("Vendor: "+demoObj.demos[i].v);
+                for(d=0;d<demoObj.demos[i].d.length;d++){
+                    console.log("\tDemo: "+demoObj.demos[i].d[d]);
+                }
+            }
+        }
+
+        function determineMode(){
+            // Determine the mode of operation
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            if(urlParams != undefined){
+                console.log("Id is " + urlParams.get('id'));
+                if(urlParams.has('id')){
+                    if(urlParams.get('id') != '00000000'){
+                        if(localStorage.getItem('nickname') == undefined){
+                            // *** Participant scanned participant badge
+                            console.log("Unregistered scan of a visitor");
+                            // Redirect to event landing page
+                            location.replace(landingPage);
+                        }
+                        else{
+                            // *** Exhibitor scanned a user badge
+                            console.log("Registered scan of a visitor");
+                            submitMode = 0;
+                            id = urlParams.get('id');
+                            // Display lead input form
+
+                            document.getElementById('leadForm').style.display = "inline";
+                            document.getElementById('header').style.display = "inline";
+                        }
+                    }
+                    else{
+                        submitMode = 1;
+                        if(localStorage.getItem('nickname') == undefined){
+                            // *** Exhibitor registration
+                            console.log("Exhibitor Registration");
+                            // Display default exhibitor registration form
+                            
+                            document.getElementById('registrationForm').style.display = "inline";
+                            console.log("New exhibitor registration");
+                            document.getElementById('header').style.display = "inline";
+                        }
+                        else{
+                            // *** Exhibitor re-registration (modification)
+                            console.log("Exhibitor Registration");
+                            // Display prefilled exhibitor registration form
+                            
+                            document.getElementById('registrationForm').style.display = "inline";
+                            console.log("Exhibitor registration modification");
+                            document.getElementById('header').style.display = "inline";
+                        }
+                    }
+                }
+                else{
+                    // *** Unqualified use
+                    if(debug == true)
+                        debugView();
+                    else{
+                        // Redirect to event landing page
+                        location.replace(landingPage);
+                    }
+                    
+                }
+            }
+        }
+        
+    </script>
+</head>
+<body onload="determineMode();">
+
+    <div id="header" style="display:none">
+        <button class="send-btn" onclick="submitData()">
+                📩
+        </button>
+        <h1 class="banner">Lead Scanner</h1>
+        <h3 class="banner">2026 Renesas Bay Area Tech Day</h3>
     </div>
 
-    <!-- The Floating Send Button -->
-    <button class="send-btn" onclick="window.close()">
-        📩
-    </button>
-    ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>ipsum<br/>
-   lorum<br/>
+
+    <div id="leadForm" style="display:none">
+        <!-- Lead form -->
+        <div class="card">
+            <h2>Lead Rating:</h2>
+            <!-- <br /> -->
+            <span onclick="gfg(1)" class="star">★</span>
+            <span onclick="gfg(2)" class="star">★</span>
+            <span onclick="gfg(3)" class="star">★</span>
+            <span onclick="gfg(4)" class="star">★</span>
+            <span onclick="gfg(5)" class="star">★</span>
+            <h3 id="output">Rating is: 0/5</h3>
+        </div>
+        <div class="card">
+            <h2>Follow Up:</h2>
+            
+            <div style="font-size: 1.6rem;">
+            <input type="checkbox" id="coding" name="followup" value="coding">
+            <label for="coding">Send link to demo</label>
+            </div>
+
+            <div style="font-size: 1.6rem;">
+            <input type="checkbox" id="music" name="followup" value="music">
+            <label for="music">Schedule a follow-up</label>
+            </div>
+
+            <div style="font-size: 1.6rem;">
+            <input type="checkbox" id="art" name="followup" value="art">
+            <label for="art">Send quote/pricing</label>
+            </div>
+
+            <div style="font-size: 1.6rem;">
+            <input type="checkbox" id="sports" name="followup" value="sports">
+            <label for="sports">Add to newsletter</label>
+            </div>
+       
+        </div>
+        
+        <div class="card">
+            <h2>Notes:</h2>
+            <!-- <br /> -->
+            <textarea rows="4" placeholder="Type your notes here"></textarea>
+        </div>
+        
+
+    <div id="registrationForm" style="display:none">
+        Exhibitor Registration form
+        <br/><br/>
+        <form action="/submit-page" method="post">
+
+            <!-- Group 1: Choose interests -->
+            <fieldset>
+                <legend>Renesas Power</legend>
+                <div>
+                    <label for="nickname">Your Name (or nickname)</label>
+                    <input type="text" id="nickname" name="nickname" value=""> *
+                    
+                </div>
+                <div>
+                    <input type="checkbox" id="coding" name="interest[]" value="coding">
+                    <label for="coding">Coding</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="music" name="interest[]" value="music">
+                    <label for="music">Music</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="reading" name="interest[]" value="reading">
+                    <label for="reading">Reading</label>
+                </div>
+            </fieldset>
+            <br/>
+            <!-- Group 2: Select preferred timeframes -->
+            <fieldset>
+                <legend>Select preferred timeframes</legend>
+                <div>
+                    <input type="checkbox" id="24hours" name="timeframe[]" value="last24">
+                    <label for="24hours">Last 24 Hours</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="3days" name="timeframe[]" value="last3Days">
+                    <label for="3days">Last 3 days</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="7days" name="timeframe[]" value="last7Days">
+                    <label for="7days">Last 7 days</label>
+                </div>
+            </fieldset>
+            <br/>
+            
+        </form>
+
+    </div>
+    
+
+    <div id="debug" style="display:none">
+        <h1>Debug</h1>
+        <button onclick="localStorage.setItem('nickname', 'Numbscull Idiotson');">Store</button>
+        <button onclick="localStorage.removeItem('nickname');">Erase</button>
+    </div>
+    
 
 </body>
 </html>
-
-
